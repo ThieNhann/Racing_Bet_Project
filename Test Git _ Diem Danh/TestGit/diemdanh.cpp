@@ -6,4 +6,5 @@ int main() {
 	cout << "\nAe cout o duoi roi ghi ten minh, sau do add/commit/push len github nhe ^^";
 	cout << "\nNg Thien Nhan";
 	cout << "\nNhanThVo";
+	cout << "\nNguyen Van Phuc";
 }
