@@ -7,4 +7,5 @@ int main() {
 	cout << "\nNg Thien Nhan";
 	cout << "\nNhanThVo";
 	cout << "\nNguyen Van Phuc";
+	cout << "Ng Nhat Khang" << endl;
 }
