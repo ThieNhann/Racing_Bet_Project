@@ -13,7 +13,7 @@ DISPLAYSURF = pygame.display.set_mode((1280, 720), RESIZABLE)
 wdw0 = 1280
 fps = pygame.time.Clock()
 pygame.display.set_caption('GamblingRace')
-bg = pygame.image.load('background\ocean\ocean.png')
+bg = pygame.image.load('background\ocean\ocean.png') \\import 
 
 bg_xpos = 0
 
