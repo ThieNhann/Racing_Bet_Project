@@ -1,0 +1,4 @@
+Flaticon.com:
+ - "https://www.flaticon.com/free-icons/settings" Settings icons created by Freepik - Flaticon
+ - "https://www.flaticon.com/free-icons/speaker" >Speaker icons created by Freepik - Flaticon
+ - "https://www.flaticon.com/free-icons/user" User icons created by Freepik - Flaticon
