@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Racing_Bet_Project", "Racing_Bet_Project\Racing_Bet_Project.pyproj", "{DEF249EA-F985-49B7-86FE-01A3D27BDD70}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DEF249EA-F985-49B7-86FE-01A3D27BDD70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEF249EA-F985-49B7-86FE-01A3D27BDD70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {967E34A8-96E3-42A3-BC0A-F26CF8421839}
+	EndGlobalSection
+EndGlobal
