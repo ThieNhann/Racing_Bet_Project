@@ -7,7 +7,7 @@ pygame.init()
 
 # Thiết lập kích thước màn hình
 screen = pygame.display.set_mode((800,600))
-bg = pygame.image.load('Racing_Bet_Project/Assets/background/ocean/ocean.png').convert()
+bg = pygame.image.load('Assets/background/ocean/ocean.png').convert()
 bg = pygame.transform.scale(bg, (800, 600)) 
 class Car:
     def __init__(self, x, y, speed, image_path):
@@ -51,14 +51,14 @@ class Car:
         return self.x < obstacle.x + 50 and self.x + 50 > obstacle.x and self.y < obstacle.y + 50 and self.y + 50 > obstacle.y
 
 # Tạo danh sách các xe với hình ảnh tương ứng
-cars = [Car(50, i*100 + 50, random.uniform(0.01, 0.05), f'Racing_Bet_Project/Assets/char/still/ocean/ocean{i+1}.png') for i in range(5)]
+cars = [Car(50, i*100 + 50, random.uniform(0.01, 0.05), f'Assets/char/still/ocean/ocean{i+1}.png') for i in range(5)]
 
 class Obstacle:
     def __init__(self, x, y, image_paths):
         self.x = x
         self.y = y
         self.image_paths = image_paths
-        self.set_image('Racing_Bet_Project/Assets/Obstacles/obstacle_box.png')
+        self.set_image('Assets/Obstacles/obstacle_box.png')
         self.changed = False  # Thêm thuộc tính này để theo dõi xem hình ảnh đã được thay đổi chưa
         self.change_time = None  # Thêm thuộc tính này để theo dõi thời gian mà hình ảnh đã được thay đổi
 
@@ -78,16 +78,16 @@ class Obstacle:
         screen.blit(self.image, (self.x, self.y))  # Vẽ hình ảnh
     
 # Tạo danh sách các chướng ngại vật ở nửa đường
-obstacle_images = ['Racing_Bet_Project/Assets/Obstacles/obstacle_confinement.png', 'Racing_Bet_Project/Assets/Obstacles/obstacle_finish.png', 
-                   'Racing_Bet_Project/Assets/Obstacles/obstacle_reverse.png', 'Racing_Bet_Project/Assets/Obstacles/obstacle_slow.png', 
-                   'Racing_Bet_Project/Assets/Obstacles/obstacle_speed.png', 'Racing_Bet_Project/Assets/Obstacles/obstacle_teleport.png', 
-                   'Racing_Bet_Project/Assets/Obstacles/obstacle_tostart.png']
+obstacle_images = ['Assets/Obstacles/obstacle_confinement.png', 'Assets/Obstacles/obstacle_finish.png', 
+                   'Assets/Obstacles/obstacle_reverse.png', 'Assets/Obstacles/obstacle_slow.png', 
+                   'Assets/Obstacles/obstacle_speed.png', 'Assets/Obstacles/obstacle_teleport.png', 
+                   'Assets/Obstacles/obstacle_tostart.png']
 obstacles = [Obstacle(400, i*100 + 50, obstacle_images) for i in range(5)]
 # Hàm hiển thị menu và nhận lựa chọn từ người chơi
 def show_menu():
     running = True
     while running:
-        screen.fill((0, 0, 0))
+        screen.blit(bg,(0,0))
         font = pygame.font.Font(None, 36)
         text = font.render("Choose your character!", True, (255, 255, 255))
         screen.blit(text, (250, 250))
@@ -164,6 +164,11 @@ while running:
                 print(f"Xe số {i+1} đã về đích!")
                 if i == player_choice:
                     player_gold += 20
+                    font = pygame.font.Font(None, 72)
+                    text = font.render("You Win!", True, (255, 0, 0))
+                    screen.blit(text, (350, 300))
+                    pygame.display.flip()
+                    pygame.time.wait(2000)
                     print(f"Chúc mừng! Xe của bạn đã về đích đầu tiên! Bạn đã nhận được 20 vàng. Số vàng hiện tại của bạn là {player_gold}.")
                 else:
                     font = pygame.font.Font(None, 72)
