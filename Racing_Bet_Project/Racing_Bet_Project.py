@@ -34,7 +34,7 @@ class Car:
         elif self.slow:
             self.x += self.speed / 2
         elif self.speedup:
-            self.x += self.speed * 2
+            self.x += self.speed * 4
         else:
             self.x += self.speed
 
@@ -111,6 +111,9 @@ player_choice = show_menu()
 # Khởi tạo số vàng của người chơi
 player_gold = 0
 
+# Tạo một danh sách để theo dõi thứ tự các xe về đích
+finish_order = []
+
 # Vòng lặp chính của game
 running = True
 while running:
@@ -141,9 +144,9 @@ while running:
                     car.effect_end_time = pygame.time.get_ticks() + 3000
                 elif 'obstacle_speed.png' in image_path:
                     car.speedup = True
-                    car.effect_end_time = pygame.time.get_ticks() + 3000
+                    car.effect_end_time = pygame.time.get_ticks() + 5000
                 elif 'obstacle_teleport.png' in image_path:
-                    car.x += 100
+                    car.x += 200
                 elif 'obstacle_tostart.png' in image_path:
                     car.x = 50
 
@@ -160,22 +163,29 @@ while running:
 
         # Kiểm tra xem có xe nào về đích chưa
         for i, car in enumerate(cars):
-            if car.x >= 750:
+            if car.x >= 750 and i not in finish_order:
+                finish_order.append(i)
                 print(f"Xe số {i+1} đã về đích!")
-                if i == player_choice:
+
+        # Nếu tất cả các xe đều đã về đích, kết thúc trò chơi và công bố kết quả
+        if len(finish_order) == len(cars):
+            running = False
+            print("Tất cả các xe đã về đích!")
+            for i, car_index in enumerate(finish_order):
+                if i == 0 and car_index == player_choice:
                     player_gold += 20
-                    font = pygame.font.Font(None, 72)
-                    text = font.render("You Win!", True, (255, 0, 0))
-                    screen.blit(text, (350, 300))
-                    pygame.display.flip()
-                    pygame.time.wait(2000)
-                    print(f"Chúc mừng! Xe của bạn đã về đích đầu tiên! Bạn đã nhận được 20 vàng. Số vàng hiện tại của bạn là {player_gold}.")
+                    result_text = f"Your car comes first! You have received 20 gold. Your current gold amount is {player_gold}."
                 else:
-                    font = pygame.font.Font(None, 72)
-                    text = font.render("Game Over", True, (255, 0, 0))
-                    screen.blit(text, (350, 300))
-                    pygame.display.flip()
-                    pygame.time.wait(2000)
-                running = False        
+                    result_text = f"Car number {car_index+1} came in {i+1}th place."
+        
+                # Tạo font và vẽ văn bản lên màn hình
+                font = pygame.font.Font(None, 36)
+                text = font.render(result_text, True, (255, 255, 255))
+                screen.blit(text, (250, 300 + i * 40))  # Thay đổi vị trí y để các dòng văn bản không chồng lên nhau
+
+            # Cập nhật màn hình để hiển thị văn bản
+            pygame.display.flip()
+
+            # Đợi một chút trước khi thoát để người chơi có thể đọc kết quả
+            pygame.time.wait(5000)
 pygame.quit()
-    
