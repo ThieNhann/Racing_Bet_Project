@@ -5,10 +5,10 @@ Sản phẩm là trò chơi cho phép đặt cược vào một trong năm đố
 
 Được thực hiện bằng quy trình Scrum. Thông qua sự hỗ trợ của giảng viên hướng dẫn Võ Hoàng Quân và các công cụ hỗ trợ:
 
-Discord – Họp nhóm
-Zalo, Discord – Trao đổi nhóm, file
-OneDrive – Lưu trữ file
-Microsoft Word – Tạo các văn bản, biên bản, biểu mẫu
-Visual Studio/Code – Lập trình 
-Google Scholar, Google Search, Studocu, Youtube – Tham khảo tài liệu
-Git-GitHub – Trao đổi, chia sẻ, chỉnh sửa code
+Discord – Họp nhóm;
+Zalo, Discord – Trao đổi nhóm, file;
+OneDrive – Lưu trữ file;
+Microsoft Word – Tạo các văn bản, biên bản, biểu mẫu;
+Visual Studio/Code – Lập trình;
+Google Scholar, Google Search, Studocu, Youtube – Tham khảo tài liệu;
+Git-GitHub – Trao đổi, chia sẻ, chỉnh sửa code;
