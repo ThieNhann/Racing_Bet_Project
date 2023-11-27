@@ -1,13 +1,14 @@
 import pygame as pg
 import sys
 import os
+import math
 
 class Window_Resize:
     def __init__(self, current_size):
         self.w, self.h = current_size
 
     def Full_Screen(self):
-        pg.display.set_mode((1280, 720), pg.SRCALPHA|pg.FULLSCREEN)
+        pg.display.set_mode((0,0), pg.SRCALPHA|pg.FULLSCREEN)
         self.w, self.h = screen.get_size()
 
     def Window(self, current_size):
@@ -66,7 +67,7 @@ class Button():
 pg.init()
 os.environ['SDL_VIDEO_CENTERED'] = '0'
 
-screen = pg.display.set_mode((800, 600), pg.SRCALPHA)
+screen = pg.display.set_mode((1280, 720), pg.SRCALPHA)
 pg.display.set_caption("Funni Game")
 
 size = Window_Resize(screen.get_size())
@@ -78,6 +79,15 @@ def Font(size):
 
 
 def Start_Menu():
+    temp = 0
+    animation_timer = 0
+    instant_mouse_pos = (0,0)
+
+    def Mouse_Animation(r, instant_mouse_pos):
+        Circle = pg.transform.rotozoom(pg.image.load('Assets/icon/Settings/Circle.png').convert_alpha(), 0, 0.005*r)
+        Circle_box = Circle.get_rect(center = (instant_mouse_pos))
+        screen.blit(Circle, Circle_box)
+
     while True:
         mouse_pos = pg.mouse.get_pos()
         for event in pg.event.get():
@@ -85,19 +95,21 @@ def Start_Menu():
                 pg.quit()
                 sys.exit()
             if event.type == pg.MOUSEBUTTONDOWN:
+                animation_timer = 40
+                instant_mouse_pos = mouse_pos
                 if Quit.Icon_Input_Check(mouse_pos):
                     pg.quit()
                     sys.exit()
                 if User.Icon_Input_Check(mouse_pos):
                     pass
                 if Setting.Icon_Input_Check(mouse_pos):
-                    Options()
-                    
+                    Options()   
         #Get the assets to draw on the screen
         Bg = pg.transform.scale(pg.image.load("Assets/background/ocean/ocean.png"), (size.w, size.h))
 
+        temp += 0.1
         Title = Font(int(150 * size.w / 1280)).render("Get Broke Simulator", True, "Black")
-        Title_box = Title.get_rect(center = (size.w * 0.5, size.h *0.25))
+        Title_box = Title.get_rect(center = (size.w * 0.5, size.h *(0.25 + 0.04 * math.sin(temp))))
 
         Prompt = Font(int(40 * size.w / 1280)).render("- Click anywhere to enter -", True, "Black")
         Prompt_box = Prompt.get_rect(center = (size.w * 0.5, size.h * 0.75))
@@ -120,7 +132,6 @@ def Start_Menu():
                                              (60*size.w/1280, 60* size.w/1280))
         Setting = Button((size.w * 0.97, size.h * 0.15), Setting_icon, Setting_icon_hover)
 
-
         #draw on the screen
         screen.blit(Bg, (0,0))
         screen.blit(Title, Title_box)
@@ -129,14 +140,43 @@ def Start_Menu():
         User.Change_Image(mouse_pos)
         Setting.Change_Image(mouse_pos)
 
-
+        if animation_timer >= 1:
+            animation_timer -= 5
+            Mouse_Animation(40 - animation_timer, instant_mouse_pos)
+        
         pg.time.Clock().tick(30)
         pg.display.update()
 
 
 def Options():
     global screen
+    animation_timer = 0
+    instant_mouse_pos = (0,0)
+    def Mouse_Animation(r, instant_mouse_pos):
+        Circle = pg.transform.rotozoom(pg.image.load('Assets/icon/Settings/Circle.png').convert_alpha(), 0, 0.005*r)
+        Circle_box = Circle.get_rect(center = (instant_mouse_pos))
+        screen.blit(Circle, Circle_box)
     while True:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+            
+            if event.type == pg.MOUSEBUTTONDOWN:
+                animation_timer = 40
+                instant_mouse_pos = mouse_pos
+                if Full_Screen.Word_Input_Check(mouse_pos):
+                    size.Full_Screen()
+
+                if HD_Screen.Word_Input_Check(mouse_pos):
+                    size.Window((1280, 720))
+
+                if Small_Screen.Word_Input_Check(mouse_pos):
+                    size.Window((800, 600))
+
+                if Go_Back.Word_Input_Check(mouse_pos):
+                    Start_Menu()
+
         Bg = pg.transform.scale(pg.image.load("Assets/background/ocean/ocean.png"), (size.w, size.h))
         screen.blit(Bg, (0,0))
 
@@ -157,23 +197,11 @@ def Options():
             button.Change_Text_Color(mouse_pos)
             button.Update()
 
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                sys.exit()
-            
-            if event.type == pg.MOUSEBUTTONDOWN:
-                if Full_Screen.Word_Input_Check(mouse_pos):
-                    size.Full_Screen()
+        if animation_timer >= 1:
+            animation_timer -= 5
+            Mouse_Animation(40 - animation_timer, instant_mouse_pos)
 
-                if HD_Screen.Word_Input_Check(mouse_pos):
-                    size.Window((1280, 720))
-
-                if Small_Screen.Word_Input_Check(mouse_pos):
-                    size.Window((800, 600))
-
-                if Go_Back.Word_Input_Check(mouse_pos):
-                    Start_Menu()
+        
                     
 
         pg.display.update()

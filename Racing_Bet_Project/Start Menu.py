@@ -97,6 +97,7 @@ def Start_Menu():
 
 def Options():
     global screen
+    
     while True:
         screen.fill('Gold')
 
