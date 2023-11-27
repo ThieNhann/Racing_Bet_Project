@@ -67,7 +67,7 @@ pg.init()
 os.environ['SDL_VIDEO_CENTERED'] = '0'
 
 screen = pg.display.set_mode((800, 600), pg.SRCALPHA)
-pg.display.set_caption("Funni Game")
+pg.display.set_caption("Racing Bet")
 
 size = Window_Resize(screen.get_size())
 
@@ -94,9 +94,9 @@ def Start_Menu():
                     Options()
                     
         #Get the assets to draw on the screen
-        Bg = pg.transform.scale(pg.image.load("Assets/background/ocean/ocean.png"), (size.w, size.h))
+        Bg = pg.transform.scale(pg.image.load("Assets/background/sky/sky-3.png"), (size.w, size.h))
 
-        Title = Font(int(150 * size.w / 1280)).render("Get Broke Simulator", True, "Black")
+        Title = Font(int(150 * size.w / 1280)).render("Racing Bet", True, "Black")
         Title_box = Title.get_rect(center = (size.w * 0.5, size.h *0.25))
 
         Prompt = Font(int(40 * size.w / 1280)).render("- Click anywhere to enter -", True, "Black")
@@ -137,7 +137,7 @@ def Start_Menu():
 def Options():
     global screen
     while True:
-        Bg = pg.transform.scale(pg.image.load("Assets/background/ocean/ocean.png"), (size.w, size.h))
+        Bg = pg.transform.scale(pg.image.load("Assets/background/sky/sky-3.png"), (size.w, size.h))
         screen.blit(Bg, (0,0))
 
         Button_box = pg.transform.scale(pg.image.load('Assets/icon/Settings/Button Box.png').convert_alpha(), 

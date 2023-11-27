@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>def249ea-f985-49b7-86fe-01a3d27bdd70</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Racing_Bet_Project.py</StartupFile>
+    <StartupFile>Experiment.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -21,7 +21,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Experiment.py" />
     <Compile Include="Racing_Bet_Project.py" />
+    <Compile Include="Start Menu.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Assets\" />
