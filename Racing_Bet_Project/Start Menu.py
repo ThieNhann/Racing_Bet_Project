@@ -60,17 +60,18 @@ def Start_Menu():
     while True:
         mouse_pos = pg.mouse.get_pos()
 
-        Play_Button = Button(pg.image.load("Racing_Bet_Project/Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
+        Play_Button = Button(pg.image.load("Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
                              (size.w/2, size.h*0.6), "Play", Font(80), "Black", "Blue")
-        Options_Button = Button(pg.image.load("Racing_Bet_Project/Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
+        Options_Button = Button(pg.image.load("Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
                              (size.w/2, size.h*0.75), "Options", Font(80), "Black", "Blue")
-        Quit_Button = Button(pg.image.load("Racing_Bet_Project/Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
+        Quit_Button = Button(pg.image.load("Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
                              (size.w/2, size.h*0.9), "Quit", Font(80), "Black", "Blue")
         
         screen.fill('white')
         Title = Font(200).render("Bezt Gem Ever", True, "Gold")
         Title_rect = Title.get_rect(center = (size.w/2, size.h*0.25))
         screen.blit(Title, Title_rect)
+        print(Play_Button)
 
 
         for button in [Play_Button, Options_Button, Quit_Button]:
@@ -100,13 +101,13 @@ def Options():
         screen.fill('Gold')
 
 
-        Full_Screen = Button(pg.image.load("Racing_Bet_Project/Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
+        Full_Screen = Button(pg.image.load("Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
                              (size.w/2, size.h*0.2), "Full Screen", Font(80), "Black", "Blue")
-        HD_Screen = Button(pg.image.load("Racing_Bet_Project/Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
+        HD_Screen = Button(pg.image.load("Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
                              (size.w/2, size.h*0.4), "1280x720", Font(80), "Black", "Blue")
-        Small_Screen = Button(pg.image.load("Racing_Bet_Project/Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
+        Small_Screen = Button(pg.image.load("Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
                              (size.w/2, size.h*0.6), "800x600", Font(80), "Black", "Blue")
-        Go_Back = Button(pg.image.load("Racing_Bet_Project/Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
+        Go_Back = Button(pg.image.load("Assets/icon/Obstacles/frame_box.png").convert_alpha(), 
                              (size.w/2, size.h*0.8), "Back", Font(80), "Black", "Blue")
 
         mouse_pos = pg.mouse.get_pos()
@@ -144,7 +145,7 @@ def Game(Game_Active):
         screen.blit(bg, (bg_pos + size.w,0))
 
     while True:
-        bg = pg.transform.scale(pg.image.load("Racing_Bet_Project/Assets/background/sky/sky-1.png").convert(), (size.w,size.h))
+        bg = pg.transform.scale(pg.image.load("Assets/background/sky/sky-1.png").convert(), (size.w,size.h))
 
         if Game_Active:
             bg_pos -= 4 * size.w/1500
