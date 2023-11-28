@@ -15,6 +15,53 @@ class Window_Resize:
         self.w, self.h = current_size
         pg.display.set_mode((self.w, self.h))
 
+class Transition(pg.sprite.Sprite):
+    def __init__(self, image, delay, size):
+        super().__init__()
+        self.image = image
+        self.transparency = 0
+        self.size_x, self.size_y = size
+        self.delay = delay
+        self.rect = self.image.get_rect(center = (self.size_x / 2, self.size_y / 2))
+
+    
+    def Kill(self):
+        if self.transparency > 180:
+            self.kill()
+    
+    def update(self):
+        self.delay -= 10
+        if self.delay < 0:
+            self.transparency += 1.5
+            if self.transparency < 180:
+                self.image.set_alpha(int(255 * math.sin(math.radians(self.transparency))))
+                
+        self.Kill()
+
+
+
+class Mouse_Animation(pg.sprite.Sprite):
+    def __init__(self, instant_mouse_pos, r, size) -> None:
+        super().__init__()
+        self.r = r
+        self.size = size
+        self.transparency = 255
+        self.pos = instant_mouse_pos
+        self.image = pg.transform.rotozoom(pg.image.load('Assets/icon/Settings/Circle.png').convert_alpha(), 0, 0.005 * self.r)
+        self.rect = self.image.get_rect(center = (self.pos))
+    
+    def Kill(self):
+        if self.r >= 75 * self.size/1280:
+            self.kill()
+
+    def update(self):
+        self.r += 5 * self.size/1280
+        self.transparency -= 255 * (5 / 70)
+        self.image = pg.transform.rotozoom(pg.image.load('Assets/icon/Settings/Circle.png').convert_alpha(), 0, 0.005 * self.r)
+        self.image.set_alpha(self.transparency)
+        self.rect = self.image.get_rect(center = (self.pos))
+        self.Kill()
+
    
 class Button():
     def __init__(self, pos, image, hovering_image = None, text_info = None, 
@@ -71,22 +118,41 @@ screen = pg.display.set_mode((1280,720), pg.SRCALPHA)
 pg.display.set_caption("Racing Bet")
 
 size = Window_Resize(screen.get_size())
+mouse_animation = pg.sprite.Group()
+transition = pg.sprite.Group()
 
 bg_pos = 0
 
 def Font(size):
     return pg.font.Font(None, size)
 
+def Login_Page():
+    logo = Transition(pg.transform.rotozoom(pg.image.load("Assets/icon/Settings/Logo HCMUS.png").convert_alpha(), 0, 0.15), 300, (size.w, size.h))
+    transition.add(logo)
+
+    while True:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+            
+            if event.type == pg.MOUSEBUTTONDOWN:
+                Start_Menu()
+
+        screen.fill(0)
+        text = Font(40).render("Click to enter next part", True, "Gold")
+        text_box = text.get_rect(center = (size.w/2, size.h * 0.9))
+        screen.blit(text, text_box)
+        transition.update()
+        if logo.delay < 0:
+            transition.draw(screen)
+
+        pg.time.Clock().tick(30)
+        pg.display.update()
+        
 
 def Start_Menu():
     temp = 0
-    animation_timer = 0
-    instant_mouse_pos = (0,0)
-
-    def Mouse_Animation(r, instant_mouse_pos):
-        Circle = pg.transform.rotozoom(pg.image.load('Assets/icon/Settings/Circle.png').convert_alpha(), 0, 0.005*r)
-        Circle_box = Circle.get_rect(center = (instant_mouse_pos))
-        screen.blit(Circle, Circle_box)
 
     while True:
         mouse_pos = pg.mouse.get_pos()
@@ -95,15 +161,16 @@ def Start_Menu():
                 pg.quit()
                 sys.exit()
             if event.type == pg.MOUSEBUTTONDOWN:
-                animation_timer = 40
-                instant_mouse_pos = mouse_pos
+                mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
+                
                 if Quit.Icon_Input_Check(mouse_pos):
                     pg.quit()
                     sys.exit()
                 if User.Icon_Input_Check(mouse_pos):
                     pass
                 if Setting.Icon_Input_Check(mouse_pos):
-                    Options()   
+                    mouse_animation.empty()
+                    Options()
         #Get the assets to draw on the screen
         Bg = pg.transform.scale(pg.image.load("Assets/background/sky/sky-3.png"), (size.w, size.h))
 
@@ -140,9 +207,8 @@ def Start_Menu():
         User.Change_Image(mouse_pos)
         Setting.Change_Image(mouse_pos)
 
-        if animation_timer >= 1:
-            animation_timer -= 5
-            Mouse_Animation(40 - animation_timer, instant_mouse_pos)
+        mouse_animation.update()
+        mouse_animation.draw(screen)
         
         pg.time.Clock().tick(30)
         pg.display.update()
@@ -150,8 +216,6 @@ def Start_Menu():
 
 def Options():
     global screen
-    animation_timer = 0
-    instant_mouse_pos = (0,0)
     def Mouse_Animation(r, instant_mouse_pos):
         Circle = pg.transform.rotozoom(pg.image.load('Assets/icon/Settings/Circle.png').convert_alpha(), 0, 0.005*r)
         Circle_box = Circle.get_rect(center = (instant_mouse_pos))
@@ -163,8 +227,6 @@ def Options():
                 sys.exit()
             
             if event.type == pg.MOUSEBUTTONDOWN:
-                animation_timer = 40
-                instant_mouse_pos = mouse_pos
                 if Full_Screen.Word_Input_Check(mouse_pos):
                     size.Full_Screen()
 
@@ -196,13 +258,7 @@ def Options():
             button.Change_Text_Color(mouse_pos)
             button.Update()
 
-        if animation_timer >= 1:
-            animation_timer -= 5
-            Mouse_Animation(40 - animation_timer, instant_mouse_pos)
-
-        
-                    
 
         pg.display.update()
         pg.time.Clock().tick(30)
-Start_Menu()
+Login_Page()
