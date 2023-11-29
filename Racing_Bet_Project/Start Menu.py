@@ -171,3 +171,29 @@ def Game(Game_Active):
         pg.display.update()
         pg.time.Clock().tick(60)
 Start_Menu()
+
+
+'''class Transition(pg.sprite.Sprite):
+    def __init__(self, image, delay, size):
+        super().__init__()
+        self.image = image
+        self.transparency = 0
+        self.size_x, self.size_y = size
+        self.delay = delay
+        self.rect = self.image.get_rect(center = (self.size_x / 2, self.size_y / 2))
+
+    
+    def Kill(self):
+        if self.transparency > 280:
+            self.kill()
+            return True
+        else: return False
+    
+    def update(self):
+        self.delay -= 10
+        if self.delay < 0:
+            self.transparency += 1.5
+            if self.transparency < 180:
+                self.image.set_alpha(int(255 * sin(radians(self.transparency))))
+                
+        self.Kill()'''
