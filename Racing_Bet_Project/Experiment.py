@@ -50,49 +50,79 @@ class Dynamic_Background():
         self.rect = self.image.get_rect(center = (self.x + 0.075 * self.mouse_x, self.y + 0.075 * self.mouse_y))
         screen.blit(self.image, self.rect)
 
-#class that control all of the interactive buttons
-class Button():
-    def __init__(self, pos, image, hovering_image = None, text_info = None, 
-                 font = None, base_color = None, hovering_color =  None):
-        self.image = image
-        (self.x_pos, self.y_pos) = pos 
 
-        if text_info == None:
-            self.hovering_image = hovering_image
+class Draw_Screen():
+    def __init__(self, type, rect_pos, rect_size, image_file, image_scaling, text_content, font, color, pos):
+        self.type = type
 
-            self.rect = self.image.get_rect(center = (self.x_pos, self.y_pos))
-            self.rect02 = self.hovering_image.get_rect(center = (self.x_pos, self.y_pos))
+        if self.type == 'image':
+            self.x, self.y = pos
+            self.image_file = image_file
+            self.image_scale = image_scaling
+            self.image = pg.transform.scale(pg.image.load(self.image_file).convert(), (self.image_scale))
+            self.rect = self.image.get_rect(center = (self.x, self.y))
 
-        else:
-            self.text_info = text_info
+        elif self.type == 'text':
+            self.x, self.y = pos
+            self.image = False
+            self.rect_size = False
             self.font = font
-            self.base_color = base_color
-            self.hovering_color = hovering_color
-            self.text = self.font.render(self.text_info, True, self.base_color)
+            self.text_content = text_content
+            self.color = color
+            self.text = self.font.render(self.text_content, True, self.color)
+            self.rect = self.text.get_rect(center = (self.x, self.y))
 
-            self.rect = self.image.get_rect(center = (self.x_pos, self.y_pos))
-            self.text_rect = self.text.get_rect(center = (self.x_pos, self.y_pos))
+        elif self.type == 'rect':
+            self.image = False
+            self.text_content = False
+            self.color = color
+            self.rect_pos = rect_pos
+            self.rect_size = rect_size
+            self.rect = pg.Rect((self.rect_pos, self.rect_size))
     
-    def Change_Image(self, mouse_pos):
-        if self.rect.collidepoint(mouse_pos):
-            screen.blit(self.hovering_image, self.rect02)
-        else:
+    def Blit(self):
+        if self.type == 'image':
             screen.blit(self.image, self.rect)
 
-    def Change_Text_Color(self, mouse_pos):
-        if self.rect.collidepoint(mouse_pos):
-            self.text = self.font.render(self.text_info, True, self.hovering_color)
-        else:
-            self.text = self.font.render(self.text_info, True, self.base_color)
+        if self.type == 'text':
+            screen.blit(self.text, self.rect)
+        
+        if self.type == 'rect':
+            pg.draw.rect(screen, self.color, self.rect)
+        
+#class that control all of the interactive buttons
+class Button(Draw_Screen):
+    def __init__(self, type, rect_pos, rect_size, image_file, image_scaling, text_content, font, color, alter_color, pos):
+        super().__init__(type, rect_pos, rect_size, image_file, image_scaling, text_content, font, color, pos)
+        self.alter_color = alter_color
 
-    def Input_Check(self, mouse_pos):
+    def Change_Color(self, mouse_pos):
         if self.rect.collidepoint(mouse_pos):
+            if self.type == 'rect':
+                pg.draw.rect(screen, self.alter_color, self.rect)
+            elif self.type != 'text' and self.type != 'image':
+                pg.draw.rect(screen, self.color, self.rect)
+
+            if self.type == 'text':
+                self.text = self.font.render(self.text_content, True, self.alter_color)
+                screen.blit(self.text, self.rect)
+            elif self.type != 'rect' and self.type != 'image':
+                self.text = self.font.render(self.text_content, True, self.color)
+                screen.blit(self.text, self.rect)
+    
+    def Mouse_Hover(self, mouse_pos):
+        if self.rect.collidepoint(mouse_pos):  
             return True
         return False
+
+    '''def Input_Check(self, mouse_pos):
+        if self.rect.collidepoint(mouse_pos):
+            return True
+        return False'''
     
-    def Update(self):
+    '''def Update(self):
         screen.blit(self.image, self.rect)
-        screen.blit(self.text, self.text_rect)
+        screen.blit(self.text, self.rect)'''
     
 pg.init()
 os.environ['SDL_VIDEO_CENTERED'] = '0'
@@ -110,7 +140,7 @@ def Font(size):
     return pg.font.Font(None, size)
 
 def Start_Animation():
-    transparency = -100
+    transparency = 180
     counter = 0
     while True:
         counter += 1
@@ -127,7 +157,7 @@ def Start_Animation():
         logo_rect = logo.get_rect(center = (size.w/2, size.h/2))
         screen.fill(0)
 
-        transparency += 4
+        transparency += 2.5
         if transparency < 180 and transparency > 0:
             logo.set_alpha(int(255 * sin(rad(transparency))))
             screen.blit(logo, logo_rect)
@@ -143,42 +173,144 @@ def Start_Animation():
 
 #Login_Page
 def Login_Page():
-    counter = 0
     while True:
-        counter += 1
         mouse_pos = pg.mouse.get_pos()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                Start_Menu()
+                #Start_Menu()
+                pass
             if event.type == pg.MOUSEBUTTONDOWN:
                 mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
+                if (Login_Button.Mouse_Hover(mouse_pos)):
+                    print("Sleep time")
+                if (signup_select.Mouse_Hover(mouse_pos)):
+                    Signup_Page()
 
-        bg = pg.transform.scale(pg.image.load('Assets/background/Street/citystreet.png'), (size.w*1.15, size.h*1.15))
-        bg = pg.transform.smoothscale(bg, (128, 72))
-        bg = pg.transform.smoothscale(bg, (size.w * 1.15, size.h * 1.15))
-        background = Dynamic_Background(bg, (size.w/2, size.h/2), mouse_pos)
-        background.Draw()
 
-        pg.draw.rect(screen, "lightblue", (size.w*0.125, size.h*0.125, size.w * 0.75, size.h * 0.75))
+        bg = Draw_Screen('image', None, None, 'Assets/background/village/village.png', (size.w*0.75, size.h*0.75), None, None, None, (size.w*0.5, size.h*0.5))
+        menu = Draw_Screen('rect', bg.rect.topleft, (size.w*0.375, size.h * 0.75), None, None, None, None, '#424769', None)
 
-        Login = pg.transform.scale(pg.image.load('Assets/icon/Settings/user_icon01.png').convert_alpha(), 
-                                (size.w*0.375 / 2, size.h*0.1))
-        Login_hover = pg.transform.scale(pg.image.load('Assets/icon/Settings/user_icon02.png').convert_alpha(), 
-                                        (size.w*0.375 / 2, size.h*0.1)) 
-        Login_tab = Button((size.w * 0.3, size.h * 0.175), Login, Login_hover)
+        welcome_text = Draw_Screen('text', None, None, None, None, 'Welcome', Font(80), '#ffffff', (size.w * 0.3125, size.h * 0.3))
 
-        Login_tab.Change_Image(mouse_pos)
-            
-        mouse_animation.update()
-        mouse_animation.draw(screen)
+        login_select = Draw_Screen('text', None, None, None, None, 'Login', Font(30), '#f9b17a', (size.w * 0.265, size.h * 0.178))
+        signup_select = Button('text', None, None, None, None, 'Sign up', Font(30), '#676f9d', '#5d648c', (size.w * 0.35, size.h * 0.178))
 
+        username_form = Button('rect', (size.w * 0.175, size.h * 0.385), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None)
+        password_form = Button('rect', (size.w * 0.175, size.h * 0.515), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None)
+
+        username_form_text = Draw_Screen('text', None, None, None, None, 'username', Font(20), '#424769', (size.w * 0.22, size.h * 0.41))
+        password_form_text = Draw_Screen('text', None, None, None, None, 'password', Font(20), '#424769', (size.w * 0.22, size.h * 0.54))
+
+        forgot_password = Button('text', None, None, None, None, 'Forgor password?', Font(20), '#676f9d', '#d69869', (size.w * 0.405, size.h * 0.64))
+
+        Login_Button = Button('rect', (size.w * 0.175, size.h * 0.7), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None)
+        FaceID_Button = Button('rect', (size.w * 0.345, size.h * 0.7), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None)
+
+        Login_Button_text = Draw_Screen('text', None, None, None, None, 'Login', Font(30), '#424769', (size.w * 0.225, size.h * 0.73))
+        FaceID_Button_text = Draw_Screen('text', None, None, None, None, 'Face ID', Font(30), '#424769', (size.w * 0.395, size.h * 0.73))
+
+        screen.fill('#2d3250')
+        bg.Blit()
+        menu.Blit()
+
+        login_select.Blit()
+        signup_select.Blit()
+        welcome_text.Blit()
+
+        username_form.Blit()
+        password_form.Blit()
+        forgot_password.Blit()
+        Login_Button.Blit()
+        FaceID_Button.Blit()
+
+        for button in [signup_select, username_form, password_form, Login_Button, FaceID_Button]:
+            button.Change_Color(mouse_pos)
+        
+        username_form_text.Blit()
+        password_form_text.Blit()
+        Login_Button_text.Blit()
+        FaceID_Button_text.Blit()
+
+        
+        #pg.draw.line(screen, "White", (0, size.h/2), (size.w, size.h/2))
+        #pg.draw.line(screen, "White", (size.w * 0.3125, 0), (size.w * 0.312, size.h))
+        
         pg.time.Clock().tick(120)
         pg.display.update()
+
+def Signup_Page():
+    while True:
+        mouse_pos = pg.mouse.get_pos()
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+            if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                #Start_Menu()
+                pass
+            if event.type == pg.MOUSEBUTTONDOWN:
+                mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
+                if (Login_Button.Mouse_Hover(mouse_pos)):
+                    print("Spooky")
+                if(login_select.Mouse_Hover(mouse_pos)):
+                    Login_Page()
+
+
+        bg = Draw_Screen('image', None, None, 'Assets/background/village/village.png', (size.w*0.75, size.h*0.75), None, None, None, (size.w*0.5, size.h*0.5))
+        menu = Draw_Screen('rect', bg.rect.topleft, (size.w*0.375, size.h * 0.75), None, None, None, None, '#424769', None)
+
+        welcome_text = Draw_Screen('text', None, None, None, None, 'Welcome', Font(80), '#ffffff', (size.w * 0.3125, size.h * 0.3))
+
+        login_select = Button('text', None, None, None, None, 'Login', Font(30), '#676f9d', '#5d648c', (size.w * 0.265, size.h * 0.178))
+        signup_select = Draw_Screen('text', None, None, None, None, 'Sign up', Font(30), '#f9b17a',(size.w * 0.35, size.h * 0.178))
+
+        username_form = Button('rect', (size.w * 0.175, size.h * 0.385), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None)
+        password_form = Button('rect', (size.w * 0.175, size.h * 0.515), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None)
+
+        username_form_text = Draw_Screen('text', None, None, None, None, 'username', Font(20), '#424769', (size.w * 0.22, size.h * 0.41))
+        password_form_text = Draw_Screen('text', None, None, None, None, 'password', Font(20), '#424769', (size.w * 0.22, size.h * 0.54))
+
+        forgot_password = Button('text', None, None, None, None, 'Forgor password?', Font(20), '#676f9d', '#d69869', (size.w * 0.405, size.h * 0.64))
+
+        Login_Button = Button('rect', (size.w * 0.175, size.h * 0.7), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None)
+        FaceID_Button = Button('rect', (size.w * 0.345, size.h * 0.7), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None)
+
+        Login_Button_text = Draw_Screen('text', None, None, None, None, 'Login', Font(30), '#424769', (size.w * 0.225, size.h * 0.73))
+        FaceID_Button_text = Draw_Screen('text', None, None, None, None, 'Face ID', Font(30), '#424769', (size.w * 0.395, size.h * 0.73))
+
+        screen.fill('#2d3250')
+        bg.Blit()
+        menu.Blit()
+
+        login_select.Blit()
+        signup_select.Blit()
+        welcome_text.Blit()
+
+        username_form.Blit()
+        password_form.Blit()
+        forgot_password.Blit()
+        Login_Button.Blit()
+        FaceID_Button.Blit()
+
+        for button in [login_select, username_form, password_form, Login_Button, FaceID_Button]:
+            button.Change_Color(mouse_pos)
         
-def Start_Menu():
+        username_form_text.Blit()
+        password_form_text.Blit()
+        Login_Button_text.Blit()
+        FaceID_Button_text.Blit()
+
+        
+        #pg.draw.line(screen, "White", (0, size.h/2), (size.w, size.h/2))
+        #pg.draw.line(screen, "White", (size.w * 0.3125, 0), (size.w * 0.312, size.h))
+        
+        pg.time.Clock().tick(120)
+        pg.display.update()
+
+#def Start_Menu():
     temp = 0
     while True:
         mouse_pos = pg.mouse.get_pos()
@@ -196,6 +328,8 @@ def Start_Menu():
                 if Setting.Input_Check(mouse_pos):
                     mouse_animation.empty()
                     Options()
+            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                Login_Page()
         #Get the assets to draw on the screen
         bg = pg.transform.scale(pg.image.load('Assets/background/Street/citystreet.png'), (size.w*1.15, size.h*1.15))
         background = Dynamic_Background(bg, (size.w/2, size.h/2), mouse_pos)
@@ -239,7 +373,7 @@ def Start_Menu():
         pg.time.Clock().tick(120)
         pg.display.update()
 
-def Options():
+#def Options():
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
