@@ -221,7 +221,7 @@ def Start_Menu():
                     pg.quit()
                     sys.exit()
                 if (Settings.Mouse_Click(mouse_pos)):
-                    Video_Setting('Start Menu')
+                    Setting_Page('Start Menu')
             if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                 Login_Page()
 
@@ -264,6 +264,73 @@ def Start_Menu():
         pg.time.Clock().tick(60)
         pg.display.update()
 
+def Setting_Page(prev_menu):
+    bg = pg.transform.smoothscale(pg.image.load('Assets/background/village/village.png').convert(), (128*3, 72*3))
+    bg = bg = pg.transform.smoothscale(bg, (size.w, size.h))
+    menu = Draw_Screen('rect', (size.w*0.125, size.h * 0.125), (size.w*0.75, size.h * 0.75), None, None, None, None, '#2d3250', None)
+    setting_option = Draw_Screen('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.75), None, None, None, None, '#676f9d', None)
+
+    Graphics = Button('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+    Graphics_text = Draw_Screen('text', None, None, None, None, 'Graphics', Font(40), '#424769', Graphics.rect.center)
+
+    Audio = Button('rect', Graphics.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+    Audio_text = Draw_Screen('text', None, None, None, None, 'Audio', Font(40), '#424769', Audio.rect.center)
+
+    Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+    Language_text = Draw_Screen('text', None, None, None, None, 'Language', Font(40), '#424769', Language.rect.center)
+
+    User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+    User_Center_text = Draw_Screen('text', None, None, None, None, 'User Center', Font(40), '#424769', User_Center.rect.center)
+
+    Exit = Button('rect', (menu.rect.bottomleft[0], menu.rect.bottomleft[1] - size.h * 0.1), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+    Exit_text = Draw_Screen('text', None, None, None, None, 'Exit', Font(40), '#424769', Exit.rect.center)
+
+    while True:
+        mouse_pos = pg.mouse.get_pos()
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+            if event.type == pg.MOUSEBUTTONDOWN:
+                mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
+                if Graphics.Mouse_Click(mouse_pos):
+                    Video_Setting(prev_menu)
+                if Audio.Mouse_Click(mouse_pos):
+                    Audio_Setting(prev_menu)
+                if Language.Mouse_Click(mouse_pos):
+                    Language_Setting(prev_menu)
+                if User_Center.Mouse_Click(mouse_pos):
+                    User_Center_Setting(prev_menu)
+                if Exit.Mouse_Click(mouse_pos):
+                    if prev_menu == 'Start Menu':
+                        Start_Menu()
+            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                Start_Menu()
+
+        screen.blit(bg, (0,0))
+        menu.Blit()
+        setting_option.Blit()
+        Graphics.Blit()
+        Audio.Blit()
+        Language.Blit()
+        User_Center.Blit()
+        Exit.Blit()
+
+        for button in [Graphics, Audio, Language, User_Center, Exit]:
+            button.Change_Color(mouse_pos)
+
+        Graphics_text.Blit()
+        Audio_text.Blit()
+        Language_text.Blit()
+        User_Center_text.Blit()
+        Exit_text.Blit()
+
+        mouse_animation.update()
+        mouse_animation.draw(screen)
+
+        pg.display.update()
+        pg.time.Clock().tick(60)
+
 def Video_Setting(prev_menu):
     while True:
         mouse_pos = pg.mouse.get_pos()
@@ -288,6 +355,8 @@ def Video_Setting(prev_menu):
                     size.Window((1280, 720))
                 if _800x600.Mouse_Click(mouse_pos):
                     size.Window((800, 600))
+            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                Setting_Page()
 
 
         bg = pg.transform.smoothscale(pg.image.load('Assets/background/village/village.png').convert(), (128*3, 72*3))
@@ -295,32 +364,32 @@ def Video_Setting(prev_menu):
         menu = Draw_Screen('rect', (size.w*0.125, size.h * 0.125), (size.w*0.75, size.h * 0.75), None, None, None, None, '#2d3250', None)
         setting_option = Draw_Screen('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.75), None, None, None, None, '#676f9d', None)
 
-        Video = Draw_Screen('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
-        Video_text = Draw_Screen('text', None, None, None, None, 'Graphics', Font(40), '#424769', Video.rect.center)
+        Graphics = Draw_Screen('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
+        Graphics_text = Draw_Screen('text', None, None, None, None, 'Graphics', Font(40), '#424769', Graphics.rect.center)
 
-        Audio = Button('rect', Video.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+        Audio = Button('rect', Graphics.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
         Audio_text = Draw_Screen('text', None, None, None, None, 'Audio', Font(40), '#424769', Audio.rect.center)
 
-        Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+        Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
         Language_text = Draw_Screen('text', None, None, None, None, 'Language', Font(40), '#424769', Language.rect.center)
 
-        User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+        User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
         User_Center_text = Draw_Screen('text', None, None, None, None, 'User Center', Font(40), '#424769', User_Center.rect.center)
 
-        Exit = Button('rect', (menu.rect.bottomleft[0], menu.rect.bottomleft[1] - size.h * 0.1), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+        Exit = Button('rect', (menu.rect.bottomleft[0], menu.rect.bottomleft[1] - size.h * 0.1), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
         Exit_text = Draw_Screen('text', None, None, None, None, 'Exit', Font(40), '#424769', Exit.rect.center)
 
-        Full_Screen = Button('rect', (size.w * 0.325, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+        Full_Screen = Button('rect', (size.w * 0.325, size.h * 0.225), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
         Full_Screen_text = Draw_Screen('text', None, None, None, None, 'Full_Screen', Font(40), '#424769', Full_Screen.rect.center)
-        _1280x720 = Button('rect', (size.w * 0.5125, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+        _1280x720 = Button('rect', (size.w * 0.5, size.h * 0.225), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
         _1280x720_text = Draw_Screen('text', None, None, None, None, '1280 x 720', Font(40), '#424769', _1280x720.rect.center)
-        _800x600 = Button('rect', (size.w * 0.7, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+        _800x600 = Button('rect', (size.w * 0.675, size.h * 0.225), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
         _800x600_text = Draw_Screen('text', None, None, None, None, '800 x 600', Font(40), '#424769', _800x600.rect.center)
 
         screen.blit(bg, (0,0))
         menu.Blit()
         setting_option.Blit()
-        Video.Blit()
+        Graphics.Blit()
         Audio.Blit()
         Language.Blit()
         User_Center.Blit()
@@ -333,7 +402,7 @@ def Video_Setting(prev_menu):
         for button in [Full_Screen, _1280x720, _800x600, Audio, Language, User_Center, Exit]:
             button.Change_Color(mouse_pos)
 
-        Video_text.Blit()
+        Graphics_text.Blit()
         Audio_text.Blit()
         Language_text.Blit()
         User_Center_text.Blit()
@@ -355,19 +424,19 @@ def Audio_Setting(prev_menu):
     menu = Draw_Screen('rect', (size.w*0.125, size.h * 0.125), (size.w*0.75, size.h * 0.75), None, None, None, None, '#2d3250', None)
     setting_option = Draw_Screen('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.75), None, None, None, None, '#676f9d', None)
 
-    Graphics = Button('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Graphics = Button('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     Graphics_text = Draw_Screen('text', None, None, None, None, 'Graphics', Font(40), '#424769', Graphics.rect.center)
 
     Audio = Draw_Screen('rect', Graphics.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
     Audio_text = Draw_Screen('text', None, None, None, None, 'Audio', Font(40), '#424769', Audio.rect.center)
 
-    Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     Language_text = Draw_Screen('text', None, None, None, None, 'Language', Font(40), '#424769', Language.rect.center)
 
-    User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     User_Center_text = Draw_Screen('text', None, None, None, None, 'User Center', Font(40), '#424769', User_Center.rect.center)
 
-    Exit = Button('rect', (menu.rect.bottomleft[0], menu.rect.bottomleft[1] - size.h * 0.1), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Exit = Button('rect', (menu.rect.bottomleft[0], menu.rect.bottomleft[1] - size.h * 0.1), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     Exit_text = Draw_Screen('text', None, None, None, None, 'Exit', Font(40), '#424769', Exit.rect.center)
     while True:
         mouse_pos = pg.mouse.get_pos()
@@ -386,6 +455,8 @@ def Audio_Setting(prev_menu):
                 if Exit.Mouse_Click(mouse_pos):
                     if prev_menu == 'Start Menu':
                         Start_Menu()
+            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                Setting_Page()
 
         
 
@@ -420,19 +491,19 @@ def Language_Setting(prev_menu):
     menu = Draw_Screen('rect', (size.w*0.125, size.h * 0.125), (size.w*0.75, size.h * 0.75), None, None, None, None, '#2d3250', None)
     setting_option = Draw_Screen('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.75), None, None, None, None, '#676f9d', None)
 
-    Graphics = Button('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Graphics = Button('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     Graphics_text = Draw_Screen('text', None, None, None, None, 'Graphics', Font(40), '#424769', Graphics.rect.center)
 
-    Audio = Button('rect', Graphics.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d','#5d648c', None, None)
+    Audio = Button('rect', Graphics.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d','#f9b17a', None, None)
     Audio_text = Draw_Screen('text', None, None, None, None, 'Audio', Font(40), '#424769', Audio.rect.center)
 
     Language = Draw_Screen('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
     Language_text = Draw_Screen('text', None, None, None, None, 'Language', Font(40), '#424769', Language.rect.center)
 
-    User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     User_Center_text = Draw_Screen('text', None, None, None, None, 'User Center', Font(40), '#424769', User_Center.rect.center)
 
-    Exit = Button('rect', (menu.rect.bottomleft[0], menu.rect.bottomleft[1] - size.h * 0.1), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Exit = Button('rect', (menu.rect.bottomleft[0], menu.rect.bottomleft[1] - size.h * 0.1), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     Exit_text = Draw_Screen('text', None, None, None, None, 'Exit', Font(40), '#424769', Exit.rect.center)
     while True:
         mouse_pos = pg.mouse.get_pos()
@@ -451,6 +522,8 @@ def Language_Setting(prev_menu):
                 if Exit.Mouse_Click(mouse_pos):
                     if prev_menu == 'Start Menu':
                         Start_Menu()
+            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                Setting_Page()
 
         screen.blit(bg, (0,0))
         menu.Blit()
@@ -483,19 +556,19 @@ def User_Center_Setting(prev_menu):
     menu = Draw_Screen('rect', (size.w*0.125, size.h * 0.125), (size.w*0.75, size.h * 0.75), None, None, None, None, '#2d3250', None)
     setting_option = Draw_Screen('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.75), None, None, None, None, '#676f9d', None)
 
-    Graphics = Button('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Graphics = Button('rect', menu.rect.topleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     Graphics_text = Draw_Screen('text', None, None, None, None, 'Graphics', Font(40), '#424769', Graphics.rect.center)
 
-    Audio = Button('rect', Graphics.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Audio = Button('rect', Graphics.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     Audio_text = Draw_Screen('text', None, None, None, None, 'Audio', Font(40), '#424769', Audio.rect.center)
 
-    Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     Language_text = Draw_Screen('text', None, None, None, None, 'Language', Font(40), '#424769', Language.rect.center)
 
     User_Center = Draw_Screen('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
     User_Center_text = Draw_Screen('text', None, None, None, None, 'User Center', Font(40), '#424769', User_Center.rect.center)
 
-    Exit = Button('rect', (menu.rect.bottomleft[0], menu.rect.bottomleft[1] - size.h * 0.1), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Exit = Button('rect', (menu.rect.bottomleft[0], menu.rect.bottomleft[1] - size.h * 0.1), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
     Exit_text = Draw_Screen('text', None, None, None, None, 'Exit', Font(40), '#424769', Exit.rect.center)
     while True:
         mouse_pos = pg.mouse.get_pos()
@@ -514,6 +587,8 @@ def User_Center_Setting(prev_menu):
                 if Exit.Mouse_Click(mouse_pos):
                     if prev_menu == 'Start Menu':
                         Start_Menu()
+            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                Setting_Page()
 
         
         screen.blit(bg, (0,0))
