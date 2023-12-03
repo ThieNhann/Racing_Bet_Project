@@ -1,21 +1,44 @@
 ﻿import pygame
 import random
 import sys
+import Experiment_Class as cls
 
 # Khởi tạo Pygame
 pygame.init()
 
 # Thiết lập kích thước màn hình
-screen = pygame.display.set_mode((800,600))
-bg = pygame.image.load('Assets/background/ocean/ocean.png').convert()
-bg = pygame.transform.scale(bg, (800, 600)) 
-class Car:
+theme_list = ['ocean', 'forest', 'villager', 'street']
+theme = 1
+screen = pygame.display.set_mode((1280,720))
+bg = pygame.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
+bg = pygame.transform.scale(bg, (1280,720))
+fps = pygame.time.Clock()
+size = cls.Screen_Info(screen.get_size())
+class Char:
     def __init__(self, x, y, speed, image_path):
         self.x = x
         self.y = y
         self.speed = speed
-        self.image = pygame.image.load(image_path)  # Tải hình ảnh từ đường dẫn được cung cấp
-        self.image = pygame.transform.scale(self.image, (50, 50))  # Thu nhỏ kích thước hình ảnh
+        self.act_i = 0
+        self.status = 'idle'
+        # Tải hình ảnh từ đường dẫn được cung cấp
+        self.walk = [pygame.image.load(image_path + f'/walk_1.png'),
+                     pygame.image.load(image_path + f'/walk_2.png'),
+                     pygame.image.load(image_path + f'/walk_3.png'),
+                     pygame.image.load(image_path + f'/walk_4.png')]
+        self.stun = [pygame.image.load(image_path + f'/death_1.png'),
+                     pygame.image.load(image_path + f'/death_2.png'),
+                     pygame.image.load(image_path + f'/death_3.png'),
+                     pygame.image.load(image_path + f'/death_4.png')]
+        self.idle = [pygame.image.load(image_path + f'/idle_1.png'),
+                     pygame.image.load(image_path + f'/idle_2.png'),
+                     pygame.image.load(image_path + f'/idle_3.png')]
+        for i in range(4):
+            self.walk[i]= pygame.transform.scale(self.walk[i], (50, 50))
+            self.stun[i]= pygame.transform.scale(self.stun[i], (50, 50))
+            if (i < 3):
+                self.idle[i]= pygame.transform.scale(self.idle[i], (50, 50))
+#        self.image = pygame.transform.scale(self.image, (50, 50))  # Thu nhỏ kích thước hình ảnh
         self.reverse = False
         self.teleport = False
         self.slow = False
@@ -23,12 +46,32 @@ class Car:
         self.effect_end_time = None
         self.wait_until = None  # Thời gian mà xe phải đợi trước khi di chuyển tiếp
 
-    def draw(self):
-        screen.blit(self.image, (self.x, self.y))  # Vẽ hình ảnh thay vì hình vuông
+    def draw(self,act_i,status):
+        if status == 'walk':
+            screen.blit(self.walk[act_i//15], (self.x, self.y))# Vẽ hình ảnh
+        elif status == 'stun':
+            screen.blit(self.stun[act_i//15], (self.x, self.y))
+        else:
+            screen.blit(self.idle[act_i//15], (self.x, self.y))
+        if status == 'idle':
+            if act_i == 44:
+                return 0
+            else:
+                return act_i+1
+        else:
+            if act_i == 59:
+                if status == 'stun':
+                    return act_i
+                else:   
+                    return 0
+            else:
+                return act_i+1  # Vẽ hình ảnh thay vì hình vuông
         
     def move(self):
         if self.wait_until and pygame.time.get_ticks() < self.wait_until:
+            self.status = 'stun'
             return  # Nếu xe đang trong thời gian chờ, không di chuyển nó
+        self.status = 'walk'
         if self.reverse:
             self.x -= self.speed
         elif self.slow:
@@ -51,7 +94,7 @@ class Car:
         return self.x < obstacle.x + 50 and self.x + 50 > obstacle.x and self.y < obstacle.y + 50 and self.y + 50 > obstacle.y
 
 # Tạo danh sách các xe với hình ảnh tương ứng
-cars = [Car(50, i*100 + 50, random.uniform(0.01, 0.05), f'Assets/char/still/ocean/ocean{i+1}.png') for i in range(5)]
+chars = [Char(50, 30 + (i + 1)*0.15*size.h, random.uniform(1, 2), f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}') for i in range(5)]
 
 class Obstacle:
     def __init__(self, x, y, image_paths):
@@ -75,14 +118,13 @@ class Obstacle:
             return self.image_path  # Trả về hình ảnh đã chọn
 
     def draw(self):
-        screen.blit(self.image, (self.x, self.y))  # Vẽ hình ảnh
-    
+        screen.blit(self.image, (self.x, self.y))# Vẽ hình ảnh   
 # Tạo danh sách các chướng ngại vật ở nửa đường
 obstacle_images = ['Assets/Obstacles/obstacle_confinement.png', 'Assets/Obstacles/obstacle_finish.png', 
                    'Assets/Obstacles/obstacle_reverse.png', 'Assets/Obstacles/obstacle_slow.png', 
                    'Assets/Obstacles/obstacle_speed.png', 'Assets/Obstacles/obstacle_teleport.png', 
                    'Assets/Obstacles/obstacle_tostart.png']
-obstacles = [Obstacle(400, i*100 + 50, obstacle_images) for i in range(5)]
+obstacles = [Obstacle(random.uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(i+1), obstacle_images) for i in range(5)]
 # Hàm hiển thị menu và nhận lựa chọn từ người chơi
 def show_menu():
     running = True
@@ -91,8 +133,9 @@ def show_menu():
         font = pygame.font.Font(None, 36)
         text = font.render("Choose your character!", True, (255, 255, 255))
         screen.blit(text, (250, 250))
-        for car in cars:
-            car.draw()
+        fps.tick(60)
+        for char in chars:
+            char.act_i = char.draw(char.act_i,char.status)
         pygame.display.flip()
 
         for event in pygame.event.get():
@@ -101,8 +144,8 @@ def show_menu():
                 sys.exit()  # Thoát khỏi chương trình nếu người dùng đóng cửa sổ
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                for i, car in enumerate(cars):
-                    if car.is_clicked(pos):
+                for i, char in enumerate(chars):
+                    if char.is_clicked(pos):
                         return i  # Trả về chỉ số của xe mà người dùng đã chọn
 
 # Hỏi người chơi chọn xe
@@ -116,39 +159,43 @@ finish_order = []
 
 # Vòng lặp chính của game
 running = True
+for char in chars:
+    char.status = 'walk'
 while running:
     # Xử lý các sự kiện
+        fps.tick(60)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
         screen.blit(bg,(0,0))
         # Vẽ và di chuyển các xe
-        for car in cars:
-            car.draw()
-            car.move()
+        for char in chars:
+            char.act_i = char.draw(char.act_i, char.status)
+            char.move()
             image_path = None  # Khởi tạo image_path với giá trị mặc định
             for obstacle in obstacles:
-                if car.collides_with(obstacle):
+                if char.collides_with(obstacle):
                     image_path = obstacle.set_random_image()  # Lấy hình ảnh đã chọn
             if image_path:  # Kiểm tra nếu image_path không phải là None
         
                 if 'obstacle_confinement.png' in image_path:  # Kiểm tra hình ảnh hiện tại của chướng ngại vật
-                    car.wait_until = pygame.time.get_ticks() + 3000  # Đặt thời gian chờ cho xe
+                    char.wait_until = pygame.time.get_ticks() + 1000 # Đặt thời gian chờ cho xe
+                    char.status = 'stun'
                 elif 'obstacle_finish.png' in image_path:
-                    car.x = 750
+                    char.x = 0.95*size.w
                 elif 'obstacle_reverse.png' in image_path:
-                    car.reverse = True
-                    car.effect_end_time = pygame.time.get_ticks() + 3000
+                    char.reverse = True
+                    char.effect_end_time = pygame.time.get_ticks() + 1000
                 elif 'obstacle_slow.png' in image_path:
-                    car.slow = True
-                    car.effect_end_time = pygame.time.get_ticks() + 3000
+                    char.slow = True
+                    char.effect_end_time = pygame.time.get_ticks() + 1000
                 elif 'obstacle_speed.png' in image_path:
-                    car.speedup = True
-                    car.effect_end_time = pygame.time.get_ticks() + 5000
+                    char.speedup = True
+                    char.effect_end_time = pygame.time.get_ticks() + 500
                 elif 'obstacle_teleport.png' in image_path:
-                    car.x += 200
+                    char.x += 200
                 elif 'obstacle_tostart.png' in image_path:
-                    car.x = 50
+                    char.x = 50
 
                     
         # Vẽ chướng ngại vật
@@ -162,21 +209,25 @@ while running:
         pygame.display.flip()
 
         # Kiểm tra xem có xe nào về đích chưa
-        for i, car in enumerate(cars):
-            if car.x >= 750 and i not in finish_order:
+        for i, char in enumerate(chars):
+            if char.x >= size.w*0.95 and i not in finish_order:
                 finish_order.append(i)
+                char.speed = 0
+                char.x = size.w*0.95
+                char.status = 'idle'
+                char.act_i = 0
                 print(f"Xe số {i+1} đã về đích!")
 
         # Nếu tất cả các xe đều đã về đích, kết thúc trò chơi và công bố kết quả
-        if len(finish_order) == len(cars):
+        if len(finish_order) == len(chars):
             running = False
             print("Tất cả các xe đã về đích!")
-            for i, car_index in enumerate(finish_order):
-                if i == 0 and car_index == player_choice:
+            for i, char_index in enumerate(finish_order):
+                if i == 0 and char_index == player_choice:
                     player_gold += 20
                     result_text = f"Your car comes first! You have received 20 gold. Your current gold amount is {player_gold}."
                 else:
-                    result_text = f"Car number {car_index+1} came in {i+1}th place."
+                    result_text = f"Car number {char_index+1} came in {i+1}th place."
         
                 # Tạo font và vẽ văn bản lên màn hình
                 font = pygame.font.Font(None, 36)
