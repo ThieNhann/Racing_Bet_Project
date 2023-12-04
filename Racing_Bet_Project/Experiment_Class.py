@@ -128,7 +128,7 @@ class Button(Draw_Screen):
             self.text = self.font.render(self.text_content, True, self.color)
 
 def Font(size):
-    return pg.font.Font(None, size)
+    return pg.font.Font('Assets/font/arial.ttf', size)
 
 class User_Data:
     def __init__(self, username, password):

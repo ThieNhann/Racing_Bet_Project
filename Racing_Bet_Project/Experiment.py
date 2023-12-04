@@ -1,107 +1,149 @@
 import pygame as pg
+import json
 import sys
 import os
 from math import sin, radians as rad
 from Experiment_Class import *
 
-
+#You may wonder why i didn't use pygame_menu and yes im asking the same question rn but eh too late
 pg.init()
 os.environ['SDL_VIDEO_CENTERED'] = '0'
 pg.display.set_caption("Racing Bet")
+
+#size of current window
 size = Screen_Info(screen.get_size())
-mouse_animation = pg.sprite.Group()
+
+#mouse animation group
+mouse_animation = pg.sprite.Group()    
+
+#FPS event counter
 Bg_cycle = pg.USEREVENT + 1
 pg.time.set_timer(Bg_cycle, 1000)
 
+#Import 2 Language Files as US and VN
+language = 'US'
+with open('en_US.json', 'r', encoding="utf8") as f:
+    US = json.load(f)
+with open('vi_VN.json', 'r', encoding="utf8") as f:
+    VN = json.load(f)
+
+
+
 def Start_Animation():
-    alpha = -125
+    #set the alpha value for the screen (transparency)
+    alpha = 250
+
+    #Get logo
     logo = pg.transform.scale(pg.image.load('Assets/icon/Settings/HCMUS_logo.png'), (size.w / 3, size.w / 3))
     logo_rect = logo.get_rect(center = (size.w/2, size.h/2))
+
     while True:
         mouse_pos = pg.mouse.get_pos()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
+
+            #Play mouse animation
             if event.type == pg.MOUSEBUTTONDOWN:
                 mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
             
-        
         screen.fill(0)
 
         alpha += 1.5
         if alpha < 180 and alpha > 0:
+            #show the logo then fade it out shortly afterwards
             logo.set_alpha(int(255 * sin(rad(alpha))))
             screen.blit(logo, logo_rect)
+
         elif alpha > 250:
+            #if alpha then reaches 250, move onto login screen
             mouse_animation.empty()
             Login_Page()
 
-
         mouse_animation.update()
         mouse_animation.draw(screen)
-
         pg.time.Clock().tick(60)
         pg.display.update()
 
 def Login_Page():
+    global language
     alpha = 0
+
+    #just stuff for FPS ignore it
     fps = 0
     tru_fps = 0
+
+    #List of valid emails
     valid_emails = ['@gmail.com', '@yahoo.com' , 'End']
-    username = ''
+
+    #Login Logics
+    username = '' 
     password = ''
+
+    #To know which box the user click (username or password)
     insert = ''
 
+    #Load Assets
     bg = pg.transform.scale(pg.image.load('Assets/background/village/village.png').convert(), (size.w*0.75, size.h*0.75))
-
-    welcome = Font(int(80 * size.w / 1280)).render('Welcome', True, '#ffffff')
-
-    login_select = Font(int(30 * size.w / 1280)).render('Login', True, '#d69869')
-    signup_select = Button('text', None, None, None, None, 'Sign up', Font(int(30 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.35, size.h * 0.178))
 
     username_box = Button('rect', (size.w * 0.175, size.h * 0.385), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
     password_box = Button('rect', (size.w * 0.175, size.h * 0.515), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
 
-    username_box_text = Font(int(20 * size.w / 1280)).render('Username', True, '#424769')
-    password_box_text = Font(int(20 * size.w / 1280)).render('Password', True, '#424769')
-
-    forgot_password = Button('text', None, None, None, None, 'Forgot password?', Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.405, size.h * 0.64))
-
     login_button = Button('rect', (size.w * 0.175, size.h * 0.7), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None,  None)
     faceID_button = Button('rect', (size.w * 0.345, size.h * 0.7), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None,  None)
 
-    login_button_text = Font(int(30 * size.w / 1280)).render('Login', True, '#424769')
-    faceID_button_text = Font(int(30 * size.w / 1280)).render('Face ID', True, '#424769')
-
-    login_failed = Font(80).render('Username or password is incorrect', True, "#FF0000")
-
     while True:
         alpha -= 5
-        mouse_pos = pg.mouse.get_pos()
         fps += 1
+        mouse_pos = pg.mouse.get_pos()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
+
             if event.type == pg.KEYDOWN:
+                #Debug: Change languages
+                if event.key == pg.K_SPACE:
+                    if language == 'US':
+                        language = 'VN'
+                    elif language == 'VN':
+                        language = 'US'
+                
+                #User clicked username
                 if insert == 'username':
                     if event.key == pg.K_BACKSPACE:
                         username = username[:-1]
                     else:
                         username += event.unicode
 
+                #User clicked password
                 elif insert == 'password':
                     if event.key == pg.K_BACKSPACE:
                         password = password[:-1]
                     else:
                         password += event.unicode
 
-
             if event.type == pg.MOUSEBUTTONDOWN:
+                #Play mouse animation
                 mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
+                
+                #Go to Sign up Page
+                if (signup_select.Mouse_Click(mouse_pos)):
+                    Signup_Page()
+
+                #To know if user click on username, password box or not
+                if username_box.Mouse_Click(mouse_pos):
+                    insert = 'username'
+                elif password_box.Mouse_Click(mouse_pos):
+                    insert = 'password'
+                else:
+                    insert = ''
+
+                #When user submit Login, check for validity and go to Title Screen if good
                 if (login_button.Mouse_Click(mouse_pos)):
-                    for items in valid_emails:
+                    Title_Screen()
+                    '''for items in valid_emails:
                         print(username[len(username) - len(items):])
                         if items == 'End':
                             alpha = 300
@@ -113,40 +155,56 @@ def Login_Page():
                             else:
                                 alpha = 300
 
-                            break
+                            break'''
 
-                    
-                    
-                if (signup_select.Mouse_Click(mouse_pos)):
-                    Signup_Page()
 
-                if username_box.Mouse_Click(mouse_pos):
-                    insert = 'username'
-                elif password_box.Mouse_Click(mouse_pos):
-                    insert = 'password'
-                else:
-                    insert = ''
 
+            #Debug: FPS
             if event.type == Bg_cycle:
                 tru_fps = fps
                 fps = 0
 
+        #Language Logics: Not how you would do it but im tired ok?
+        if language == 'US':
+            welcome = Font(int(60 * size.w / 1280)).render(US['Login']['Title'], True, '#ffffff')
+            login_select = Font(int(20 * size.w / 1280)).render(US['Login']['Select_Login'], True, '#d69869')
+            signup_select = Button('text', None, None, None, None, US['Login']['Select_Signup'], Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.35, size.h * 0.178))
+            username_box_text = Font(int(10 * size.w / 1280)).render(US['Login']['Username_text'], True, '#424769')
+            password_box_text = Font(int(10 * size.w / 1280)).render(US['Login']['Password_text'], True, '#424769')
+            login_button_text = Font(int(20 * size.w / 1280)).render(US['Login']['Login_Button'], True, '#424769')
+            faceID_button_text = Font(int(20 * size.w / 1280)).render(US['Login']['FaceID_Button'], True, '#424769')
+            forgot_password = Button('text', None, None, None, None, US['Login']['Forgot_Password'], Font(int(15 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.405, size.h * 0.64))
+            login_failed = Font(60).render(US['Login']['Login_Failed'], True, "#FF0000")
+
+        elif language == 'VN':
+            welcome = Font(int(60 * size.w / 1280)).render(VN['Login']['Title'], True, '#ffffff')
+            login_select = Font(int(20 * size.w / 1280)).render(VN['Login']['Select_Login'], True, '#d69869')
+            signup_select = Button('text', None, None, None, None, VN['Login']['Select_Signup'], Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.35, size.h * 0.178))
+            username_box_text = Font(int(10 * size.w / 1280)).render(VN['Login']['Username_text'], True, '#424769')
+            password_box_text = Font(int(10 * size.w / 1280)).render(VN['Login']['Password_text'], True, '#424769')
+            login_button_text = Font(int(20 * size.w / 1280)).render(VN['Login']['Login_Button'], True, '#424769')
+            faceID_button_text = Font(int(20 * size.w / 1280)).render(VN['Login']['FaceID_Button'], True, '#424769')
+            forgot_password = Button('text', None, None, None, None, VN['Login']['Forgot_Password'], Font(int(15 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.405, size.h * 0.64))
+            login_failed = Font(60).render(VN['Login']['Login_Failed'], True, "#FF0000")
+
+
         screen.fill('#2d3250')
         screen.blit(bg, (size.w*0.125, size.h*0.125))
         pg.draw.rect(screen, '#424769', [size.w*0.125, size.h*0.125, size.w*0.375, size.h * 0.75])
-        username_input = Font(int(20 * size.w / 1280)).render(username, True, '#FFFFFF')
-        password_input = Font(int(20 * size.w / 1280)).render(password, True, '#FFFFFF')
 
-        signup_select.Blit()
-        username_box.Blit()
-        password_box.Blit()
-        forgot_password.Blit()
-        login_button.Blit()
-        faceID_button.Blit()
+        #Draw the what the user typed in
+        username_input = Font(int(12 * size.w / 1280)).render(username, True, '#FFFFFF')
+        password_input = Font(int(12 * size.w / 1280)).render(password, True, '#FFFFFF')
 
+        #Blit Assets onto the screen
+        for item in [signup_select, username_box, password_box, forgot_password, login_button, faceID_button]:
+            item.Blit()
+
+        #Change colors if the mouse hover above
         for button in [signup_select, username_box, password_box, login_button, faceID_button, forgot_password]:
             button.Change_Color(mouse_pos)
         
+        #Blit Texts onto the screen
         screen.blit(login_select      ,   login_select.get_rect(center = (size.w * 0.265, size.h * 0.178)))
         screen.blit(welcome           ,   welcome.get_rect(center = (size.w * 0.3125, size.h * 0.3)))
         screen.blit(username_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.41)))
@@ -156,6 +214,7 @@ def Login_Page():
         screen.blit(username_input, username_input.get_rect(midleft = (size.w * 0.19, size.h * 0.45)))
         screen.blit(password_input, password_input.get_rect(midleft = (size.w * 0.19, size.h * 0.58)))
 
+        #If error then set alpha so message appears then slowly fade away
         login_failed.set_alpha(alpha)
         screen.blit(login_failed, login_failed.get_rect(center = (size.w/2, size.h/2)))
 
@@ -163,80 +222,98 @@ def Login_Page():
         mouse_animation.draw(screen)
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
         screen.blit(FPS, (0,0))
-        #pg.draw.line(screen, "White", (0, size.h/2), (size.w, size.h/2))
-        #pg.draw.line(screen, "White", (size.w * 0.3125, 0), (size.w * 0.312, size.h))
         
         pg.time.Clock().tick(60)
         pg.display.update()
 
 def Signup_Page():
+    global language
+
+    #just stuff for FPS ignore it
+    fps = 0
+    tru_fps = 0
+
+    #List of valid emails
     valid_emails = ['@gmail.com', '@yahoo.com' , 'End']
-    alpha = 0
-    username = ''
+
+    #Login Logics
+    username = '' 
     password = ''
     repeat_password = ''
+
+    #To know which box the user click (username or password)
     insert = ''
+
+    alpha = 0
+
+    #Load Assets
     bg = pg.transform.scale(pg.image.load('Assets/background/village/village.png').convert(), (size.w*0.75, size.h*0.75))
-
-    welcome = Font(int(80 * size.w / 1280)).render('Welcome', True, '#ffffff')
-
-    login_select = Button('text', None, None, None, None, 'Login', Font(int(30 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.265, size.h * 0.178))
-    signup_select = Font(int(30 * size.w / 1280)).render('Sign up', True, '#d69869')
-
+    
     username_box = Button('rect', (size.w * 0.175, size.h * 0.385), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
     password_box = Button('rect', (size.w * 0.175, size.h * 0.515), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
     repeat_password_box = Button('rect', (size.w * 0.175, size.h * 0.645), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-
-    username_box_text = Font(int(20 * size.w / 1280)).render('Username', True, '#424769')
-    password_box_text = Font(int(20 * size.w / 1280)).render('Password', True, '#424769')
     
     signup_button = Button('rect', (size.w * 0.175, size.h * 0.775), (size.w*0.275, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None,  None)
-    
     signup_button_text = Font(int(30 * size.w / 1280)).render('Sign Up', True, '#424769')
+
     error = Font(80).render("Password doesn't match", True, "#FF0000")
 
     while True:
         alpha -= 5
+        fps += 1
         mouse_pos = pg.mouse.get_pos()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
             if event.type == pg.KEYDOWN:
+                #Debug: Change Language
+                if event.key == pg.K_SPACE:
+                    if language == 'US':
+                        language = 'VN'
+                    elif language == 'VN':
+                        language = 'US'
+
+                #User clicked username
                 if insert == 'username':
                     if event.key == pg.K_BACKSPACE:
                         username = username[:-1]
                     else:
                         username += event.unicode
+
+                #User clicked password
                 elif insert == 'password':
                     if event.key == pg.K_BACKSPACE:
                         password = password[:-1]
                     else:
                         password += event.unicode
 
+                #User clicked re-enter password
                 elif insert == 'repeat_password':
                     if event.key == pg.K_BACKSPACE:
                         repeat_password = repeat_password[:-1]
                     else:
                         repeat_password += event.unicode
 
+            #Play mouse animation
             if event.type == pg.MOUSEBUTTONDOWN:
                 mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
 
+                #Go to Login Page
                 if(login_select.Mouse_Click(mouse_pos)):
                     Login_Page()
 
+                #To know which box user clicked
                 if username_box.Mouse_Click(mouse_pos):
                     insert = 'username'
-
                 elif password_box.Mouse_Click(mouse_pos):
                     insert = 'password'
-                
                 elif repeat_password_box.Mouse_Click(mouse_pos):
                     insert = 'repeat_password'
                 else:
                     insert = ''
                 
+                #When user submit Sign up, check for validity and go to Title Screen if good
                 if signup_button.Mouse_Click(mouse_pos):
                     if password != repeat_password:
                         error = Font(80).render("Password doesn't match", True, "#FF0000")
@@ -253,24 +330,45 @@ def Signup_Page():
                                 user.Sign_Up()
                                 Title_Screen()
                                 break
+            #Debug: FPS
+            if event.type == Bg_cycle:
+                tru_fps = fps
+                fps = 0
+        
+        #Languages
+        if language == 'US':
+            welcome = Font(int(60 * size.w / 1280)).render(US['Login']['Title'], True, '#ffffff')
+            login_select = Button('text', None, None, None, None, US['Sign_Up']['Select_Login'], Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.265, size.h * 0.178))
+            signup_select = Font(int(20 * size.w / 1280)).render(US['Sign_Up']['Select_Signup'], True, '#d69869')
+            username_box_text = Font(int(10 * size.w / 1280)).render(US['Sign_Up']['Username_text'], True, '#424769')
+            password_box_text = Font(int(10 * size.w / 1280)).render(US['Sign_Up']['Password_text'], True, '#424769')
+            signup_button_text = Font(int(20 * size.w / 1280)).render(US['Sign_Up']['Signup_button'], True, '#424769')
+        if language == 'VN':
+            welcome = Font(int(60 * size.w / 1280)).render(VN['Login']['Title'], True, '#ffffff')
+            login_select = Button('text', None, None, None, None, VN['Sign_Up']['Select_Login'], Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.265, size.h * 0.178))
+            signup_select = Font(int(20 * size.w / 1280)).render(VN['Sign_Up']['Select_Signup'], True, '#d69869')
+            username_box_text = Font(int(10 * size.w / 1280)).render(VN['Sign_Up']['Username_text'], True, '#424769')
+            password_box_text = Font(int(10 * size.w / 1280)).render(VN['Sign_Up']['Password_text'], True, '#424769')
+            signup_button_text = Font(int(20 * size.w / 1280)).render(VN['Sign_Up']['Signup_button'], True, '#424769')
 
         screen.fill('#2d3250')
         screen.blit(bg, (size.w*0.125, size.h*0.125))
         pg.draw.rect(screen, '#424769', [size.w*0.125, size.h*0.125, size.w*0.375, size.h * 0.75])
-        username_input = Font(int(20 * size.w / 1280)).render(username, True, '#FFFFFF')
-        password_input = Font(int(20 * size.w / 1280)).render(password, True, '#FFFFFF')
-        repeat_password_input = Font(int(20 * size.w / 1280)).render(repeat_password, True, '#FFFFFF')
 
-        login_select.Blit()
-        username_box.Blit()
-        password_box.Blit()
-        signup_button.Blit()
-        repeat_password_box.Blit()
+        #Draw the what the user typed in
+        username_input = Font(int(12 * size.w / 1280)).render(username, True, '#FFFFFF')
+        password_input = Font(int(12 * size.w / 1280)).render(password, True, '#FFFFFF')
+        repeat_password_input = Font(int(12 * size.w / 1280)).render(repeat_password, True, '#FFFFFF')
 
+        #Blit Assets onto screen
+        for item in [login_select, username_box, password_box, repeat_password_box, signup_button]:
+            item.Blit()
 
+        #Change colors if the mouse hover above
         for button in [login_select, username_box, password_box, signup_button, repeat_password_box]:
             button.Change_Color(mouse_pos)
 
+        #Blit Texts onto the screen
         screen.blit(signup_select     ,   signup_select.get_rect(center = (size.w * 0.35, size.h * 0.178)))
         screen.blit(welcome           ,   welcome.get_rect(center = (size.w * 0.3125, size.h * 0.3)))
         screen.blit(username_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.41)))
@@ -281,25 +379,30 @@ def Signup_Page():
         screen.blit(password_input, password_input.get_rect(midleft = (size.w * 0.19, size.h * 0.58)))
         screen.blit(repeat_password_input, repeat_password_input.get_rect(midleft = (size.w * 0.19, size.h * 0.71)))
 
+        #If error then set alpha so message appears then slowly fade away
         error.set_alpha(alpha)
         screen.blit(error, error.get_rect(center = (size.w/2, size.h/2)))
 
-
         mouse_animation.update()
         mouse_animation.draw(screen)
-        #pg.draw.line(screen, "White", (0, size.h/2), (size.w, size.h/2))
-        #pg.draw.line(screen, "White", (size.w * 0.3125, 0), (size.w * 0.312, size.h))
+        FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
+        screen.blit(FPS, (0,0))
         
         pg.time.Clock().tick(60)
         pg.display.update()
 
 def Title_Screen():
-    Title_Loop = 0
-    alpha = 0
-    enter_game = False
     fps = 0
     tru_fps = 0
+    alpha = 0
 
+    #Move title up and down
+    Title_bounce = 0
+
+    #If enter_game becomes True then stop button functions
+    enter_game = False
+
+    #Load Assets
     Background = pg.transform.scale(pg.image.load('Assets/background/village/village.png').convert_alpha(), (size.w*1.15, size.h*1.15))
         
     Quit = Button('image', None, None, 'Assets/icon/Settings/shutdown_01.png', (60*size.w/1280, 60* size.w/1280), 
@@ -309,27 +412,35 @@ def Title_Screen():
                     None, None, None, None, 'Assets/icon/Settings/setting_02.png', (size.w * 0.97, size.h * 0.05))
     
     Title = Draw_Screen('text', None, None, None, None, 'Racing Bet', 
-                    Font(int(150 * size.w / 1280)), '#000000', (size.w * 0.5, size.h *(0.25 + 0.04 * sin(Title_Loop))))
+                    Font(int(120 * size.w / 1280)), '#000000', (size.w * 0.5, size.h *(0.25 + 0.04 * sin(Title_bounce))))
         
     Prompt = Draw_Screen('text', None, None, None, None, '- Click anywhere to enter -', 
-                    Font(int(40 * size.w / 1280)), '#000000', (size.w * 0.5, size.h * 0.75))
+                    Font(int(25 * size.w / 1280)), '#000000', (size.w * 0.5, size.h * 0.75))
     while True:
         alpha += 7.5
         fps += 1
-        Title_Loop += 0.1
+        Title_bounce += 0.1
         mouse_pos = pg.mouse.get_pos()
+
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
+
             if event.type == pg.MOUSEBUTTONDOWN:
                 mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
+
+                #If Quit button is pressed, exit the game only when enter_game is False
                 if Quit.Mouse_Click(mouse_pos) == True and enter_game == False:
                     pg.quit()
                     sys.exit()
+                
+                #Go to Settings Page
                 if (Settings.Mouse_Click(mouse_pos) == True and enter_game == False):
                     pg.image.save(screen, 'Assets/temps/temp.png')
                     Video_Setting('Start Menu', '', '')
+                
+                #If user click anywhere on the screen, set alpha to 255 and enter_game = True to stop all button function
                 elif enter_game == False:
                     enter_game = True
                     alpha = 255
@@ -338,56 +449,68 @@ def Title_Screen():
                 tru_fps = fps
                 fps = 0
         
-
+        #Background moves with cursor
         Bg = Dynamic_Background(Background, (size.w / 2, size.h / 2), mouse_pos)
 
         screen.fill(0)
+
+        #Set alpha for fade in animation
         for stuff in [Settings.image, Quit.image, Background, Title.text]:
             stuff.set_alpha(alpha)
+
+        #Make the prompt continuously flashing
         Prompt.text.set_alpha(255 * abs(sin(rad(alpha))))
         Bg.Draw()
 
-        Title.Blit()
-        Prompt.Blit()
-        Quit.Blit()
-        Settings.Blit()
+        #Blit Assets onto screen
+        for item in [Title, Prompt, Quit, Settings]:
+            item.Blit()
 
+        #Fade out animaion
         if enter_game:
             alpha -= 15
             if alpha < -20:
                 In_Game_Menu(-20)
+        
+        #Change colors if the mouse hover above
         else:
             for button in [Quit, Settings]:
                 button.Change_Color(mouse_pos)
         
         mouse_animation.update()
         mouse_animation.draw(screen)
-
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
         screen.blit(FPS, (0,0))
-
-
 
         pg.time.Clock().tick(60)
         pg.display.update()
 
 def Video_Setting(prev_menu, char_set, race_length):
+    #For optimization: only call update once when screen size is changed
     change_size = True
+
+    #Set the image of the previous menu as background
     bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
+
     while True:
         mouse_pos = pg.mouse.get_pos()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
+
             if event.type == pg.MOUSEBUTTONDOWN:
                 mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
+
+                #Go to different setting menus
                 if Audio.Mouse_Click(mouse_pos):
                     Audio_Setting(prev_menu, char_set, race_length)
                 if Language.Mouse_Click(mouse_pos):
                     Language_Setting(prev_menu, char_set, race_length)
                 if User_Center.Mouse_Click(mouse_pos):
                     User_Center_Setting(prev_menu, char_set, race_length)
+
+                #If return is pressed, return to a previous menu
                 if Return.Mouse_Click(mouse_pos):
                     if prev_menu == 'Start Menu':
                         Title_Screen()
@@ -397,57 +520,59 @@ def Video_Setting(prev_menu, char_set, race_length):
                         Choose_Character_Set(-20, char_set, race_length)
                     elif prev_menu == 'Choose_Race_Length':
                         Choose_Race_Length(-20, char_set, race_length)
+                
+                #Change resolutions
                 if Full_Screen.Mouse_Click(mouse_pos):
                     size.Full_Screen()
                 if _1366x768.Mouse_Click(mouse_pos):
                     size.Window((1366, 768))
                 if _1280x720.Mouse_Click(mouse_pos):
                     size.Window((1280, 720))    
+
+            #update everything within the menu
             if event.type == pg.WINDOWSIZECHANGED:
                 change_size = True
 
+        #If a size change is detected, create new object that replace the old one with new resolution
         if change_size:
             bg = bg = pg.transform.smoothscale(bg, (size.w, size.h))
 
             Video = Draw_Screen('rect', (size.w*0.125, size.h * 0.125), (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
-            Video_text = Draw_Screen('text', None, None, None, None, 'Graphics', Font(int(40 * size.w / 1280)), '#424769', Video.rect.center)
+            Video_text = Draw_Screen('text', None, None, None, None, 'Graphics', Font(int(25 * size.w / 1280)), '#424769', Video.rect.center)
 
             Audio = Button('rect', Video.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-            Audio_text = Draw_Screen('text', None, None, None, None, 'Audio', Font(int(40 * size.w / 1280)), '#424769', Audio.rect.center)
+            Audio_text = Draw_Screen('text', None, None, None, None, 'Audio', Font(int(25 * size.w / 1280)), '#424769', Audio.rect.center)
 
             Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-            Language_text = Draw_Screen('text', None, None, None, None, 'Language', Font(int(40 * size.w / 1280)), '#424769', Language.rect.center)
+            Language_text = Draw_Screen('text', None, None, None, None, 'Language', Font(int(25 * size.w / 1280)), '#424769', Language.rect.center)
 
             User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-            User_Center_text = Draw_Screen('text', None, None, None, None, 'User Center', Font(int(40 * size.w / 1280)), '#424769', User_Center.rect.center)
+            User_Center_text = Draw_Screen('text', None, None, None, None, 'User Center', Font(int(25 * size.w / 1280)), '#424769', User_Center.rect.center)
 
             Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-            Return_text = Draw_Screen('text', None, None, None, None, 'Return', Font(int(40 * size.w / 1280)), '#424769', Return.rect.center)
+            Return_text = Draw_Screen('text', None, None, None, None, 'Return', Font(int(25 * size.w / 1280)), '#424769', Return.rect.center)
 
             Full_Screen = Button('rect', (size.w * 0.325, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
-            Full_Screen_text = Font(int(40 * size.w / 1280)).render('Full Screen', True, '#424769')
+            Full_Screen_text = Font(int(25 * size.w / 1280)).render('Full Screen', True, '#424769')
 
             _1366x768 = Button('rect', (size.w * 0.5125, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
-            _1366x768_text = Font(int(40 * size.w / 1280)).render('1366 x 768', True, '#424769')
+            _1366x768_text = Font(int(25 * size.w / 1280)).render('1366 x 768', True, '#424769')
 
             _1280x720 = Button('rect', (size.w * 0.7, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
-            _1280x720_text = Font(int(40 * size.w / 1280)).render('1280 x 720', True, '#424769')
+            _1280x720_text = Font(int(25 * size.w / 1280)).render('1280 x 720', True, '#424769')
 
+        #After all the object has been updated, change the variable to False
         change_size = False
+
         screen.blit(bg, (0,0))
         pg.draw.rect(screen, '#2d3250', [size.w*0.125, size.h * 0.125, size.w*0.75, size.h * 0.75])
         pg.draw.rect(screen, '#676f9d', [size.w*0.125, size.h * 0.125, size.w*0.175, size.h * 0.75])
 
-        Video.Blit()
-        Audio.Blit()
-        Language.Blit()
-        User_Center.Blit()
-        Return.Blit()
+        #Blit Assets onto screen
+        for item in [Video, Audio, Language, User_Center, Return, Full_Screen, _1366x768, _1280x720]:
+            item.Blit()
 
-        Full_Screen.Blit()
-        _1366x768.Blit()
-        _1280x720.Blit()
-
+        #Change colors if the mouse hover above
         for button in [Full_Screen, _1366x768, _1280x720, Audio, Language, User_Center, Return]:
             button.Change_Color(mouse_pos)
 
@@ -457,6 +582,7 @@ def Video_Setting(prev_menu, char_set, race_length):
         User_Center_text.Blit()
         Return_text.Blit()
 
+        #Blit Texts onto screen
         screen.blit(Full_Screen_text, Full_Screen_text.get_rect(center = (Full_Screen.rect.center)))
         screen.blit(_1366x768_text, Full_Screen_text.get_rect(center = (_1366x768.rect.center)))
         screen.blit(_1280x720_text, Full_Screen_text.get_rect(center = (_1280x720.rect.center)))
