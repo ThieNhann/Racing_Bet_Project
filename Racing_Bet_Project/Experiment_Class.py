@@ -1,4 +1,7 @@
 import pygame as pg
+import sqlite3
+import hashlib
+from User_Database import *
 
 class Screen_Info:
     def __init__(self, current_size):
@@ -127,6 +130,26 @@ class Button(Draw_Screen):
 def Font(size):
     return pg.font.Font(None, size)
 
+class User_Data:
+    def __init__(self, username, password):
+        self.username = username
+        self.password = hashlib.sha256(password.encode()).hexdigest()
+
+    def Login(self):
+        cur.execute("SELECT * FROM User_Data WHERE Username = ? AND Password = ?", (self.username, self.password))
+        if cur.fetchall():
+            return True
+        else:
+            return False
+
+    def Sign_Up(self):
+        cur.execute("INSERT INTO User_Data(Username, Password) VALUES (?,?)", (self.username, self.password))
+        print(self.username)
+        print(self.password)
+        conn.commit()
+        
+
+
 
 pg.init()
-screen = pg.display.set_mode((0,0), pg.FULLSCREEN|pg.SRCALPHA)
+screen = pg.display.set_mode((0,0), pg.FULLSCREEN | pg.SRCALPHA)

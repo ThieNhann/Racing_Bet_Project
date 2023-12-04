@@ -14,7 +14,9 @@ Bg_cycle = pg.USEREVENT + 1
 pg.time.set_timer(Bg_cycle, 1000)
 
 def Start_Animation():
-    alpha = 250
+    alpha = -125
+    logo = pg.transform.scale(pg.image.load('Assets/icon/Settings/HCMUS_logo.png'), (size.w / 3, size.w / 3))
+    logo_rect = logo.get_rect(center = (size.w/2, size.h/2))
     while True:
         mouse_pos = pg.mouse.get_pos()
         for event in pg.event.get():
@@ -24,17 +26,16 @@ def Start_Animation():
             if event.type == pg.MOUSEBUTTONDOWN:
                 mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
             
-        logo = pg.transform.scale(pg.image.load('Assets/icon/Settings/HCMUS_logo.png'), (size.w / 3, size.w / 3))
-        logo_rect = logo.get_rect(center = (size.w/2, size.h/2))
+        
         screen.fill(0)
 
-        alpha += 1.75
+        alpha += 1.5
         if alpha < 180 and alpha > 0:
             logo.set_alpha(int(255 * sin(rad(alpha))))
             screen.blit(logo, logo_rect)
         elif alpha > 250:
             mouse_animation.empty()
-            Login_and_Signup_Page()
+            Login_Page()
 
 
         mouse_animation.update()
@@ -43,25 +44,29 @@ def Start_Animation():
         pg.time.Clock().tick(60)
         pg.display.update()
 
-def Login_and_Signup_Page():
+def Login_Page():
+    alpha = 0
     fps = 0
     tru_fps = 0
-    current_view =  'Login'
+    valid_emails = ['@gmail.com', '@yahoo.com' , 'End']
+    username = ''
+    password = ''
+    insert = ''
 
     bg = pg.transform.scale(pg.image.load('Assets/background/village/village.png').convert(), (size.w*0.75, size.h*0.75))
 
     welcome = Font(int(80 * size.w / 1280)).render('Welcome', True, '#ffffff')
 
-    select_login = Button('text', None, None, None, None, 'Login', Font(int(30 * size.w / 1280)), '#d69869', '#d69869', None, (size.w * 0.265, size.h * 0.178))
-    select_signup = Button('text', None, None, None, None, 'Sign up', Font(int(30 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.35, size.h * 0.178))
+    login_select = Font(int(30 * size.w / 1280)).render('Login', True, '#d69869')
+    signup_select = Button('text', None, None, None, None, 'Sign up', Font(int(30 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.35, size.h * 0.178))
 
     username_box = Button('rect', (size.w * 0.175, size.h * 0.385), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
     password_box = Button('rect', (size.w * 0.175, size.h * 0.515), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
 
-    username_text = Font(int(20 * size.w / 1280)).render('username', True, '#424769')
-    password_text = Font(int(20 * size.w / 1280)).render('password', True, '#424769')
+    username_box_text = Font(int(20 * size.w / 1280)).render('Username', True, '#424769')
+    password_box_text = Font(int(20 * size.w / 1280)).render('Password', True, '#424769')
 
-    forgot_password = Button('text', None, None, None, None, 'Forgor password?', Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.405, size.h * 0.64))
+    forgot_password = Button('text', None, None, None, None, 'Forgot password?', Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.405, size.h * 0.64))
 
     login_button = Button('rect', (size.w * 0.175, size.h * 0.7), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None,  None)
     faceID_button = Button('rect', (size.w * 0.345, size.h * 0.7), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None,  None)
@@ -69,67 +74,221 @@ def Login_and_Signup_Page():
     login_button_text = Font(int(30 * size.w / 1280)).render('Login', True, '#424769')
     faceID_button_text = Font(int(30 * size.w / 1280)).render('Face ID', True, '#424769')
 
+    login_failed = Font(80).render('Username or password is incorrect', True, "#FF0000")
+
     while True:
+        alpha -= 5
         mouse_pos = pg.mouse.get_pos()
         fps += 1
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
+            if event.type == pg.KEYDOWN:
+                if insert == 'username':
+                    if event.key == pg.K_BACKSPACE:
+                        username = username[:-1]
+                    else:
+                        username += event.unicode
+
+                elif insert == 'password':
+                    if event.key == pg.K_BACKSPACE:
+                        password = password[:-1]
+                    else:
+                        password += event.unicode
+
+
             if event.type == pg.MOUSEBUTTONDOWN:
                 mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
                 if (login_button.Mouse_Click(mouse_pos)):
-                    Title_Screen()
-                if (select_signup.Mouse_Click(mouse_pos) and current_view == 'Login'):
-                    current_view = 'Sign up'
+                    for items in valid_emails:
+                        print(username[len(username) - len(items):])
+                        if items == 'End':
+                            alpha = 300
+                            break
+                        elif username[len(username) - len(items):] == items:
+                            user = User_Data(username, password)
+                            if user.Login():
+                                Title_Screen()
+                            else:
+                                alpha = 300
 
-                    select_login.Update('Login', '#676f9d', '#5d648c')
-                    select_signup.Update('Sign up', '#d69869', '#d69869')
+                            break
 
-                if (select_login.Mouse_Click(mouse_pos)  and current_view == 'Sign up'):
-                    current_view = 'Login'
                     
-                    select_login.Update('Login', '#d69869', '#d69869')
-                    select_signup.Update('Sign up', '#676f9d', '#5d648c')
+                    
+                if (signup_select.Mouse_Click(mouse_pos)):
+                    Signup_Page()
+
+                if username_box.Mouse_Click(mouse_pos):
+                    insert = 'username'
+                elif password_box.Mouse_Click(mouse_pos):
+                    insert = 'password'
+                else:
+                    insert = ''
 
             if event.type == Bg_cycle:
                 tru_fps = fps
                 fps = 0
 
-
         screen.fill('#2d3250')
         screen.blit(bg, (size.w*0.125, size.h*0.125))
         pg.draw.rect(screen, '#424769', [size.w*0.125, size.h*0.125, size.w*0.375, size.h * 0.75])
+        username_input = Font(int(20 * size.w / 1280)).render(username, True, '#FFFFFF')
+        password_input = Font(int(20 * size.w / 1280)).render(password, True, '#FFFFFF')
 
+        signup_select.Blit()
         username_box.Blit()
         password_box.Blit()
         forgot_password.Blit()
         login_button.Blit()
         faceID_button.Blit()
 
-        for button in [username_box, password_box, login_button, faceID_button, forgot_password]:
+        for button in [signup_select, username_box, password_box, login_button, faceID_button, forgot_password]:
             button.Change_Color(mouse_pos)
-
-        if current_view == 'Login':
-            select_signup.Blit()
-            select_login.Blit()
-            select_signup.Change_Color(mouse_pos)
-            
-        elif current_view == 'Sign up':
-            select_login.Blit()
-            select_signup.Blit()
-            select_login.Change_Color(mouse_pos)
-
+        
+        screen.blit(login_select      ,   login_select.get_rect(center = (size.w * 0.265, size.h * 0.178)))
         screen.blit(welcome           ,   welcome.get_rect(center = (size.w * 0.3125, size.h * 0.3)))
-        screen.blit(username_text ,   username_text.get_rect(midleft = (size.w * 0.19, size.h * 0.41)))
-        screen.blit(password_text ,   username_text.get_rect(midleft = (size.w * 0.19, size.h * 0.54)))
+        screen.blit(username_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.41)))
+        screen.blit(password_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.54)))
         screen.blit(login_button_text ,   login_button_text.get_rect(center = (login_button.rect.center)))
         screen.blit(faceID_button_text,   faceID_button_text.get_rect(center = (faceID_button.rect.center)))
+        screen.blit(username_input, username_input.get_rect(midleft = (size.w * 0.19, size.h * 0.45)))
+        screen.blit(password_input, password_input.get_rect(midleft = (size.w * 0.19, size.h * 0.58)))
+
+        login_failed.set_alpha(alpha)
+        screen.blit(login_failed, login_failed.get_rect(center = (size.w/2, size.h/2)))
 
         mouse_animation.update()
         mouse_animation.draw(screen)
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
         screen.blit(FPS, (0,0))
+        #pg.draw.line(screen, "White", (0, size.h/2), (size.w, size.h/2))
+        #pg.draw.line(screen, "White", (size.w * 0.3125, 0), (size.w * 0.312, size.h))
+        
+        pg.time.Clock().tick(60)
+        pg.display.update()
+
+def Signup_Page():
+    valid_emails = ['@gmail.com', '@yahoo.com' , 'End']
+    alpha = 0
+    username = ''
+    password = ''
+    repeat_password = ''
+    insert = ''
+    bg = pg.transform.scale(pg.image.load('Assets/background/village/village.png').convert(), (size.w*0.75, size.h*0.75))
+
+    welcome = Font(int(80 * size.w / 1280)).render('Welcome', True, '#ffffff')
+
+    login_select = Button('text', None, None, None, None, 'Login', Font(int(30 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.265, size.h * 0.178))
+    signup_select = Font(int(30 * size.w / 1280)).render('Sign up', True, '#d69869')
+
+    username_box = Button('rect', (size.w * 0.175, size.h * 0.385), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    password_box = Button('rect', (size.w * 0.175, size.h * 0.515), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    repeat_password_box = Button('rect', (size.w * 0.175, size.h * 0.645), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+
+    username_box_text = Font(int(20 * size.w / 1280)).render('Username', True, '#424769')
+    password_box_text = Font(int(20 * size.w / 1280)).render('Password', True, '#424769')
+    
+    signup_button = Button('rect', (size.w * 0.175, size.h * 0.775), (size.w*0.275, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None,  None)
+    
+    signup_button_text = Font(int(30 * size.w / 1280)).render('Sign Up', True, '#424769')
+    error = Font(80).render("Password doesn't match", True, "#FF0000")
+
+    while True:
+        alpha -= 5
+        mouse_pos = pg.mouse.get_pos()
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+            if event.type == pg.KEYDOWN:
+                if insert == 'username':
+                    if event.key == pg.K_BACKSPACE:
+                        username = username[:-1]
+                    else:
+                        username += event.unicode
+                elif insert == 'password':
+                    if event.key == pg.K_BACKSPACE:
+                        password = password[:-1]
+                    else:
+                        password += event.unicode
+
+                elif insert == 'repeat_password':
+                    if event.key == pg.K_BACKSPACE:
+                        repeat_password = repeat_password[:-1]
+                    else:
+                        repeat_password += event.unicode
+
+            if event.type == pg.MOUSEBUTTONDOWN:
+                mouse_animation.add(Mouse_Animation(mouse_pos, 5, size.w))
+
+                if(login_select.Mouse_Click(mouse_pos)):
+                    Login_Page()
+
+                if username_box.Mouse_Click(mouse_pos):
+                    insert = 'username'
+
+                elif password_box.Mouse_Click(mouse_pos):
+                    insert = 'password'
+                
+                elif repeat_password_box.Mouse_Click(mouse_pos):
+                    insert = 'repeat_password'
+                else:
+                    insert = ''
+                
+                if signup_button.Mouse_Click(mouse_pos):
+                    if password != repeat_password:
+                        error = Font(80).render("Password doesn't match", True, "#FF0000")
+                        alpha = 500
+                    else:
+                        for items in valid_emails:
+                            if items == 'End':
+                                alpha = 500
+                                error = Font(80).render("Invalid username", True, "#FF0000")
+                                break
+                            elif username[len(username) - len(items):] == items:
+                                print('executed')
+                                user = User_Data(username, password)
+                                user.Sign_Up()
+                                Title_Screen()
+                                break
+
+        screen.fill('#2d3250')
+        screen.blit(bg, (size.w*0.125, size.h*0.125))
+        pg.draw.rect(screen, '#424769', [size.w*0.125, size.h*0.125, size.w*0.375, size.h * 0.75])
+        username_input = Font(int(20 * size.w / 1280)).render(username, True, '#FFFFFF')
+        password_input = Font(int(20 * size.w / 1280)).render(password, True, '#FFFFFF')
+        repeat_password_input = Font(int(20 * size.w / 1280)).render(repeat_password, True, '#FFFFFF')
+
+        login_select.Blit()
+        username_box.Blit()
+        password_box.Blit()
+        signup_button.Blit()
+        repeat_password_box.Blit()
+
+
+        for button in [login_select, username_box, password_box, signup_button, repeat_password_box]:
+            button.Change_Color(mouse_pos)
+
+        screen.blit(signup_select     ,   signup_select.get_rect(center = (size.w * 0.35, size.h * 0.178)))
+        screen.blit(welcome           ,   welcome.get_rect(center = (size.w * 0.3125, size.h * 0.3)))
+        screen.blit(username_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.41)))
+        screen.blit(password_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.54)))
+        screen.blit(signup_button_text ,   signup_button_text.get_rect(center = (signup_button.rect.center)))
+        screen.blit(password_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.67)))
+        screen.blit(username_input, username_input.get_rect(midleft = (size.w * 0.19, size.h * 0.45)))
+        screen.blit(password_input, password_input.get_rect(midleft = (size.w * 0.19, size.h * 0.58)))
+        screen.blit(repeat_password_input, repeat_password_input.get_rect(midleft = (size.w * 0.19, size.h * 0.71)))
+
+        error.set_alpha(alpha)
+        screen.blit(error, error.get_rect(center = (size.w/2, size.h/2)))
+
+
+        mouse_animation.update()
+        mouse_animation.draw(screen)
+        #pg.draw.line(screen, "White", (0, size.h/2), (size.w, size.h/2))
+        #pg.draw.line(screen, "White", (size.w * 0.3125, 0), (size.w * 0.312, size.h))
         
         pg.time.Clock().tick(60)
         pg.display.update()
@@ -520,8 +679,6 @@ def In_Game_Menu(alpha):
 
     Background = pg.transform.scale(pg.image.load('Assets/icon/Settings/Cafe.png').convert_alpha(), (512, 288))
     Background = pg.transform.smoothscale(Background, (size.w*1.15, size.h*1.15))
-    Money_Gone = pg.transform.scale(pg.image.load('Assets/icon/Settings/money_gone.png').convert_alpha(), (128, 72))
-    Money_Gone = pg.transform.scale(Money_Gone, (size.w * 0.4, size.h * 0.4))
 
     User_Info_Tab = pg.Surface((size.w, size.h * 0.1), pg.SRCALPHA)
     User_Info_Tab.fill('#2d3250')
@@ -580,12 +737,11 @@ def In_Game_Menu(alpha):
         screen.fill(0)
         Bg = Dynamic_Background(Background, (size.w / 2, size.h / 2), mouse_pos)
 
-        for stuff in [Background, Money_Gone, Settings.image, Play_Break, Play.image, Mini_Game.image, 
+        for stuff in [Background, Settings.image, Play_Break, Play.image, Mini_Game.image, 
                     Mini_Game_CLick, Rank.image, Rank_Click, User_Info_Tab, Return.image]:
             stuff.set_alpha(alpha)
 
         Bg.Draw()
-        screen.blit(Money_Gone, Money_Gone.get_rect(center = (size.w * 0.25, size.h * 0.55)))
         screen.blit(User_Info_Tab, (0,0))
 
         Play.Blit()
