@@ -1,7 +1,13 @@
 import pygame as pg
+import json
 import sqlite3
 import hashlib
 from User_Database import *
+
+with open ('Config.json', 'r') as f:
+    config = json.load(f)
+    start_screen_size = config['Start_Screen_Size'][1:-1]
+    start_screen_size = tuple(map(int, start_screen_size.split(', ')))
 
 class Screen_Info:
     def __init__(self, current_size):
@@ -149,7 +155,5 @@ class User_Data:
         conn.commit()
         
 
-
-
 pg.init()
-screen = pg.display.set_mode((0,0), pg.FULLSCREEN | pg.SRCALPHA)
+screen = pg.display.set_mode(start_screen_size, pg.SRCALPHA)

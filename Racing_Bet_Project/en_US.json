@@ -20,5 +20,28 @@
         "Username_text"  :  "Username",
         "Password_text"  :  "Password",
         "Signup_button"  :  "Sign Up"
+    },
+
+    "Title_Screen":
+    {
+        "Prompt"    :  "- Click anywhere to continue -"
+    },
+
+    "Settings":
+    {
+        "Video"         :  "Video",
+        "Audio"         :  "Audio",
+        "Language"      :  "Language",
+        "User_Center"   :  "User Center",
+        "Return"        :  "Return",
+
+
+        "Full_Screen"   :  "Full Screen"
+
     }
+
+    
+
+
+    
 }
