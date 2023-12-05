@@ -1,7 +1,7 @@
 import sqlite3
 import hashlib
 
-conn = sqlite3.connect('User_Data.db')
+conn = sqlite3.connect('database/User_Data.db')
 cur = conn.cursor()
 
 cur.execute("""

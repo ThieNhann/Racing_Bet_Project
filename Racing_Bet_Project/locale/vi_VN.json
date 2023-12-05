@@ -1,0 +1,42 @@
+{
+    "Login":
+    {
+        "Select_Login"   :  "Đăng nhập",
+        "Select_Signup"  :  "Đăng ký",
+        "Title"          :  "Chào mừng",
+        "Username_text"  :  "Tên đăng nhập",
+        "Password_text"  :  "Mật khẩu",
+        "Login_Button"   :  "Đăng nhập",
+        "FaceID_Button"  :  "Face ID",
+        "Forgot_Password":  "Quên mật khẩu?",
+        "Login_Failed"   :  "Tên đăng nhập hoặc mật khẩu không đúng"
+    },
+
+    "Sign_Up":
+    {
+        "Select_Login"  :  "Đăng nhập",
+        "Select_Signup" :  "Đăng ký",
+        "Title"         :  "Chào mừng",
+        "Username_text" :  "Tên đăng nhập",
+        "Password_text" :  "Mật khẩu",
+        "Signup_button" :  "Đăng ký"
+    },
+
+    "Title_Screen":
+    {
+        "Prompt"   :  "- Bấm để bắt đầu -"
+    },
+
+    "Settings":
+    {
+        "Video"         :  "Hình ảnh",
+        "Audio"         :  "Âm thanh",
+        "Language"      :  "Ngôn ngữ",
+        "User_Center"   :  "Người dùng",
+        "Return"        :  "Trở về",
+
+        "Full_Screen"   :  "Toàn màn hình"
+    }
+
+
+}

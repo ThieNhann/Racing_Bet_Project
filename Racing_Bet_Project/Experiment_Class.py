@@ -4,10 +4,12 @@ import sqlite3
 import hashlib
 from User_Database import *
 
-with open ('Config.json', 'r') as f:
+with open ('settings/Config.json', 'r') as f:
     config = json.load(f)
     start_screen_size = config['Start_Screen_Size'][1:-1]
     start_screen_size = tuple(map(int, start_screen_size.split(', ')))
+    in_full_screen = config['In_Full_Screen']
+    print(in_full_screen)
 
 class Screen_Info:
     def __init__(self, current_size):
@@ -51,7 +53,7 @@ class Dynamic_Background():
         self.rect = self.image.get_rect(center = (self.x,  self.y))
 
     def Draw(self):
-        self.rect = self.image.get_rect(center = (self.x + 0.05 * self.mouse_x, self.y + 0.05 * self.mouse_y))
+        self.rect = self.image.get_rect(center = (self.x + 0.03 * self.mouse_x, self.y + 0.035 * self.mouse_y))
         screen.blit(self.image, self.rect)
 
 class Draw_Screen():
@@ -134,7 +136,7 @@ class Button(Draw_Screen):
             self.text = self.font.render(self.text_content, True, self.color)
 
 def Font(size):
-    return pg.font.Font('Assets/font/arial.ttf', size)
+    return pg.font.Font('font/arial.ttf', size)
 
 class User_Data:
     def __init__(self, username, password):
@@ -156,4 +158,7 @@ class User_Data:
         
 
 pg.init()
-screen = pg.display.set_mode(start_screen_size, pg.SRCALPHA)
+if in_full_screen == 'False':   
+    screen = pg.display.set_mode(start_screen_size, pg.SRCALPHA)
+elif in_full_screen == 'True':
+    screen = pg.display.set_mode((0,0), pg.FULLSCREEN | pg.SRCALPHA)

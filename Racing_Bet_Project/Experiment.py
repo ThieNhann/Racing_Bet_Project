@@ -10,6 +10,14 @@ pg.init()
 os.environ['SDL_VIDEO_CENTERED'] = '0'
 pg.display.set_caption("Racing Bet")
 
+#Load music
+pg.mixer.music.load('Forest (rushed ver).wav')
+
+print(pg.display.get_desktop_sizes())
+
+#Mainly for deleting info when hold backspace
+pg.key.set_repeat(600, 25)
+
 #size of current window
 size = Screen_Info(screen.get_size())
 
@@ -27,21 +35,27 @@ def Load_Config():
     global US
     global VN
     global language
-    with open('en_US.json', 'r', encoding="utf8") as f:
+    with open('locale/en_US.json', 'r', encoding="utf8") as f:
         US = json.load(f)
-    with open('vi_VN.json', 'r', encoding="utf8") as f:
+    with open('locale/vi_VN.json', 'r', encoding="utf8") as f:
         VN = json.load(f)
 
-    with open ('Config.json', 'r') as f:
+    with open ('settings/Config.json', 'r') as f:
         config = json.load(f)
         language = config['Start_Language']
 
 def Shutdown():
     global language
-    save_config = {"Start_Language": f"{language}", "Start_Screen_Size" : f"{screen.get_size()}"}
+    global in_full_screen
+    save_config = {"Start_Language"     : f"{language}", 
+                   "Start_Screen_Size"  : f"{screen.get_size()}",
+                   "In_Full_Screen"     : f"{in_full_screen}"
+                  }
 
-    with open ('Config.json', 'w') as f:
-        json.dump(save_config, f)
+    print(in_full_screen)
+    json_file = json.dumps(save_config, indent = 4)
+    with open ('settings/Config.json', 'w') as f:
+        f.write(json_file)
 
     pg.quit()
     sys.exit()
@@ -113,26 +127,26 @@ def Login_Page():
         welcome = Font(int(60 * size.w / 1280)).render(US['Login']['Title'], True, '#ffffff')
         login_select = Font(int(20 * size.w / 1280)).render(US['Login']['Select_Login'], True, '#d69869')
         signup_select = Button('text', None, None, None, None, US['Login']['Select_Signup'], Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.35, size.h * 0.178))
-        username_box_text = Font(int(10 * size.w / 1280)).render(US['Login']['Username_text'], True, '#424769')
-        password_box_text = Font(int(10 * size.w / 1280)).render(US['Login']['Password_text'], True, '#424769')
+        username_box_text = Font(int(13 * size.w / 1280)).render(US['Login']['Username_text'], True, '#424769')
+        password_box_text = Font(int(13 * size.w / 1280)).render(US['Login']['Password_text'], True, '#424769')
         login_button_text = Font(int(20 * size.w / 1280)).render(US['Login']['Login_Button'], True, '#424769')
         faceID_button_text = Font(int(20 * size.w / 1280)).render(US['Login']['FaceID_Button'], True, '#424769')
         forgot_password = Button('text', None, None, None, None, US['Login']['Forgot_Password'], Font(int(15 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.405, size.h * 0.64))
         login_failed = Font(60).render(US['Login']['Login_Failed'], True, "#FF0000")
 
     elif language == 'VN':
-        welcome = Font(int(60 * size.w / 1280)).render(VN['Login']['Title'], True, '#ffffff')
+        welcome = Font(int(50 * size.w / 1280)).render(VN['Login']['Title'], True, '#ffffff')
         login_select = Font(int(20 * size.w / 1280)).render(VN['Login']['Select_Login'], True, '#d69869')
         signup_select = Button('text', None, None, None, None, VN['Login']['Select_Signup'], Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.35, size.h * 0.178))
-        username_box_text = Font(int(10 * size.w / 1280)).render(VN['Login']['Username_text'], True, '#424769')
-        password_box_text = Font(int(10 * size.w / 1280)).render(VN['Login']['Password_text'], True, '#424769')
+        username_box_text = Font(int(13 * size.w / 1280)).render(VN['Login']['Username_text'], True, '#424769')
+        password_box_text = Font(int(13 * size.w / 1280)).render(VN['Login']['Password_text'], True, '#424769')
         login_button_text = Font(int(20 * size.w / 1280)).render(VN['Login']['Login_Button'], True, '#424769')
         faceID_button_text = Font(int(20 * size.w / 1280)).render(VN['Login']['FaceID_Button'], True, '#424769')
         forgot_password = Button('text', None, None, None, None, VN['Login']['Forgot_Password'], Font(int(15 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.405, size.h * 0.64))
         login_failed = Font(60).render(VN['Login']['Login_Failed'], True, "#FF0000")
 
     while True:
-        alpha -= 5
+        alpha -= 2.5
         fps += 1
         mouse_pos = pg.mouse.get_pos()
         for event in pg.event.get():
@@ -144,6 +158,7 @@ def Login_Page():
                 #User clicked username
                 if insert == 'username':
                     if event.key == pg.K_BACKSPACE:
+
                         username = username[:-1]
                     else:
                         username += event.unicode
@@ -173,7 +188,7 @@ def Login_Page():
 
                 #When user submit Login, check for validity and go to Title Screen if good
                 if (login_button.Mouse_Click(mouse_pos)):
-                    Title_Screen()
+                    Title_Screen(True)
                     '''for items in valid_emails:
                         print(username[len(username) - len(items):])
                         if items == 'End':
@@ -195,14 +210,15 @@ def Login_Page():
                 fps = 0
 
         #Language Logics: Not how you would do it but im tired ok?
-        
+
+
         screen.fill('#2d3250')
         screen.blit(bg, (size.w*0.125, size.h*0.125))
         pg.draw.rect(screen, '#424769', [size.w*0.125, size.h*0.125, size.w*0.375, size.h * 0.75])
 
         #Draw the what the user typed in
-        username_input = Font(int(12 * size.w / 1280)).render(username, True, '#FFFFFF')
-        password_input = Font(int(12 * size.w / 1280)).render(password, True, '#FFFFFF')
+        username_input = Font(int(13 * size.w / 1280)).render(username, True, '#FFFFFF')
+        password_input = Font(int(13 * size.w / 1280)).render(password, True, '#FFFFFF')
 
         #Blit Assets onto the screen
         for item in [signup_select, username_box, password_box, forgot_password, login_button, faceID_button]:
@@ -221,7 +237,7 @@ def Login_Page():
         screen.blit(faceID_button_text,   faceID_button_text.get_rect(center = (faceID_button.rect.center)))
         screen.blit(username_input, username_input.get_rect(midleft = (size.w * 0.19, size.h * 0.45)))
         screen.blit(password_input, password_input.get_rect(midleft = (size.w * 0.19, size.h * 0.58)))
-
+        
         #If error then set alpha so message appears then slowly fade away
         login_failed.set_alpha(alpha)
         screen.blit(login_failed, login_failed.get_rect(center = (size.w/2, size.h/2)))
@@ -274,7 +290,7 @@ def Signup_Page():
         password_box_text = Font(int(10 * size.w / 1280)).render(US['Sign_Up']['Password_text'], True, '#424769')
         signup_button_text = Font(int(20 * size.w / 1280)).render(US['Sign_Up']['Signup_button'], True, '#424769')
     if language == 'VN':
-        welcome = Font(int(60 * size.w / 1280)).render(VN['Login']['Title'], True, '#ffffff')
+        welcome = Font(int(50 * size.w / 1280)).render(VN['Login']['Title'], True, '#ffffff')
         login_select = Button('text', None, None, None, None, VN['Sign_Up']['Select_Login'], Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.265, size.h * 0.178))
         signup_select = Font(int(20 * size.w / 1280)).render(VN['Sign_Up']['Select_Signup'], True, '#d69869')
         username_box_text = Font(int(10 * size.w / 1280)).render(VN['Sign_Up']['Username_text'], True, '#424769')
@@ -290,11 +306,13 @@ def Signup_Page():
                 Shutdown()
 
                 #User clicked username
+            if event.type == pg.KEYDOWN:
                 if insert == 'username':
                     if event.key == pg.K_BACKSPACE:
                         username = username[:-1]
                     else:
                         username += event.unicode
+                        
 
                 #User clicked password
                 elif insert == 'password':
@@ -343,7 +361,7 @@ def Signup_Page():
                                 print('executed')
                                 user = User_Data(username, password)
                                 user.Sign_Up()
-                                Title_Screen()
+                                Title_Screen(True)
                                 break
             #Debug: FPS
             if event.type == Bg_cycle:
@@ -390,13 +408,13 @@ def Signup_Page():
         pg.time.Clock().tick(60)
         pg.display.update()
 
-def Title_Screen():
+def Title_Screen(restart_music):
     fps = 0
     tru_fps = 0
     alpha = 0
 
-    #Move title up and down
-    Title_bounce = 0
+    if restart_music:
+      pg.mixer.music.play(loops=-1)
 
     #If enter_game becomes True then stop button functions
     enter_game = False
@@ -418,9 +436,8 @@ def Title_Screen():
         Prompt = Font(int(25 * size.w/1280)).render(VN['Title_Screen']['Prompt'], True, '#000000')
 
     while True:
-        alpha += 7.5
+        alpha += 5
         fps += 1
-        Title_bounce += 0.1
         mouse_pos = pg.mouse.get_pos()
 
         for event in pg.event.get():
@@ -451,9 +468,6 @@ def Title_Screen():
         #Background moves with cursor
         Bg = Dynamic_Background(Background, (size.w / 2, size.h / 2), mouse_pos)
 
-        Title = Draw_Screen('text', None, None, None, None, 'Racing Bet', 
-                    Font(int(120 * size.w / 1280)), '#000000', (size.w * 0.5, size.h *(0.25 + 0.04 * sin(Title_bounce))))
-
         Title = Font(int(100 * size.w / 1280)).render('Racing Bet', True, "#000000")
         
         screen.fill(0)
@@ -470,7 +484,7 @@ def Title_Screen():
         for item in  [Quit, Settings]:
             item.Blit()
 
-        screen.blit(Title, Title.get_rect(center = (size.w * 0.5, size.h *(0.25 + 0.04 * sin(Title_bounce)))))
+        screen.blit(Title, Title.get_rect(center = (size.w * 0.5, size.h *0.25 )))
         screen.blit(Prompt, Prompt.get_rect(center = (size.w * 0.5, size.h * 0.75)))
         #Fade out animaion
         if enter_game:
@@ -492,28 +506,12 @@ def Title_Screen():
         pg.display.update()
 
 def Video_Setting(prev_menu, char_set, race_length):
+    global in_full_screen
     #For optimization: only call update once when screen size is changed
     change_size = True
 
     #Set the image of the previous menu as background
     bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
-
-    if language == 'US':
-        Video_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Video'], True, '#424769')
-        Audio_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Audio'], True, '#424769')
-        Language_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Language'], True, '#424769')
-        User_Center_text = Font(int(25 * size.w / 1280)).render(US['Settings']['User_Center'], True, '#424769')
-        Return_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Return'], True, '#424769')
-        Full_Screen_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Full_Screen'], True, '#424769')
-
-
-    elif language == 'VN':
-        Video_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['Video'], True, '#424769')
-        Audio_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['Audio'], True, '#424769')
-        Language_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['Language'], True, '#424769')
-        User_Center_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['User_Center'], True, '#424769')
-        Return_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['Return'], True, '#424769')
-        Full_Screen_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['Full_Screen'], True, '#424769')
 
     while True:
         mouse_pos = pg.mouse.get_pos()
@@ -535,7 +533,7 @@ def Video_Setting(prev_menu, char_set, race_length):
                 #If return is pressed, return to a previous menu
                 if Return.Mouse_Click(mouse_pos):
                     if prev_menu == 'Start Menu':
-                        Title_Screen()
+                        Title_Screen(False)
                     elif prev_menu == 'In_Game_Menu':
                         In_Game_Menu(0)
                     elif prev_menu == 'Choose_Character_Set':
@@ -545,10 +543,13 @@ def Video_Setting(prev_menu, char_set, race_length):
                 
                 #Change resolutions
                 if Full_Screen.Mouse_Click(mouse_pos):
+                    in_full_screen = True
                     size.Full_Screen()
                 if _1366x768.Mouse_Click(mouse_pos):
+                    in_full_screen = False
                     size.Window((1366, 768))
                 if _1280x720.Mouse_Click(mouse_pos):
+                    in_full_screen = False
                     size.Window((1280, 720))    
 
             #update everything within the menu
@@ -574,6 +575,23 @@ def Video_Setting(prev_menu, char_set, race_length):
 
             _1366x768_text = Font(int(25 * size.w / 1280)).render('1366 x 768', True, '#424769')
             _1280x720_text = Font(int(25 * size.w / 1280)).render('1280 x 720', True, '#424769')
+
+            if language == 'US':
+                Video_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Video'], True, '#424769')
+                Audio_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Audio'], True, '#424769')
+                Language_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Language'], True, '#424769')
+                User_Center_text = Font(int(25 * size.w / 1280)).render(US['Settings']['User_Center'], True, '#424769')
+                Return_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Return'], True, '#424769')
+                Full_Screen_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Full_Screen'], True, '#424769')
+
+
+            elif language == 'VN':
+                Video_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['Video'], True, '#424769')
+                Audio_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['Audio'], True, '#424769')
+                Language_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['Language'], True, '#424769')
+                User_Center_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['User_Center'], True, '#424769')
+                Return_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['Return'], True, '#424769')
+                Full_Screen_text = Font(int(25 * size.w / 1280)).render(VN['Settings']['Full_Screen'], True, '#424769')
 
         #After all the object has been updated, change the variable to False
         change_size = False
@@ -621,6 +639,22 @@ def Audio_Setting(prev_menu, char_set, race_length):
     User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
     Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
 
+    music_slider = pg.rect.Rect((0, 0), (350 * size.w/1280, 20 * size.h/720))
+    music_slider.center = (size.w * 0.7, size.h * 0.25)
+
+    se_slider = pg.rect.Rect((0, 0), (350 * size.w/1280, 20 * size.h/720))
+    se_slider.center = (size.w * 0.7, size.h * 0.4)
+
+    music_circle = pg.rect.Rect((0,0), (30 * size.w/1280, 30 * size.w/1280))
+    music_circle.midright = music_slider.midright
+
+    se_circle = pg.rect.Rect((0,0), (30 * size.w/1280, 30 * size.w/1280))
+    se_circle.midright = se_slider.midright
+    
+    music_text = Font(int(25*size.w/1280)).render("Music", True, '#FFFFFF')
+    se_text = Font(int(25*size.w/1280)).render("Sound Effects", True, '#FFFFFF')
+
+
     if language == 'US':
         Video_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Video'], True, '#424769')
         Audio_text = Font(int(25 * size.w / 1280)).render(US['Settings']['Audio'], True, '#424769')
@@ -656,7 +690,7 @@ def Audio_Setting(prev_menu, char_set, race_length):
                 #If return is pressed, return to a previous menu
                 if Return.Mouse_Click(mouse_pos):
                     if prev_menu == 'Start Menu':
-                        Title_Screen()
+                        Title_Screen(False)
                     elif prev_menu == 'In_Game_Menu':
                         In_Game_Menu(0)
                     elif prev_menu == 'Choose_Character_Set':
@@ -674,6 +708,24 @@ def Audio_Setting(prev_menu, char_set, race_length):
         for item in [Video, Audio, Language, User_Center, Return]:
             item.Blit()
 
+        pg.draw.rect(screen, '#FFFFFF', music_slider, 0, 15)
+        pg.draw.rect(screen, '#000000', music_circle, 0, 30)
+        pg.draw.rect(screen, '#FFFFFF', se_slider, 0, 15)
+        pg.draw.rect(screen, '#000000', se_circle, 0, 30)
+
+        keys = pg.mouse.get_pressed()
+        if music_slider.collidepoint(mouse_pos) and music_circle.collidepoint(mouse_pos) and keys[0] == True:
+            music_circle.center = (mouse_pos[0], size.h * 0.25)
+
+        elif se_slider.collidepoint(mouse_pos) and se_circle.collidepoint(mouse_pos) and keys[0] == True:
+            se_circle.center = (mouse_pos[0], size.h * 0.4)
+        
+        collided = Font(20).render(f"{round((music_circle.center[0] - music_slider.midleft[0]) / (350 * size.w/1280), 1)}", True, "#FF0000")
+        screen.blit(collided, collided.get_rect(center = (size.w/2, size.h/2)))
+
+        #Change colors if the mouse hover above
+        for button in [Video, Language, User_Center, Return]:
+            button.Change_Color(mouse_pos)
         
         screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
         screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
@@ -681,9 +733,8 @@ def Audio_Setting(prev_menu, char_set, race_length):
         screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
         screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
 
-        #Change colors if the mouse hover above
-        for button in [Video, Language, User_Center, Return]:
-            button.Change_Color(mouse_pos)
+        screen.blit(music_text, music_text.get_rect(midleft = (size.w * 0.35, size.h * 0.25)))
+        screen.blit(se_text, se_text.get_rect(midleft = (size.w * 0.35, size.h * 0.4)))
 
 
         mouse_animation.update()
@@ -739,7 +790,7 @@ def Language_Setting(prev_menu, char_set, race_length):
                 #If return is pressed, return to a previous menu
                 if Return.Mouse_Click(mouse_pos):
                     if prev_menu == 'Start Menu':
-                        Title_Screen()
+                        Title_Screen(False)
                     elif prev_menu == 'In_Game_Menu':
                         In_Game_Menu(0)
                     elif prev_menu == 'Choose_Character_Set':
@@ -772,6 +823,12 @@ def Language_Setting(prev_menu, char_set, race_length):
         for item in [Video, Audio, Language, User_Center, Return, Choose_US, Choose_VN]:
             item.Blit()
 
+
+        #Change colors if the mouse hover above
+        for button in [Video, Audio, User_Center, Return, Choose_US, Choose_VN]:
+            button.Change_Color(mouse_pos)
+
+        
         screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
         screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
         screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
@@ -779,10 +836,6 @@ def Language_Setting(prev_menu, char_set, race_length):
         screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
         screen.blit(Choose_US_text, Choose_US_text.get_rect(center = (Choose_US.rect.center)))
         screen.blit(Choose_VN_text, Choose_VN_text.get_rect(center = (Choose_VN.rect.center)))
-
-        #Change colors if the mouse hover above
-        for button in [Video, Audio, User_Center, Return, Choose_US, Choose_VN]:
-            button.Change_Color(mouse_pos)
 
 
         mouse_animation.update()
@@ -840,7 +893,7 @@ def User_Center_Setting(prev_menu, char_set, race_length):
                     #If return is pressed, return to a previous menu
                 if Return.Mouse_Click(mouse_pos):
                     if prev_menu == 'Start Menu':
-                        Title_Screen()
+                        Title_Screen(False)
                     elif prev_menu == 'In_Game_Menu':
                         In_Game_Menu(0)
                     elif prev_menu == 'Choose_Character_Set':
@@ -858,15 +911,15 @@ def User_Center_Setting(prev_menu, char_set, race_length):
             item.Blit()
 
 
+        #Change colors if the mouse hover above
+        for button in [Video, Audio, Language, Return]:
+            button.Change_Color(mouse_pos)
+        
         screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
         screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
         screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
         screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
         screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
-
-        #Change colors if the mouse hover above
-        for button in [Video, Audio, Language, Return]:
-            button.Change_Color(mouse_pos)
 
 
         mouse_animation.update()
