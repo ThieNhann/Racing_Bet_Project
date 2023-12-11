@@ -14,15 +14,20 @@
 
     "Sign_Up":
     {
-        "Select_Login"  :  "Đăng nhập",
-        "Select_Signup" :  "Đăng ký",
-        "Title"         :  "Chào mừng",
-        "Username_text" :  "Tên đăng nhập",
-        "Password_text" :  "Mật khẩu",
-        "Signup_button" :  "Đăng ký"
+        "Select_Login"          :  "Đăng nhập",
+        "Select_Signup"         :  "Đăng ký",
+        "Title"                 :  "Chào mừng",
+        "Username_text"         :  "Tên đăng nhập",
+        "Password_text"         :  "Mật khẩu",
+        "Repeat_Password_text"  :  "Nhập lại mật khẩu",
+        "Signup_button"         :  "Đăng ký",
+        "Username_Error"        :  "Sai địa chỉ Email",
+        "Password_Length_Error" :  "Mật khẩu phải có ít nhất 8 kí tự",
+        "Password_Mismatch"     :  "Mật khẩu không khớp",
+        "Existed"               :  "Đã tồn tại tài khoản với email này"
     },
 
-    "Title_Screen":
+    "Title":
     {
         "Prompt"   :  "- Bấm để bắt đầu -"
     },
@@ -33,9 +38,18 @@
         "Audio"         :  "Âm thanh",
         "Language"      :  "Ngôn ngữ",
         "User_Center"   :  "Người dùng",
-        "Return"        :  "Trở về",
+        "Return"        :  "Trở về"
+    },
 
+    "Video":
+    {
         "Full_Screen"   :  "Toàn màn hình"
+    },
+
+    "Audio":
+    {
+        "Music"   :  "Âm nhạc",
+        "SFX"     :  "Hiệu ứng âm thanh"  
     }
 
 

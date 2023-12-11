@@ -14,15 +14,21 @@
 
     "Sign_Up":
     {
-        "Select_Login"   :  "Login",
-        "Select_Signup"  :  "Sign Up",
-        "Title"          :  "Welcome",
-        "Username_text"  :  "Username",
-        "Password_text"  :  "Password",
-        "Signup_button"  :  "Sign Up"
+        "Select_Login"          :  "Login",
+        "Select_Signup"         :  "Sign Up",
+        "Title"                 :  "Welcome",
+        "Username_text"         :  "Username",
+        "Password_text"         :  "Password",
+        "Repeat_Password_text"  :  "Repeat Password",
+        "Signup_button"         :  "Sign Up",
+        "Username_Error"        :  "The email is in wrong format",
+        "Password_Length_Error" :  "Password must have at least 8 characters",
+        "Password_Mismatch"     :  "Password doesn't match",
+        "Existed"               :  "Account with this email already existed"
+        
     },
 
-    "Title_Screen":
+    "Title":
     {
         "Prompt"    :  "- Click anywhere to continue -"
     },
@@ -33,11 +39,18 @@
         "Audio"         :  "Audio",
         "Language"      :  "Language",
         "User_Center"   :  "User Center",
-        "Return"        :  "Return",
+        "Return"        :  "Return"
+    },
 
-
+    "Video":
+    {
         "Full_Screen"   :  "Full Screen"
+    },
 
+    "Audio":
+    {
+        "Music"   :  "Music",
+        "SFX"     :  "Sound Effects"  
     }
 
     

@@ -2,28 +2,54 @@ import pygame as pg
 import json
 import sqlite3
 import hashlib
-from User_Database import *
 
-with open ('settings/Config.json', 'r') as f:
-    config = json.load(f)
-    start_screen_size = config['Start_Screen_Size'][1:-1]
-    start_screen_size = tuple(map(int, start_screen_size.split(', ')))
-    in_full_screen = config['In_Full_Screen']
-    print(in_full_screen)
+
+try:
+    with open ('settings/Config.json', 'r') as f:
+        config = json.load(f)
+        start_screen_size = config['Start_Screen_Size'][1:-1]
+        start_screen_size = tuple(map(int, start_screen_size.split(', ')))
+        in_full_screen = config['In_Full_Screen']
+except:
+    start_screen_size = (0,0)
+    in_full_screen = 'True'
+
+
+conn = sqlite3.connect('database/User_Data.db')
+cur = conn.cursor()
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS User_Data(
+            User_ID INTEGER PRIMARY KEY,
+            Username VAR CHAR(255) NOT NULL,
+            Password VAR CHAR(255) NOT NULL,
+            Coins VAR CHAR (255) NOT NULL
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS User_History(
+            History_ID INTEGER PRIMARY KEY,
+            USER_ID INTEGER,
+            SELECTED_CHAR VAR CHAR(255),
+            RESULT VAR CHAR(255),
+            FOREIGN KEY(USER_ID) REFERENCES User_Data(User_ID)
+)
+""") 
 
 class Screen_Info:
     def __init__(self, current_size):
         self.w, self.h = current_size
 
     def Full_Screen(self):
-        pg.display.set_mode((0,0), pg.SRCALPHA|pg.FULLSCREEN)
+        pg.display.set_mode((0,0), pg.SRCALPHA|pg.FULLSCREEN | pg.NOFRAME)
         self.w, self.h = screen.get_size()
 
     def Window(self, current_size):
         self.w, self.h = current_size
-        pg.display.set_mode((self.w, self.h))
+        pg.display.set_mode((self.w, self.h), pg.SRCALPHA| pg.NOFRAME)
 
-class Mouse_Animation(pg.sprite.Sprite):
+class Click_Animation(pg.sprite.Sprite):
     def __init__(self, instant_mouse_pos, r, size) -> None:
         super().__init__()
         self.r = r
@@ -45,7 +71,7 @@ class Mouse_Animation(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center = (self.pos))
         self.Kill()
 
-class Dynamic_Background():
+class Background_Animation():
     def __init__(self, bg, pos, mouse_pos):
         self.image = bg
         self.x, self.y = pos
@@ -56,7 +82,7 @@ class Dynamic_Background():
         self.rect = self.image.get_rect(center = (self.x + 0.03 * self.mouse_x, self.y + 0.035 * self.mouse_y))
         screen.blit(self.image, self.rect)
 
-class Draw_Screen():
+class Draw_to_Screen():
     def __init__(self, type, rect_pos, rect_size, image_file, image_scaling, text_content, font, color, pos):
         self.type = type
         self.pos = pos
@@ -85,8 +111,9 @@ class Draw_Screen():
             self.rect_pos = rect_pos
             self.rect_size = rect_size
             self.rect = pg.Rect((self.rect_pos, self.rect_size))
+
     
-    def Blit(self):
+    def Blit(self, width, radius):
         if self.type == 'image':
             screen.blit(self.image, self.rect)
 
@@ -94,9 +121,9 @@ class Draw_Screen():
             screen.blit(self.text, self.rect)
         
         if self.type == 'rect':
-            pg.draw.rect(screen, self.color, self.rect)
+            pg.draw.rect(screen, self.color, self.rect, width, radius)
       
-class Button(Draw_Screen):
+class Button(Draw_to_Screen):
     def __init__(self, type, rect_pos, rect_size, image_file, image_scaling, text_content, font, color, alter_color, alter_image_file, pos):
         super().__init__(type, rect_pos, rect_size, image_file, image_scaling, text_content, font, color, pos)
         if type == 'rect' or type == 'text':
@@ -106,10 +133,10 @@ class Button(Draw_Screen):
             self.alter_image = pg.transform.scale(pg.image.load(self.alter_image_file).convert_alpha(), (self.image_scale))
         
 
-    def Change_Color(self, mouse_pos):
+    def Change_Color(self, mouse_pos, width, radius):
         if self.rect.collidepoint(mouse_pos):
             if self.type == 'rect':
-                pg.draw.rect(screen, self.alter_color, self.rect)
+                pg.draw.rect(screen, self.alter_color, self.rect, width, radius)
 
             if self.type == 'text':
                 self.text = self.font.render(self.text_content, True, self.alter_color)
@@ -150,15 +177,25 @@ class User_Data:
         else:
             return False
 
+    def Sign_Up_Validate(self):
+        cur.execute("SELECT * FROM User_Data WHERE Username = ?", (self.username,))
+
+        if  cur.fetchall():
+            return False
+        else :
+            return True
+    
     def Sign_Up(self):
-        cur.execute("INSERT INTO User_Data(Username, Password) VALUES (?,?)", (self.username, self.password))
-        print(self.username)
-        print(self.password)
+        cur.execute("INSERT INTO User_Data(Username, Password, Coins) VALUES (?,?,?)", (self.username, self.password, 200))
         conn.commit()
+        return True
+            
         
+        
+
 
 pg.init()
 if in_full_screen == 'False':   
-    screen = pg.display.set_mode(start_screen_size, pg.SRCALPHA)
+    screen = pg.display.set_mode(start_screen_size, pg.SRCALPHA | pg.NOFRAME)
 elif in_full_screen == 'True':
-    screen = pg.display.set_mode((0,0), pg.FULLSCREEN | pg.SRCALPHA)
+    screen = pg.display.set_mode((0,0), pg.FULLSCREEN | pg.SRCALPHA | pg.NOFRAME)

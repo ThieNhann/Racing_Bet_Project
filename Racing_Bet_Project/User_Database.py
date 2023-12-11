@@ -29,5 +29,13 @@ cur.execute("SELECT * FROM User_Data")
 
 conn.commit()
 
+cur.execute("INSERT INTO User_Data(Username, Password) VALUES (?,?)", (2,3))
+conn.commit()
+
+'''elif (Validate_Email(username) == False):
+    username_alpha = 500
+    pg.image.save(screen, 'Assets/temps/temp.png')
+    Enter_Code(username, password, hashlib.sha256('1000'.encode()).hexdigest())'''
+
 
 
