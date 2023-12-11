@@ -11,9 +11,9 @@ theme_list = ['ocean', 'forest', 'villager', 'street']
 theme = 0  
 length = 2   
 baseSize = 90
-screen = pygame.display.set_mode((1920,1080))
+screen = pygame.display.set_mode((1280,720))
 bg = pygame.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
-bg = pygame.transform.scale(bg, (1920,1080))
+bg = pygame.transform.scale(bg, (1280,720))
 fps = pygame.time.Clock()
 size = Screen_Info(screen.get_size())
 class Char:
@@ -142,25 +142,25 @@ obstacles = [Obstacle(random.uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(
 def show_menu():
     running = True
     selection = 0
-    charImage = Draw_Screen('text', None, None, None, None, '', 
+    charImage = Draw_to_Screen('text', None, None, None, None, '', 
                                     Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.60, size.h * 0.5))
     while running:
         screen.blit(bg,(0,0))
         font = pygame.font.Font(None, 36)
-        text = Draw_Screen('text', None, None, None, None, 'Choose your character!', 
+        text = Draw_to_Screen('text', None, None, None, None, 'Choose your character!', 
                     Font(int(70 * size.w / 1280)), '#FFFFFF', (size.w * 0.5, size.h * 0.3))
         
-        currentChar = Draw_Screen('text', None, None, None, None, 'Your character:', 
+        currentChar = Draw_to_Screen('text', None, None, None, None, 'Your character:', 
                     Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.4, size.h * 0.5))
         
         Start = Button('rect', (size.w*0.4, size.h * 0.65), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
-        Start_text = Draw_Screen('text', None, None, None, None, 'Start', Font((40)), '#000000', Start.rect.center)
+        Start_text = Draw_to_Screen('text', None, None, None, None, 'Start', Font((40)), '#000000', Start.rect.center)
         
-        text.Blit()
-        currentChar.Blit()
-        charImage.Blit()
-        Start.Blit()
-        Start_text.Blit()
+        text.Blit(0,0)
+        currentChar.Blit(0,0)
+        charImage.Blit(0,0)
+        Start.Blit(0,0)
+        Start_text.Blit(0,0)
         fps.tick(60)
         for char in chars:
             char.act_i = char.draw(char.act_i,char.status)
@@ -174,7 +174,7 @@ def show_menu():
                 pos = pygame.mouse.get_pos()
                 for i, char in enumerate(chars):
                     if char.is_clicked(pos):
-                        charImage = Draw_Screen('image', None, None, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}/idle_1.png', ((baseSize * 1.2)*size.w/1280, (baseSize * 1.2)* size.w/1280), None, 
+                        charImage = Draw_to_Screen('image', None, None, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}/idle_1.png', ((baseSize * 1.2)*size.w/1280, (baseSize * 1.2)* size.w/1280), None, 
                                     None, None, (size.w * 0.6, size.h * 0.5))
                         selection = i                # Trả về chỉ số của xe mà người dùng đã chọn
                     if Start.Mouse_Click(pos):
