@@ -1,19 +1,21 @@
 ﻿import pygame
 import random
 import sys
-import Experiment_Class as cls
+from Experiment_Class import *
 
 # Khởi tạo Pygame
 pygame.init()
 
 # Thiết lập kích thước màn hình
 theme_list = ['ocean', 'forest', 'villager', 'street']
-theme = 1
-screen = pygame.display.set_mode((1280,720))
+theme = 0  
+length = 2   
+baseSize = 90
+screen = pygame.display.set_mode((1920,1080))
 bg = pygame.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
-bg = pygame.transform.scale(bg, (1280,720))
+bg = pygame.transform.scale(bg, (1920,1080))
 fps = pygame.time.Clock()
-size = cls.Screen_Info(screen.get_size())
+size = Screen_Info(screen.get_size())
 class Char:
     def __init__(self, x, y, speed, image_path):
         self.x = x
@@ -21,6 +23,8 @@ class Char:
         self.speed = speed
         self.act_i = 0
         self.status = 'idle'
+        self.laps = 0
+        self.orientation = 1
         # Tải hình ảnh từ đường dẫn được cung cấp
         self.walk = [pygame.image.load(image_path + f'/walk_1.png'),
                      pygame.image.load(image_path + f'/walk_2.png'),
@@ -34,10 +38,10 @@ class Char:
                      pygame.image.load(image_path + f'/idle_2.png'),
                      pygame.image.load(image_path + f'/idle_3.png')]
         for i in range(4):
-            self.walk[i]= pygame.transform.scale(self.walk[i], (50, 50))
-            self.stun[i]= pygame.transform.scale(self.stun[i], (50, 50))
+            self.walk[i]= pygame.transform.scale(self.walk[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
+            self.stun[i]= pygame.transform.scale(self.stun[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
             if (i < 3):
-                self.idle[i]= pygame.transform.scale(self.idle[i], (50, 50))
+                self.idle[i]= pygame.transform.scale(self.idle[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
 #        self.image = pygame.transform.scale(self.image, (50, 50))  # Thu nhỏ kích thước hình ảnh
         self.reverse = False
         self.teleport = False
@@ -48,11 +52,20 @@ class Char:
 
     def draw(self,act_i,status):
         if status == 'walk':
-            screen.blit(self.walk[act_i//15], (self.x, self.y))# Vẽ hình ảnh
+            if self.orientation == 1:
+                screen.blit(self.walk[act_i//15], (self.x, self.y)) # Vẽ hình ảnh
+            elif self.orientation == -1:
+                screen.blit(pygame.transform.flip(self.walk[act_i//15],1,0), (self.x, self.y))
         elif status == 'stun':
-            screen.blit(self.stun[act_i//15], (self.x, self.y))
+            if self.orientation == 1:
+                screen.blit(self.stun[act_i//15], (self.x, self.y)) # Vẽ hình ảnh
+            elif self.orientation == -1:
+                screen.blit(pygame.transform.flip(self.stun[act_i//15],1,0), (self.x, self.y))
         else:
-            screen.blit(self.idle[act_i//15], (self.x, self.y))
+            if self.orientation == 1:
+                screen.blit(self.idle[act_i//15], (self.x, self.y)) # Vẽ hình ảnh
+            elif self.orientation == -1:
+                screen.blit(pygame.transform.flip(self.idle[act_i//15],1,0), (self.x, self.y))
         if status == 'idle':
             if act_i == 44:
                 return 0
@@ -77,7 +90,7 @@ class Char:
         elif self.slow:
             self.x += self.speed / 2
         elif self.speedup:
-            self.x += self.speed * 4
+            self.x += self.speed * 3
         else:
             self.x += self.speed
 
@@ -88,13 +101,13 @@ class Char:
             self.effect_end_time = None
     
     def is_clicked(self, pos):
-        return self.x <= pos[0] <= self.x + 50 and self.y <= pos[1] <= self.y + 50
+        return self.x <= pos[0] <= self.x + baseSize * size.w / 1280 and self.y <= pos[1] <= self.y + baseSize * size.h / 720
 
     def collides_with(self, obstacle):
-        return self.x < obstacle.x + 50 and self.x + 50 > obstacle.x and self.y < obstacle.y + 50 and self.y + 50 > obstacle.y
+        return self.x < obstacle.x + baseSize * size.w / 1280 and self.x + baseSize * size.w / 1280 > obstacle.x and self.y < obstacle.y + baseSize * size.h / 720 and self.y + baseSize * size.h / 720 > obstacle.y
 
 # Tạo danh sách các xe với hình ảnh tương ứng
-chars = [Char(50, 30 + (i + 1)*0.15*size.h, random.uniform(1, 2), f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}') for i in range(5)]
+chars = [Char(50, 30 + (i + 1)*0.15*size.h, random.uniform(1, 2) * size.w / 1280, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}') for i in range(5)]
 
 class Obstacle:
     def __init__(self, x, y, image_paths):
@@ -107,7 +120,7 @@ class Obstacle:
 
     def set_image(self, image_path):
         self.image = pygame.image.load(image_path)  # Tải hình ảnh từ đường dẫn được cung cấp
-        self.image = pygame.transform.scale(self.image, (50, 50))  # Thu nhỏ kích thước hình ảnh
+        self.image = pygame.transform.scale(self.image, (baseSize * size.w / 1280, baseSize * size.h / 720))  # Thu nhỏ kích thước hình ảnh
 
     def set_random_image(self):
         if not self.changed:
@@ -128,11 +141,26 @@ obstacles = [Obstacle(random.uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(
 # Hàm hiển thị menu và nhận lựa chọn từ người chơi
 def show_menu():
     running = True
+    selection = 0
+    charImage = Draw_Screen('text', None, None, None, None, '', 
+                                    Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.60, size.h * 0.5))
     while running:
         screen.blit(bg,(0,0))
         font = pygame.font.Font(None, 36)
-        text = font.render("Choose your character!", True, (255, 255, 255))
-        screen.blit(text, (250, 250))
+        text = Draw_Screen('text', None, None, None, None, 'Choose your character!', 
+                    Font(int(70 * size.w / 1280)), '#FFFFFF', (size.w * 0.5, size.h * 0.3))
+        
+        currentChar = Draw_Screen('text', None, None, None, None, 'Your character:', 
+                    Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.4, size.h * 0.5))
+        
+        Start = Button('rect', (size.w*0.4, size.h * 0.65), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
+        Start_text = Draw_Screen('text', None, None, None, None, 'Start', Font((40)), '#000000', Start.rect.center)
+        
+        text.Blit()
+        currentChar.Blit()
+        charImage.Blit()
+        Start.Blit()
+        Start_text.Blit()
         fps.tick(60)
         for char in chars:
             char.act_i = char.draw(char.act_i,char.status)
@@ -146,7 +174,13 @@ def show_menu():
                 pos = pygame.mouse.get_pos()
                 for i, char in enumerate(chars):
                     if char.is_clicked(pos):
-                        return i  # Trả về chỉ số của xe mà người dùng đã chọn
+                        charImage = Draw_Screen('image', None, None, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}/idle_1.png', ((baseSize * 1.2)*size.w/1280, (baseSize * 1.2)* size.w/1280), None, 
+                                    None, None, (size.w * 0.6, size.h * 0.5))
+                        selection = i                # Trả về chỉ số của xe mà người dùng đã chọn
+                    if Start.Mouse_Click(pos):
+                        return selection
+                        
+                
 
 # Hỏi người chơi chọn xe
 player_choice = show_menu()
@@ -182,7 +216,10 @@ while running:
                     char.wait_until = pygame.time.get_ticks() + 1000 # Đặt thời gian chờ cho xe
                     char.status = 'stun'
                 elif 'obstacle_finish.png' in image_path:
-                    char.x = 0.95*size.w
+                    if (char.speed > 0):
+                        char.x = 0.95 * size.w
+                    else:
+                        char.x = 0.05 * size.w
                 elif 'obstacle_reverse.png' in image_path:
                     char.reverse = True
                     char.effect_end_time = pygame.time.get_ticks() + 1000
@@ -193,9 +230,12 @@ while running:
                     char.speedup = True
                     char.effect_end_time = pygame.time.get_ticks() + 500
                 elif 'obstacle_teleport.png' in image_path:
-                    char.x += 200
+                    char.x += char.speed/(abs(char.speed)) * 200 * size.w / 1280
                 elif 'obstacle_tostart.png' in image_path:
-                    char.x = 50
+                    if (char.speed > 0):
+                        char.x = 0.05 * size.w
+                    else:
+                        char.x = 0.95 * size.w
 
                     
         # Vẽ chướng ngại vật
@@ -210,13 +250,20 @@ while running:
 
         # Kiểm tra xem có xe nào về đích chưa
         for i, char in enumerate(chars):
-            if char.x >= size.w*0.95 and i not in finish_order:
-                finish_order.append(i)
-                char.speed = 0
-                char.x = size.w*0.95
-                char.status = 'idle'
-                char.act_i = 0
-                print(f"Xe số {i+1} đã về đích!")
+            if (char.x >= 0.95*size.w and char.laps % 2 == 0) or (char.x <= 0.05*size.w and char.laps % 2 == 1):
+                if char.laps == length and i not in finish_order:
+                    finish_order.append(i)
+                    char.speed = 0
+                    char.x = size.w*0.95
+                    char.status = 'idle'
+                    char.act_i = 0
+                    print(f"Xe số {i+1} đã về đích!")
+                    print(char.laps)
+                else:
+                    obstacles.append(Obstacle(random.uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(i+1), obstacle_images))
+                    char.laps += 1
+                    char.speed = -1*char.speed
+                    char.orientation = -char.orientation
 
         # Nếu tất cả các xe đều đã về đích, kết thúc trò chơi và công bố kết quả
         if len(finish_order) == len(chars):
@@ -232,7 +279,7 @@ while running:
                 # Tạo font và vẽ văn bản lên màn hình
                 font = pygame.font.Font(None, 36)
                 text = font.render(result_text, True, (255, 255, 255))
-                screen.blit(text, (250, 300 + i * 40))  # Thay đổi vị trí y để các dòng văn bản không chồng lên nhau
+                screen.blit(text, (250 * size.w / 1280, (300 + i * 40) * size.h / 720))  # Thay đổi vị trí y để các dòng văn bản không chồng lên nhau
 
             # Cập nhật màn hình để hiển thị văn bản
             pygame.display.flip()
