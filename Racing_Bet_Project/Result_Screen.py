@@ -170,7 +170,7 @@ def Show_Result(ranking_list, player_choice, game_theme):
         for event in pygame.event.get():
             if (event.type == pygame.MOUSEBUTTONDOWN):
                     pos = pygame.mouse.get_pos()
-                    if Quit.Mouse_Click(pos):
+                    if Quit.Click(pos):
                         running = False
                         return
         pygame.display.flip()

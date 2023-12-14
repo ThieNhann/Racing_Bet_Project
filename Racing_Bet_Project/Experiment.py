@@ -4,6 +4,7 @@ import sys
 import os
 import smtplib
 import ssl
+import Result_Screen as result
 from email_validator import validate_email
 from email.message import EmailMessage
 from math import sin, radians as rad
@@ -849,6 +850,7 @@ def In_Game_Menu(alpha):
         pg.time.Clock().tick(60)
         pg.display.update()
 
+
 def Mini_Game_Menu():
     global highest_scores, gold
     screen_size_display = (size.w, size.h) = (size.w, size.h)
@@ -1366,6 +1368,7 @@ def Mini_Game_Menu():
             gameplay()
 
     main()
+
 #Choose character
 def Choose_Character_Set(alpha, chr_set, race_len):
     Change_Menu = False
@@ -1640,12 +1643,14 @@ def Choose_Race_Length(alpha, chr_set, race_len):
         pg.display.update()
 
 def Core_Game(theme, length):
-    theme_list = ['ocean', 'forest', 'villager', 'street'] 
+    theme_list = ['ocean', 'forest', 'villager', 'street']
     baseSize = 90
+    baseSpeed = 2
+
     bg = pg.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
     bg = pg.transform.scale(bg, (1280,720))
+
     fps = pg.time.Clock()
-    size = Screen_Info(screen.get_size())
 
     class Char:
         def __init__(self, x, y, speed, image_path):
@@ -1661,23 +1666,29 @@ def Core_Game(theme, length):
                         pg.image.load(image_path + f'/walk_2.png'),
                         pg.image.load(image_path + f'/walk_3.png'),
                         pg.image.load(image_path + f'/walk_4.png')]
+            
             self.stun = [pg.image.load(image_path + f'/death_1.png'),
                         pg.image.load(image_path + f'/death_2.png'),
                         pg.image.load(image_path + f'/death_3.png'),
                         pg.image.load(image_path + f'/death_4.png')]
+            
             self.idle = [pg.image.load(image_path + f'/idle_1.png'),
                         pg.image.load(image_path + f'/idle_2.png'),
                         pg.image.load(image_path + f'/idle_3.png')]
+            
             for i in range(4):
                 self.walk[i]= pg.transform.scale(self.walk[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
                 self.stun[i]= pg.transform.scale(self.stun[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
+
                 if (i < 3):
                     self.idle[i]= pg.transform.scale(self.idle[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
-        #   self.image = pg.transform.scale(self.image, (50, 50))  # Thu nhỏ kích thước hình ảnh
+
+    #        self.image = pg.transform.scale(self.image, (50, 50))  # Thu nhỏ kích thước hình ảnh
             self.reverse = False
             self.teleport = False
             self.slow = False
             self.speedup = False
+            self.finished = False
             self.effect_end_time = None
             self.wait_until = None  # Thời gian mà xe phải đợi trước khi di chuyển tiếp
 
@@ -1704,27 +1715,35 @@ def Core_Game(theme, length):
                 if act_i == 44:
                     return 0
                 else:
-                    return act_i+1
+                    return act_i + 1
+                
             else:
                 if act_i == 59:
                     if status == 'stun':
                         return act_i
                     else:   
                         return 0
+                    
                 else:
-                    return act_i+1  # Vẽ hình ảnh thay vì hình vuông
+                    return act_i + 1  # Vẽ hình ảnh thay vì hình vuông
             
         def move(self):
             if self.wait_until and pg.time.get_ticks() < self.wait_until:
                 self.status = 'stun'
                 return  # Nếu xe đang trong thời gian chờ, không di chuyển nó
-            self.status = 'walk'
+            
+            if not self.finished:
+                self.status = 'walk'
+
             if self.reverse:
                 self.x -= self.speed
+
             elif self.slow:
                 self.x += self.speed / 2
+
             elif self.speedup:
-                self.x += self.speed * 3
+                self.x += self.speed * 2.5
+
             else:
                 self.x += self.speed
 
@@ -1741,7 +1760,7 @@ def Core_Game(theme, length):
             return self.x < obstacle.x + baseSize * size.w / 1280 and self.x + baseSize * size.w / 1280 > obstacle.x and self.y < obstacle.y + baseSize * size.h / 720 and self.y + baseSize * size.h / 720 > obstacle.y
 
     # Tạo danh sách các xe với hình ảnh tương ứng
-    chars = [Char(50, 30 + (i + 1)*0.15*size.h, uniform(1, 2) * size.w / 1280, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}') for i in range(5)]
+    chars = [Char(50, 30 + (i + 1)*0.15*size.h, uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}') for i in range(5)]
 
     class Obstacle:
         def __init__(self, x, y, image_paths):
@@ -1780,6 +1799,7 @@ def Core_Game(theme, length):
                                         Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.60, size.h * 0.5))
         while running:
             screen.blit(bg,(0,0))
+
             text = Draw_to_Screen('text', None, None, None, None, 'Choose your character!', 
                         Font(int(70 * size.w / 1280)), '#FFFFFF', (size.w * 0.5, size.h * 0.3))
             
@@ -1789,22 +1809,23 @@ def Core_Game(theme, length):
             Start = Button('rect', (size.w*0.4, size.h * 0.65), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
             Start_text = Draw_to_Screen('text', None, None, None, None, 'Start', Font((40)), '#000000', Start.rect.center)
             
-            text.Blit(0,0)
-            currentChar.Blit(0,0)
-            charImage.Blit(0,0)
-            Start.Blit(0,0)
-            Start_text.Blit(0,0)
+            for item in [text, currentChar, charImage, Start, Start_text]:
+                item.Blit(0,0)
+
             fps.tick(60)
             for char in chars:
                 char.act_i = char.draw(char.act_i,char.status)
+
             pg.display.flip()
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
-                    pg.quit()
-                    sys.exit()  # Thoát khỏi chương trình nếu người dùng đóng cửa sổ
+                    Shutdown()  
+                    # Thoát khỏi chương trình nếu người dùng đóng cửa sổ
+
                 if event.type == pg.MOUSEBUTTONDOWN:
                     pos = pg.mouse.get_pos()
+
                     for i, char in enumerate(chars):
                         if char.is_clicked(pos):
                             charImage = Draw_to_Screen('image', None, None, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}/idle_1.png', ((baseSize * 1.2)*size.w/1280, (baseSize * 1.2)* size.w/1280), None, 
@@ -1818,23 +1839,40 @@ def Core_Game(theme, length):
     # Hỏi người chơi chọn xe
     player_choice = show_menu()
 
-    # Khởi tạo số vàng của người chơi
-    player_gold = 0
-
     # Tạo một danh sách để theo dõi thứ tự các xe về đích
     finish_order = []
+    ranking_list = [0, 0, 0, 0, 0]
 
     # Vòng lặp chính của game
     running = True
     for char in chars:
         char.status = 'walk'
+        
+    Finish = Button('rect', (size.w*0.4, size.h * 0.65), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
+    Finish_text = Draw_to_Screen('text', None, None, None, None, 'Next', Font((40)), '#000000', Finish.rect.center)
+
+    all_Finish = False
+
     while running:
         # Xử lý các sự kiện
             fps.tick(60)
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     running = False
+                if (event.type == pg.MOUSEBUTTONDOWN):
+                    mouse_pos = pg.mouse.get_pos()
+                    if all_Finish:
+                        if Finish.Click(mouse_pos):
+                            running = False
+                            result.Show_Result(ranking_list, player_choice, theme, screen)
+                            In_Game_Menu(-20)
+
             screen.blit(bg,(0,0))
+            
+            if all_Finish:
+                Finish.Blit(0,0)
+                Finish_text.Blit(0,0)
+            
             # Vẽ và di chuyển các xe
             for char in chars:
                 char.act_i = char.draw(char.act_i, char.status)
@@ -1869,8 +1907,7 @@ def Core_Game(theme, length):
                             char.x = 0.05 * size.w
                         else:
                             char.x = 0.95 * size.w
-
-                        
+                                        
             # Vẽ chướng ngại vật
             for obstacle in obstacles:
                 obstacle.draw()
@@ -1886,39 +1923,55 @@ def Core_Game(theme, length):
                 if (char.x >= 0.95*size.w and char.laps % 2 == 0) or (char.x <= 0.05*size.w and char.laps % 2 == 1):
                     if char.laps == length and i not in finish_order:
                         finish_order.append(i)
+                        if len(finish_order) == 1:
+                            ranking_list[2] = i + 1
+                        elif len(finish_order) == 2:
+                            ranking_list[3] = i + 1
+                        elif len(finish_order) == 3:
+                            ranking_list[1] = i + 1
+                        elif len(finish_order) == 4:
+                            ranking_list[0] = i + 1
+                        elif len(finish_order) == 5:
+                            ranking_list[4] = i + 1
+                        print(ranking_list)
                         char.speed = 0
-                        char.x = size.w*0.95
+                        if length % 2 == 0:
+                            char.x = size.w*0.95
+                        else:
+                            char.x = size.w*0.05
                         char.status = 'idle'
                         char.act_i = 0
+                        char.finished = True
                         print(f"Xe số {i+1} đã về đích!")
                         print(char.laps)
-                    else:
+                    elif not char.finished:
                         obstacles.append(Obstacle(uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(i+1), obstacle_images))
                         char.laps += 1
                         char.speed = -1*char.speed
                         char.orientation = -char.orientation
 
+            
             # Nếu tất cả các xe đều đã về đích, kết thúc trò chơi và công bố kết quả
             if len(finish_order) == len(chars):
-                running = False
-                print("Tất cả các xe đã về đích!")
-                for i, char_index in enumerate(finish_order):
-                    if i == 0 and char_index == player_choice:
-                        player_gold += 20
-                        result_text = f"Your car comes first! You have received 20 gold. Your current gold amount is {player_gold}."
-                    else:
-                        result_text = f"Car number {char_index+1} came in {i+1}th place."
-            
-                    # Tạo font và vẽ văn bản lên màn hình
-                    font = pg.font.Font(None, 36)
-                    text = font.render(result_text, True, (255, 255, 255))
-                    screen.blit(text, (250 * size.w / 1280, (300 + i * 40) * size.h / 720))  # Thay đổi vị trí y để các dòng văn bản không chồng lên nhau
+                all_Finish = True
+    #            print("Tất cả các xe đã về đích!")
+    #            for i, char_index in enumerate(finish_order):
+    #                if i == 0 and char_index == player_choice:
+    #                    player_gold += 20
+    #                    result_text = f"Your car comes first! You have received 20 gold. Your current gold amount is {player_gold}."
+    #                else:
+    #                    result_text = f"Car number {char_index+1} came in {i+1}th place."
+    #        
+    #                # Tạo font và vẽ văn bản lên màn hình
+    #                font = pg.font.Font(None, 36)
+    #                text = font.render(result_text, True, (255, 255, 255))
+    #                screen.blit(text, (250 * size.w / 1280, (300 + i * 40) * size.h / 720))  # Thay đổi vị trí y để các dòng văn bản không chồng lên nhau
 
                 # Cập nhật màn hình để hiển thị văn bản
                 pg.display.flip()
 
                 # Đợi một chút trước khi thoát để người chơi có thể đọc kết quả
-                pg.time.wait(5000)
+                # pg.time.wait(5000)
 
 #Settings Tab
 def Video_Menu(prev_menu, set_char, race_len):

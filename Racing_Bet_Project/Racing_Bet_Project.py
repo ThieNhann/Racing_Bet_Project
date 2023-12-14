@@ -181,7 +181,7 @@ def show_menu():
                         charImage = Draw_to_Screen('image', None, None, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}/idle_1.png', ((baseSize * 1.2)*size.w/1280, (baseSize * 1.2)* size.w/1280), None, 
                                     None, None, (size.w * 0.6, size.h * 0.5))
                         selection = i                # Trả về chỉ số của xe mà người dùng đã chọn
-                    if Start.Mouse_Click(pos):
+                    if Start.Click(pos):
                         return selection
                         
                 
@@ -214,7 +214,7 @@ while running:
                 running = False
             if (event.type == pygame.MOUSEBUTTONDOWN) and all_Finish:
                     pos = pygame.mouse.get_pos()
-                    if Finish.Mouse_Click(pos):
+                    if Finish.Click(pos):
                         running = False
                         result.Show_Result(ranking_list, player_choice, theme)
         screen.blit(bg,(0,0))
