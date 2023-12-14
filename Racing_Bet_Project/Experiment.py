@@ -2,15 +2,14 @@ import pygame as pg
 import json
 import sys
 import os
-from email_validator import validate_email
 import smtplib
 import ssl
+from email_validator import validate_email
 from email.message import EmailMessage
 from math import sin, radians as rad
 from Experiment_Class import *
-from random import randint, randrange
+from random import randint, randrange, uniform, choice
 
-#You may wonder why i didn't use pygame_menu and yes im asking the same question rn but eh too late
 pg.init()
 os.environ['SDL_VIDEO_CENTERED'] = '0'
 pg.display.set_caption("Racing Bet")
@@ -25,27 +24,31 @@ title_music = pg.mixer.Sound('Assets/music/Forest (rushed ver).wav')
 button_click = pg.mixer.Sound('Assets/menu_click.mp3')
 interface = pg.mixer.Sound('Assets/interface.mp3')
 
-#Mainly for deleting info when backspace is held
+#For holding down Backspace
 pg.key.set_repeat(600, 25)
 
 #size of current screen
 size = Screen_Info(screen.get_size())
 
 #mouse animation group
-mouse_animation = pg.sprite.Group()
+click_ani = pg.sprite.Group()
 
 #FPS event counter
 Bg_cycle = pg.USEREVENT + 1
 pg.time.set_timer(Bg_cycle, 1000)
+
+#Create instance of user
+current_user = User_Data()
 
 #Load the config (lang, volume)
 def Load_Config():
     global US, VN, lang, music_volume, sfx_volume
 
     #open config files
-    with open('locale/en_US.json', 'r', encoding="utf8") as f:
+    with open('locale/en_US.json', 'r', encoding = "utf8") as f:
         US = json.load(f)
-    with open('locale/vi_VN.json', 'r', encoding="utf8") as f:
+
+    with open('locale/vi_VN.json', 'r', encoding = "utf8") as f:
         VN = json.load(f)
 
     #if config file not available then set default
@@ -55,12 +58,12 @@ def Load_Config():
             lang = config['Start_Language']
             music_volume = float(config['Music_Volume'])
             sfx_volume = float(config['SFX_Volume'])
+
     except:
         lang = 'US'
         music_volume = 1.0
         sfx_volume = 1.0
     
-
     sfx_channels.set_volume(sfx_volume)
     music_channels.set_volume(music_volume)
 
@@ -76,6 +79,7 @@ def Shutdown():
                   }
     
     json_file = json.dumps(save_config, indent = 4)
+
     with open ('settings/config.json', 'w') as f:
         f.write(json_file)
 
@@ -97,27 +101,28 @@ def Validate_Email(email):
         return False
 
 #Send confirmation code
-def Send_Email(username):
-    #Get password (private reason ehe)
+def Send_Email(email):
+    #Get pwd (private reason ehe)
     with open ("C:/Users/ADMIN/Desktop/app.txt", 'r') as f:
-        password = f.read()
+        pwd = f.read()
     
     #Get sender and receiver
     sender = "mihikoxakamatsu@gmail.com"
-    receiver = username
+    receiver = email
 
     #Generate code
     code = randint(100000, 999999)
 
     #Email content
     Title = "Email Verifications for School Project"
+
     Body = f"""
     Your email verification code is: {code}
         
     Please ignore this email if it is mistakenly sent to you."""
     
     #Encode
-    code = hashlib.sha256(password.encode()).hexdigest()
+    code = hashlib.sha256(pwd.encode()).hexdigest()
 
     #Making the emails
     em = EmailMessage()
@@ -130,499 +135,14 @@ def Send_Email(username):
 
     #Send the email
     with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-        smtp.login(sender, password)
+        smtp.login(sender, pwd)
         smtp.sendmail(sender, receiver, em.as_string())
 
     #return to compare with user input
     return code
 
-#Settings tab
-def Video_Menu(prev_menu, set_char, race_length):
-    global in_full_screen
-
-    #Update everything only once to improve performance
-    change_size = True
-
-    #Set the image of the previous menu as background
-    bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
-
-    while True:
-
-        #Position of the mouse
-        mouse_pos = pg.mouse.get_pos()
-
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                Shutdown()
-
-            if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
-
-                #Go to different setting menus
-                if Audio.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    Audio_Menu(prev_menu, set_char, race_length)
-
-                if Language.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    Language_Menu(prev_menu, set_char, race_length)
-
-                if User_Center.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    User_Center_Menu(prev_menu, set_char, race_length)
-
-                #If return is pressed, return to a previous menu
-                if Return.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-
-                    if prev_menu == 'Start Menu':
-                        Title(False)
-
-                    elif prev_menu == 'In_Game_Menu':
-                        In_Game_Menu(0)
-
-                    elif prev_menu == 'Choose_Character_Set':
-                        Choose_Character_Set(-20, set_char, race_length)
-
-                    elif prev_menu == 'Choose_Race_Length':
-                        Choose_Race_Length(-20, set_char, race_length)
-                
-                #Change resolutions
-                if Full_Screen.Mouse_Click(mouse_pos):
-                    sfx_channels.play(interface)
-                    in_full_screen = True
-                    size.Full_Screen()
-
-                if _1366x768.Mouse_Click(mouse_pos):
-                    sfx_channels.play(interface)
-                    in_full_screen = False
-                    size.Window((1366, 768))
-
-                if _1280x720.Mouse_Click(mouse_pos):
-                    sfx_channels.play(interface)
-                    in_full_screen = False
-                    size.Window((1280, 720))    
-
-            #Update everything within the menu when size changed
-            if event.type == pg.WINDOWSIZECHANGED:
-                change_size = True
-
-        #If a size change is detected, create new object that replace the old one with new resolution
-        if change_size:
-
-            bg = bg = pg.transform.smoothscale(bg, (size.w, size.h))
-
-            Video = Draw_to_Screen('rect', (size.w*0.125, size.h * 0.125), (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
-            Audio = Button('rect', Video.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-            Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-            User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-            Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-
-            Full_Screen = Button('rect', (size.w * 0.325, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
-            _1366x768 = Button('rect', (size.w * 0.5125, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
-            _1280x720 = Button('rect', (size.w * 0.7, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
-            
-            Video_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Video' ), True, '#424769')
-            Audio_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Audio' ), True, '#424769')
-            Language_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Language' ), True, '#424769')
-            User_Center_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'User_Center' ), True, '#424769')
-            Return_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Return' ), True, '#424769')
-
-            Full_Screen_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Video', 'Full_Screen' ), True, '#424769')
-            _1366x768_text = Font(int(25 * size.w / 1280)).render('1366 x 768', True, '#424769')
-            _1280x720_text = Font(int(25 * size.w / 1280)).render('1280 x 720', True, '#424769')
-            
-
-        #After all the object has been updated, change the variable to False
-        change_size = False
-
-        screen.blit(bg, (0,0))
-        pg.draw.rect(screen, '#2d3250', [size.w*0.125, size.h * 0.125, size.w*0.75, size.h * 0.75])
-        pg.draw.rect(screen, '#676f9d', [size.w*0.125, size.h * 0.125, size.w*0.175, size.h * 0.75])
-
-        #Blit Assets onto screen
-        for item in [Video, Audio, Language, User_Center, Return]:
-            item.Blit(0,0)
-        
-        for item in [Full_Screen, _1366x768, _1280x720]:
-            item.Blit(0,10)
-
-        #Change colors if the mouse hover above
-        for button in [Audio, Language, User_Center, Return]:
-            button.Change_Color(mouse_pos, 0 , 0)
-
-        for button in [Full_Screen, _1366x768, _1280x720]:
-            button.Change_Color(mouse_pos, 0 , 10)
-
-
-        #Blit Settings Text onto screen
-        screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
-        screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
-        screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
-        screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
-        screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
-
-        #Blit Video Texts onto screen
-        screen.blit(Full_Screen_text, Full_Screen_text.get_rect(center = (Full_Screen.rect.center)))
-        screen.blit(_1366x768_text, _1366x768_text.get_rect(center = (_1366x768.rect.center)))
-        screen.blit(_1280x720_text, _1280x720_text.get_rect(center = (_1280x720.rect.center)))
-
-        #Mouse Animation
-        mouse_animation.update()
-        mouse_animation.draw(screen)
-
-        pg.display.update()
-        pg.time.Clock().tick(60)
-
-def Audio_Menu(prev_menu, set_char, race_length):
-    global music_volume, sfx_volume
-    
-    #Load Assets
-    bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
-    bg = bg = pg.transform.smoothscale(bg, (size.w, size.h))
-
-    Video = Button('rect', (size.w*0.125, size.h * 0.125), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    Audio = Draw_to_Screen('rect', Video.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
-    Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-
-    music_slider = pg.rect.Rect((0, 0), (300 * size.w/1280, 20 * size.h/720))
-    music_slider.center = (size.w * 0.7, size.h * 0.25)
-
-    music_circle = pg.rect.Rect((0,0), (30 * size.w/1280, 30 * size.w/1280))
-    music_circle.center = (music_volume * (music_slider.right - music_slider.left) + music_slider.left, size.h * 0.25)
-
-    sfx_slider = pg.rect.Rect((0, 0), (300 * size.w/1280, 20 * size.h/720))
-    sfx_slider.center = (size.w * 0.7, size.h * 0.4)
-
-    sfx_circle = pg.rect.Rect((0,0), (30 * size.w/1280, 30 * size.w/1280))
-    sfx_circle.center = (sfx_volume * (sfx_slider.right - sfx_slider.left) + sfx_slider.left, size.h * 0.4)
-
-    Video_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Video' ), True, '#424769')
-    Audio_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Audio' ), True, '#424769')
-    Language_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Language' ), True, '#424769')
-    User_Center_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'User_Center' ), True, '#424769')
-    Return_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Return' ), True, '#424769')
-
-    music_text = Font(int(25*size.w/1280)).render(Updt_Lang(lang, 'Audio', 'Music' ), True, '#FFFFFF')
-    sfx_text = Font(int(25*size.w/1280)).render(Updt_Lang(lang, 'Audio', 'SFX' ), True, '#FFFFFF')
-
-    while True:
-
-        #Position of the mouse
-        mouse_pos = pg.mouse.get_pos()
-
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                Shutdown()
-
-            if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
-
-                #Go to different setting menus
-                if Video.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    Video_Menu(prev_menu, set_char, race_length)
-
-                if Language.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    Language_Menu(prev_menu, set_char, race_length)
-
-                if User_Center.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    User_Center_Menu(prev_menu, set_char, race_length)
-
-                #If return is pressed, return to a previous menu
-                if Return.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-
-                    if prev_menu == 'Start Menu':
-                        Title(False)
-
-                    elif prev_menu == 'In_Game_Menu':
-                        In_Game_Menu(0)
-
-                    elif prev_menu == 'Choose_Character_Set':
-                        Choose_Character_Set(-20, set_char, race_length)
-
-                    elif prev_menu == 'Choose_Race_Length':
-                        Choose_Race_Length(-20, set_char, race_length)
-
-
-        screen.blit(bg, (0,0))
-        pg.draw.rect(screen, '#2d3250', [size.w*0.125, size.h * 0.125, size.w*0.75, size.h * 0.75])
-        pg.draw.rect(screen, '#676f9d', [size.w*0.125, size.h * 0.125, size.w*0.175, size.h * 0.75])
-
-        #Draw the music sliders
-        pg.draw.rect(screen, 'light grey', music_slider, 0, 15)
-        pg.draw.rect(screen, '#000000', music_circle, 0, 30)
-        pg.draw.rect(screen, 'light grey', sfx_slider, 0, 15)
-        pg.draw.rect(screen, '#000000', sfx_circle, 0, 30)
-
-
-        #Change the music settings when mouse is pressed onto the circle
-        keys = pg.mouse.get_pressed()
-
-        if (music_circle.collidepoint(mouse_pos) and keys[0] == True):
-            
-            #Move music circle with mouse
-            music_circle.center = (mouse_pos[0], size.h * 0.25)
-            if music_circle.left <= music_slider.left: music_circle.left = music_slider.left
-            if music_circle.right >= music_slider.right: music_circle.right = music_slider.right
-
-            #Change music
-            music_volume = round((music_circle.center[0] - music_slider.midleft[0]) / (300 * size.w/1280), 2)
-            if music_volume <= 0.05: music_volume = 0
-            if music_volume >= 0.95: music_volume = 1.0
-
-            music_channels.set_volume(music_volume)
-
-        elif (sfx_circle.collidepoint(mouse_pos) and keys[0] == True):
-
-            #Move sfx circle with mouse
-            sfx_circle.center = (mouse_pos[0], size.h * 0.4)
-            if sfx_circle.left <= sfx_slider.left: sfx_circle.left = sfx_slider.left
-            if sfx_circle.right >= sfx_slider.right: sfx_circle.right = sfx_slider.right
-
-            #Change music
-            sfx_volume = round((sfx_circle.center[0] - sfx_slider.midleft[0]) / (300 * size.w/1280), 2)
-            if sfx_volume <= 0.05: sfx_volume = 0
-            if sfx_volume >= 0.95: sfx_volume = 1.0
-
-            sfx_channels.set_volume(sfx_volume)
-
-        #Blit Assets onto screen
-        for item in [Video, Audio, Language, User_Center, Return]:
-            item.Blit(0,0)
-
-        #Change colors if the mouse hover above
-        for button in [Video, Language, User_Center, Return]:
-            button.Change_Color(mouse_pos, 0 ,0)
-        
-        #Blit Settings Text onto screen
-        screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
-        screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
-        screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
-        screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
-        screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
-
-        screen.blit(music_text, music_text.get_rect(midleft = (size.w * 0.35, size.h * 0.25)))
-        screen.blit(sfx_text, sfx_text.get_rect(midleft = (size.w * 0.35, size.h * 0.4)))
-
-        #Mouse animation
-        mouse_animation.update()
-        mouse_animation.draw(screen)
-
-        pg.display.update()
-        pg.time.Clock().tick(60)
-
-def Language_Menu(prev_menu, set_char, race_length):
-    global lang
-    Change_Language = True
-
-    #Load Assets
-    bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
-    bg = pg.transform.smoothscale(bg, (size.w, size.h))
-
-    Video = Button('rect', (size.w*0.125, size.h * 0.125), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    Audio = Button('rect', Video.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d','#5d648c', None, None)
-    Language = Draw_to_Screen('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
-    User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-
-    Choose_US = Button('rect', (size.w*0.375, size.h * 0.2), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
-    Choose_VN = Button('rect', (size.w*0.625, size.h * 0.2), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
-
-    Choose_US_text = Font(int(25 * size.w / 1280)).render('English', True, '#424769')
-    Choose_VN_text = Font(int(25 * size.w / 1280)).render('Tiếng Việt', True, '#424769')
-
-    while True:
-
-        #Position of the mouse
-        mouse_pos = pg.mouse.get_pos()
-
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                Shutdown()
-
-            if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
-
-                #Change global langauge settings
-                if Choose_US.Mouse_Click(mouse_pos) == True:
-                    sfx_channels.play(interface)
-                    Change_Language = True
-                    lang = 'US'
-
-                if Choose_VN.Mouse_Click(mouse_pos) == True:
-                    sfx_channels.play(interface)
-                    Change_Language = True
-                    lang = 'VN'
-
-                #Go to different setting menus
-                if Video.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    Video_Menu(prev_menu, set_char, race_length)
-
-                if Audio.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    Audio_Menu(prev_menu, set_char, race_length)
-
-                if User_Center.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    User_Center_Menu(prev_menu, set_char, race_length)
-
-                #If return is pressed, return to a previous menu
-                if Return.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-
-                    if prev_menu == 'Start Menu':
-                        Title(False)
-
-                    elif prev_menu == 'In_Game_Menu':
-                        In_Game_Menu(0)
-
-                    elif prev_menu == 'Choose_Character_Set':
-                        Choose_Character_Set(-20, set_char, race_length)
-
-                    elif prev_menu == 'Choose_Race_Length':
-                        Choose_Race_Length(-20, set_char, race_length)
-
-        #Update global lang
-        if Change_Language == True:
-            Video_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Video' ), True, '#424769')
-            Audio_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Audio' ), True, '#424769')
-            Language_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Language' ), True, '#424769')
-            User_Center_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'User_Center' ), True, '#424769')
-            Return_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Return' ), True, '#424769')
-
-        #After update, return variable to False
-        Change_Language == False
-
-        screen.blit(bg, (0,0))
-        pg.draw.rect(screen, '#2d3250', [size.w*0.125, size.h * 0.125, size.w*0.75, size.h * 0.75])
-        pg.draw.rect(screen, '#676f9d', [size.w*0.125, size.h * 0.125, size.w*0.175, size.h * 0.75])
-
-        #Blit Assets onto screen
-        for item in [Choose_US, Choose_VN]:
-            item.Blit(0,10)
-        
-        for item in [Video, Audio, Language, User_Center, Return]:
-            item.Blit(0,0)
-
-        #Change colors if the mouse hover above
-        for button in [Choose_US, Choose_VN]:
-            button.Change_Color(mouse_pos, 0 ,10)
-
-        for button in [Video, Audio, User_Center, Return]:
-            button.Change_Color(mouse_pos, 0 ,0)
-        
-        #Blit settings text onto the screen
-        screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
-        screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
-        screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
-        screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
-        screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
-
-        screen.blit(Choose_US_text, Choose_US_text.get_rect(center = (Choose_US.rect.center)))
-        screen.blit(Choose_VN_text, Choose_VN_text.get_rect(center = (Choose_VN.rect.center)))
-
-        mouse_animation.update()
-        mouse_animation.draw(screen)
-
-        pg.display.update()
-        pg.time.Clock().tick(60)
-
-def User_Center_Menu(prev_menu, set_char, race_length):
-
-    #Load Assets
-    bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
-    bg = pg.transform.smoothscale(bg, (size.w, size.h))
-
-    Video = Button('rect', (size.w*0.125, size.h * 0.125), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    Audio = Button('rect', Video.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    User_Center = Draw_to_Screen('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
-    Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    
-
-    Video_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Video' ), True, '#424769')
-    Audio_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Audio' ), True, '#424769')
-    Language_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Language' ), True, '#424769')
-    User_Center_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'User_Center' ), True, '#424769')
-    Return_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Return' ), True, '#424769')
-
-    while True:
-
-        #Get mouse position
-        mouse_pos = pg.mouse.get_pos()
-
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                Shutdown()
-
-            if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
-
-                #Go to different setting menus
-                if Video.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    Video_Menu(prev_menu, set_char, race_length)
-
-                if Audio.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    Audio_Menu(prev_menu, set_char, race_length)
-
-                if Language.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-                    Language_Menu(prev_menu, set_char, race_length)
-
-                #If return is pressed, return to a previous menu
-                if Return.Mouse_Click(mouse_pos):
-                    sfx_channels.play(button_click)
-
-                    if prev_menu == 'Start Menu':
-                        Title(False)
-
-                    elif prev_menu == 'In_Game_Menu':
-                        In_Game_Menu(0)
-
-                    elif prev_menu == 'Choose_Character_Set':
-                        Choose_Character_Set(-20, set_char, race_length)
-
-                    elif prev_menu == 'Choose_Race_Length':
-                        Choose_Race_Length(-20, set_char, race_length)
-
-        screen.blit(bg, (0,0))
-        pg.draw.rect(screen, '#2d3250', [size.w*0.125, size.h * 0.125, size.w*0.75, size.h * 0.75])
-        pg.draw.rect(screen, '#676f9d', [size.w*0.125, size.h * 0.125, size.w*0.175, size.h * 0.75])
-
-        #Blit Assets onto screen
-        for item in [Video, Audio, Language, User_Center, Return]:
-            item.Blit(0,0)
-
-
-        #Change colors if the mouse hover above
-        for button in [Video, Audio, Language, Return]:
-            button.Change_Color(mouse_pos, 0 ,0)
-        
-        #Blit text onto the screen
-        screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
-        screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
-        screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
-        screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
-        screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
-
-        mouse_animation.update()
-        mouse_animation.draw(screen)
-
-        pg.display.update()
-        pg.time.Clock().tick(60)
-
 #Logo Animation
 def Start_Animation():
-
     #set the alpha value for the screen
     alpha = 250
 
@@ -630,6 +150,7 @@ def Start_Animation():
     logo = pg.transform.scale(pg.image.load('Assets/icon/Settings/HCMUS_logo.png'), (size.w / 3, size.w / 3))
     logo_rect = logo.get_rect(center = (size.w/2, size.h/2))
 
+    #Main code
     while True:
         alpha += 1.5
         mouse_pos = pg.mouse.get_pos()
@@ -640,8 +161,9 @@ def Start_Animation():
 
             #Play mouse animation
             if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
             
+        #Code
         screen.fill(0)
 
         if alpha < 180 and alpha > 0:
@@ -653,47 +175,58 @@ def Start_Animation():
             #if alpha then reaches 250, move onto login screen
             Login('', '')
 
-        mouse_animation.update()
-        mouse_animation.draw(screen)
+
+        click_ani.update()
+        click_ani.draw(screen)
 
         pg.time.Clock().tick(60)
         pg.display.update()
 
 #Login
-def Login(username, password):
+def Login(email, pwd):
     alpha = 0
 
     #just stuff for FPS ignore it
     fps = 0
     tru_fps = 0
 
-    #To know which box the user click (username or password)
+    #To know which box the user click (email or pwd)
     insert = ''
 
     #Load Assets
     bg = pg.transform.scale(pg.image.load('Assets/background/village/village.png').convert(), (size.w*0.75, size.h*0.75))
+    bounding_box = pg.rect.Rect((0,0), (size.w*0.275, size.h * 0.1))
 
-    signup_select = Button('text', None, None, None, None, Updt_Lang(lang, 'Login', 'Select_Signup'), Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.35, size.h * 0.178))
-    forgot_password = Button('text', None, None, None, None, Updt_Lang(lang, 'Login', 'Forgot_Password'), Font(int(15 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.405, size.h * 0.64))
+    to_signup = Button('text', None, None, None, None, Updt_Lang(lang, 'Login', 'To_Signup'), 
+                           Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.35, size.h * 0.178))
+    
+    forgot_pwd = Button('text', None, None, None, None, Updt_Lang(lang, 'Login', 'Forgot_Pwd'), 
+                            Font(int(15 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.405, size.h * 0.64))
 
-    username_box = Button('rect', (size.w * 0.175, size.h * 0.385), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    password_box = Button('rect', (size.w * 0.175, size.h * 0.515), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    email_box = Button('rect', (size.w * 0.175, size.h * 0.385), (size.w*0.275, size.h * 0.1), 
+                          None, None, None, None, '#676f9d', '#5d648c', None, None)
+    
+    pwd_box = Button('rect', (size.w * 0.175, size.h * 0.515), (size.w*0.275, size.h * 0.1), 
+                          None, None, None, None, '#676f9d', '#5d648c', None, None)
 
-    login_button = Button('rect', (size.w * 0.175, size.h * 0.7), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None,  None)
-    faceID_button = Button('rect', (size.w * 0.345, size.h * 0.7), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None,  None)
+    submit_login = Button('rect', (size.w * 0.175, size.h * 0.7), (size.w*0.1, size.h * 0.06), 
+                          None, None, None, None, '#f9b17a', '#d69869', None,  None)
+    
+    faceID_button = Button('rect', (size.w * 0.345, size.h * 0.7), (size.w*0.1, size.h * 0.06), 
+                           None, None, None, None, '#f9b17a', '#d69869', None,  None)
 
-    Quit = Button('image', None, None, 'Assets/icon/Settings/shutdown_01.png', (60*size.w/1280, 60* size.w/1280), 
-                None, None, None, None, 'Assets/icon/Settings/shutdown_02.png', (size.w * 0.03, size.h * 0.95))
+    Quit = Button('image', None, None, 'Assets/icon/Settings/shutdown_01.png', (50*size.w/1280, 50* size.w/1280), 
+                None, None, None, None, 'Assets/icon/Settings/shutdown_02.png', (size.w * 0.025, size.h * 0.955))
+    
 
-    welcome = Font(int(60 * size.w / 1280)).render (Updt_Lang(lang, 'Login', 'Title'), True, '#ffffff')
-    login_select = Font(int(20 * size.w / 1280)).render(Updt_Lang(lang,'Login', 'Select_Login'), True, '#d69869')
-    username_box_text = Font(int(13 * size.w / 1280)).render(Updt_Lang(lang, 'Login', 'Username_text'), True, '#424769')
-    password_box_text = Font(int(13 * size.w / 1280)).render(Updt_Lang(lang, 'Login', 'Password_text'), True, '#424769')
-    login_button_text = Font(int(20 * size.w / 1280)).render(Updt_Lang(lang, 'Login', 'Login_Button'), True, '#424769')
-    faceID_button_text = Font(int(20 * size.w / 1280)).render(Updt_Lang(lang, 'Login', 'FaceID_Button'), True, '#424769')
+    welcome =       Font(int(60 * size.w / 1280)).render (Updt_Lang(lang, 'Login', 'Title'), True, '#ffffff')
+    to_login =      Font(int(20 * size.w / 1280)).render(Updt_Lang(lang,'Login', 'To_Login'), True, '#d69869')
+    email_txt =     Font(int(13 * size.w / 1280)).render(Updt_Lang(lang, 'Login', 'Email_Txt'), True, '#424769')
+    pwd_txt =       Font(int(13 * size.w / 1280)).render(Updt_Lang(lang, 'Login', 'Pwd_Txt'), True, '#424769')
+    login_txt =     Font(int(20 * size.w / 1280)).render(Updt_Lang(lang, 'Login', 'Submit_Login'), True, '#424769')
+    faceID_txt =    Font(int(20 * size.w / 1280)).render(Updt_Lang(lang, 'Login', 'FaceID_Btn'), True, '#424769')
 
     login_failed = Font(int(60 * size.w / 1280)).render(Updt_Lang(lang, 'Login', 'Login_Failed'), True, "#FF0000")
-
 
     while True:
         alpha -= 7.5
@@ -705,44 +238,47 @@ def Login(username, password):
 
             if event.type == pg.KEYDOWN:
                 
-                #User clicked username
-                if insert == 'username':
+                #User clicked email
+                if insert == 'email':
                     if event.key == pg.K_BACKSPACE:
 
-                        username = username[:-1]
+                        email = email[:-1]
                     else:
-                        username += event.unicode
+                        email += event.unicode
 
-                #User clicked password
-                elif insert == 'password':
+                #User clicked pwd
+                elif insert == 'pwd':
                     if event.key == pg.K_BACKSPACE:
-                        password = password[:-1]
+                        pwd = pwd[:-1]
                     else:
-                        password += event.unicode
+                        pwd += event.unicode
 
             if event.type == pg.MOUSEBUTTONDOWN:
                 #Play mouse animation
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
 
-                if Quit.Mouse_Click(mouse_pos):
+                if Quit.Click(mouse_pos):
                     Shutdown()
                 
                 #Go to Sign up Page
-                if (signup_select.Mouse_Click(mouse_pos)):
+                if (to_signup.Click(mouse_pos)):
                     Signup('', '')
 
-                #To know if user click on username, password box or not
-                if username_box.Mouse_Click(mouse_pos):
-                    insert = 'username'
-                elif password_box.Mouse_Click(mouse_pos):
-                    insert = 'password'
+                #To know if user click on email, pwd box or not
+                if email_box.Click(mouse_pos):
+                    insert = 'email'
+                elif pwd_box.Click(mouse_pos):
+                    insert = 'pwd'
                 else:
                     insert = ''
 
                 #When user submit Login, check for validity and go to Title Screen if good
-                if (login_button.Mouse_Click(mouse_pos)):
-                    current_user = User_Data(username, password)
+                if (submit_login.Click(mouse_pos)):
+                    print(pwd)
+                    current_user.email = email
+                    current_user.pwd = hashlib.sha256(pwd.encode()).hexdigest()
                     if current_user.Login():
+                        print(current_user.email)
                         Title(True)
                     else:
                         alpha = 500
@@ -753,40 +289,46 @@ def Login(username, password):
                 fps = 0
 
         #Language Logics: Not how you would do it but im tired ok?
-
-
         screen.fill('#2d3250')
+
         screen.blit(bg, (size.w*0.125, size.h*0.125))
         pg.draw.rect(screen, '#424769', [size.w*0.125, size.h*0.125, size.w*0.375, size.h * 0.75])
 
-        #Draw the what the user typed in
-        username_input = Font(int(13 * size.w / 1280)).render(username, True, '#FFFFFF')
-        password_input = Font(int(13 * size.w / 1280)).render((len(password) - 1) * '*', True, '#FFFFFF')
-
         #Blit Assets onto the screen
-        for item in [signup_select, username_box, password_box, forgot_password, login_button, faceID_button, Quit]:
+        for item in [to_signup, email_box, pwd_box, forgot_pwd, submit_login, faceID_button, Quit]:
             item.Blit(0,10)
 
         #Change colors if the mouse hover above
-        for button in [signup_select, username_box, password_box, login_button, faceID_button, forgot_password, Quit]:
-            button.Change_Color(mouse_pos, 0 ,10)
+        for button in [to_signup, email_box, pwd_box, submit_login, faceID_button, forgot_pwd, Quit]:
+            button.Hover(mouse_pos, 0 ,10)
+
+        #Draw the what the user typed in
+        email_input = Font(int(13 * size.w / 1280)).render(email, True, '#FFFFFF')
+        pwd_input = Font(int(13 * size.w / 1280)).render((len(pwd)) * '*', True, '#FFFFFF')
         
         #Blit Texts onto the screen
-        screen.blit(login_select      ,   login_select.get_rect(center = (size.w * 0.265, size.h * 0.178)))
-        screen.blit(welcome           ,   welcome.get_rect(center = (size.w * 0.3125, size.h * 0.3)))
-        screen.blit(username_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.41)))
-        screen.blit(password_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.54)))
-        screen.blit(login_button_text ,   login_button_text.get_rect(center = (login_button.rect.center)))
-        screen.blit(faceID_button_text,   faceID_button_text.get_rect(center = (faceID_button.rect.center)))
-        screen.blit(username_input, username_input.get_rect(midleft = (size.w * 0.19, size.h * 0.45)))
-        screen.blit(password_input, password_input.get_rect(midleft = (size.w * 0.19, size.h * 0.58)))
+        screen.blit(to_login   ,    to_login.get_rect(center = (size.w * 0.265, size.h * 0.178)))
+        screen.blit(welcome    ,    welcome.get_rect(center = (size.w * 0.3125, size.h * 0.3)))
+        screen.blit(email_txt  ,    email_txt.get_rect(midleft = (size.w * 0.19, size.h * 0.41)))
+        screen.blit(pwd_txt    ,    email_txt.get_rect(midleft = (size.w * 0.19, size.h * 0.54)))
+        screen.blit(login_txt  ,    login_txt.get_rect(center = (submit_login.rect.center)))
+        screen.blit(faceID_txt ,    faceID_txt.get_rect(center = (faceID_button.rect.center)))
+        screen.blit(email_input,    email_input.get_rect(midleft = (size.w * 0.19, size.h * 0.45)))
+        screen.blit(pwd_input  ,    pwd_input.get_rect(midleft = (size.w * 0.19, size.h * 0.58)))
+
+        if insert == 'email':
+            bounding_box.center = email_box.rect.center
+            pg.draw.rect(screen, '#FFFFFF', bounding_box, 2, 10)
+        elif insert == 'pwd':
+            bounding_box.center = pwd_box.rect.center
+            pg.draw.rect(screen, '#FFFFFF', bounding_box, 2, 10)
         
         #If error then set alpha so message appears then slowly fade away
         login_failed.set_alpha(alpha)
         screen.blit(login_failed, login_failed.get_rect(center = (size.w/2, size.h/2)))
 
-        mouse_animation.update()
-        mouse_animation.draw(screen)
+        click_ani.update()
+        click_ani.draw(screen)
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
         screen.blit(FPS, (0,0))
         
@@ -794,7 +336,7 @@ def Login(username, password):
         pg.display.update()
 
 #Sign up
-def Signup(username, password):
+def Signup(email, pwd):
     global lang
 
     #just stuff for FPS ignore it
@@ -803,46 +345,47 @@ def Signup(username, password):
 
     #Login Logics
 
-    repeat_password = password
+    repeat_pwd = pwd
 
-    #To know which box the user click (username or password)
+    #To know which box the user click (email or pwd)
     insert = ''
 
-    password_mismatch_alpha = 0
-    password_length_error_alpha = 0
-    username_alpha = 0
+    pwd_mismatch_alpha = 0
+    pwd_len_error_alpha = 0
+    email_alpha = 0
     existed_alpha = 0
 
     #Load Assets
     bg = pg.transform.scale(pg.image.load('Assets/background/village/village.png').convert(), (size.w*0.75, size.h*0.75))
     
-    username_box = Button('rect', (size.w * 0.175, size.h * 0.385), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    password_box = Button('rect', (size.w * 0.175, size.h * 0.515), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    repeat_password_box = Button('rect', (size.w * 0.175, size.h * 0.645), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    email_box = Button('rect', (size.w * 0.175, size.h * 0.385), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    pwd_box = Button('rect', (size.w * 0.175, size.h * 0.515), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    repeat_pwd_box = Button('rect', (size.w * 0.175, size.h * 0.645), (size.w*0.275, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
     
-    signup_button = Button('rect', (size.w * 0.175, size.h * 0.775), (size.w*0.275, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None,  None)
+    submit_signup = Button('rect', (size.w * 0.175, size.h * 0.775), (size.w*0.275, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None,  None)
 
-    login_select = Button('text', None, None, None, None, Updt_Lang(lang, 'Sign_Up', 'Select_Login'), Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.265, size.h * 0.178))
+    to_login = Button('text', None, None, None, None, Updt_Lang(lang, 'Sign_Up', 'To_Login'), Font(int(20 * size.w / 1280)), '#676f9d', '#5d648c', None, (size.w * 0.265, size.h * 0.178))
 
-    Quit = Button('image', None, None, 'Assets/icon/Settings/shutdown_01.png', (60*size.w/1280, 60* size.w/1280), 
-                None, None, None, None, 'Assets/icon/Settings/shutdown_02.png', (size.w * 0.03, size.h * 0.95))
-    
-    username_error = Font(int(60 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Username_Error'), True, "#FF0000")
-    password_mismatch = Font(int(60 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Password_Mismatch'), True, "#FF0000")
-    password_length_error = Font(int(50 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Password_Length_Error'), True, "#FF0000")
-    existed_error = Font(int(50 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Existed'), True, "#FF0000")
+    Quit = Button('image', None, None, 'Assets/icon/Settings/shutdown_01.png', (50*size.w/1280, 50* size.w/1280), 
+                None, None, None, None, 'Assets/icon/Settings/shutdown_02.png', (size.w * 0.025, size.h * 0.955))
 
     welcome = Font(int(60 * size.w / 1280)).render(Updt_Lang(lang, 'Login', 'Title'), True, '#ffffff')
-    signup_select = Font(int(20 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Select_Signup'), True, '#d69869')
-    username_box_text = Font(int(13 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Username_text'), True, '#424769')
-    password_box_text = Font(int(13 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Password_text'), True, '#424769')
-    signup_button_text = Font(int(20 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Signup_button'), True, '#424769')
+    to_signup = Font(int(20 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'To_Signup'), True, '#d69869')
+    email_txt = Font(int(13 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Email_Txt'), True, '#424769')
+    pwd_txt = Font(int(13 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Pwd_Txt'), True, '#424769')
+    repeat_pwd_txt = Font(int(13 * size.w/1280)).render(Updt_Lang(lang, 'Sign_Up', 'Repeat_Pwd_Txt'), True, "#424769")
+    submit_signup_txt = Font(int(20 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Submit_Signup'), True, '#424769')
+
+    email_error = Font(int(60 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Email_Error'), True, "#FF0000")
+    pwd_mismatch = Font(int(60 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Pwd_Mismatch'), True, "#FF0000")
+    pwd_len_error = Font(int(50 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Pwd_Len_Error'), True, "#FF0000")
+    existed_error = Font(int(50 * size.w / 1280)).render(Updt_Lang(lang, 'Sign_Up', 'Existed'), True, "#FF0000")
 
 
     while True:
-        username_alpha -= 7.5
-        password_mismatch_alpha -= 7.5
-        password_length_error_alpha -= 7.5
+        email_alpha -= 7.5
+        pwd_mismatch_alpha -= 7.5
+        pwd_len_error_alpha -= 7.5
         existed_alpha -= 7.5
         fps += 1
         mouse_pos = pg.mouse.get_pos()
@@ -853,66 +396,67 @@ def Signup(username, password):
 
             #Play mouse animation
             if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
 
-                if Quit.Mouse_Click(mouse_pos):
+                if Quit.Click(mouse_pos):
                     Shutdown()
 
                 #Go to Login Page
-                if(login_select.Mouse_Click(mouse_pos)):
+                if(to_login.Click(mouse_pos)):
                     Login('', '')
 
                 #To know which box user clicked
-                if username_box.Mouse_Click(mouse_pos):
-                    insert = 'username'
+                if email_box.Click(mouse_pos):
+                    insert = 'email'
 
-                elif password_box.Mouse_Click(mouse_pos):
-                    insert = 'password'
+                elif pwd_box.Click(mouse_pos):
+                    insert = 'pwd'
 
-                elif repeat_password_box.Mouse_Click(mouse_pos):
-                    insert = 'repeat_password'
+                elif repeat_pwd_box.Click(mouse_pos):
+                    insert = 'repeat_pwd'
 
                 else:
                     insert = ''
 
                 #When user submit Sign up, check for validity and go to Title Screen if good
-                if signup_button.Mouse_Click(mouse_pos):
-                    current_user = User_Data(username, password)
-                    if len(password) < 8:
-                        password_length_error_alpha = 500
+                if submit_signup.Click(mouse_pos):
+                    current_user.email = email
+                    current_user.pwd = hashlib.sha256(pwd.encode()).hexdigest()
+                    if len(pwd) < 8:
+                        pwd_len_error_alpha = 500
 
-                    elif password != repeat_password:
-                        password_mismatch_alpha = 500
+                    elif pwd != repeat_pwd:
+                        pwd_mismatch_alpha = 500
 
                     elif (current_user.Sign_Up_Validate() == False):
                         existed_alpha = 500
 
                     else :
                         pg.image.save(screen, 'Assets/temps/temp.png')
-                        Enter_Code(username, password, hashlib.sha256('1000'.encode()).hexdigest())
+                        Enter_Code(email, pwd, hashlib.sha256('1000'.encode()).hexdigest())
 
-                #User clicked username
+                #User clicked email
             if event.type == pg.KEYDOWN:
 
-                if insert == 'username':
+                if insert == 'email':
                     if event.key == pg.K_BACKSPACE:
-                        username = username[:-1]
+                        email = email[:-1]
                     else:
-                        username += event.unicode
+                        email += event.unicode
                         
-                #User clicked password
-                elif insert == 'password':
+                #User clicked pwd
+                elif insert == 'pwd':
                     if event.key == pg.K_BACKSPACE:
-                        password = password[:-1]
+                        pwd = pwd[:-1]
                     else:
-                        password += event.unicode
+                        pwd += event.unicode
 
-                #User clicked re-enter password
-                elif insert == 'repeat_password':
+                #User clicked re-enter pwd
+                elif insert == 'repeat_pwd':
                     if event.key == pg.K_BACKSPACE:
-                        repeat_password = repeat_password[:-1]
+                        repeat_pwd = repeat_pwd[:-1]
                     else:
-                        repeat_password += event.unicode
+                        repeat_pwd += event.unicode
 
                                
             #Debug: FPS
@@ -925,47 +469,46 @@ def Signup(username, password):
         pg.draw.rect(screen, '#424769', [size.w*0.125, size.h*0.125, size.w*0.375, size.h * 0.75])
 
         #Draw the what the user typed in
-        username_input = Font(int(12 * size.w / 1280)).render(username, True, '#FFFFFF')
-        password_input = Font(int(12 * size.w / 1280)).render(len(password) * '*', True, '#FFFFFF')
-        repeat_password_input = Font(int(12 * size.w / 1280)).render(len(repeat_password) * '*', True, '#FFFFFF')
+        email_input = Font(int(12 * size.w / 1280)).render(email, True, '#FFFFFF')
+        pwd_input = Font(int(12 * size.w / 1280)).render(len(pwd) * '*', True, '#FFFFFF')
+        repeat_pwd_input = Font(int(12 * size.w / 1280)).render(len(repeat_pwd) * '*', True, '#FFFFFF')
 
         #Blit Assets onto screen
-        for item in [login_select, username_box, password_box, repeat_password_box, signup_button, Quit]:
+        for item in [to_login, email_box, pwd_box, repeat_pwd_box, submit_signup, Quit]:
             item.Blit(0,10)
 
         #Change colors if the mouse hover above
-        for button in [login_select, username_box, password_box, signup_button, repeat_password_box, Quit]:
-            button.Change_Color(mouse_pos, 0 ,10)
+        for button in [to_login, email_box, pwd_box, submit_signup, repeat_pwd_box, Quit]:
+            button.Hover(mouse_pos, 0 ,10)
 
         #Blit Texts onto the screen
-        screen.blit(signup_select     ,   signup_select.get_rect(center = (size.w * 0.35, size.h * 0.178)))
+        screen.blit(to_signup     ,   to_signup.get_rect(center = (size.w * 0.35, size.h * 0.178)))
         screen.blit(welcome           ,   welcome.get_rect(center = (size.w * 0.3125, size.h * 0.3)))
-        screen.blit(username_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.41)))
-        screen.blit(password_box_text ,   username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.54)))
-        screen.blit(Font(int(13 * size.w/1280)).render(Updt_Lang(lang, 'Sign_Up', 'Repeat_Password_text'), True, "#424769"),
-                     username_box_text.get_rect(midleft = (size.w * 0.19, size.h * 0.67)))
-        screen.blit(signup_button_text ,   signup_button_text.get_rect(center = (signup_button.rect.center)))
-        screen.blit(username_input, username_input.get_rect(midleft = (size.w * 0.19, size.h * 0.45)))
-        screen.blit(password_input, password_input.get_rect(midleft = (size.w * 0.19, size.h * 0.58)))
-        screen.blit(repeat_password_input, repeat_password_input.get_rect(midleft = (size.w * 0.19, size.h * 0.71)))
+        screen.blit(email_txt ,   email_txt.get_rect(midleft = (size.w * 0.19, size.h * 0.41)))
+        screen.blit(pwd_txt ,   email_txt.get_rect(midleft = (size.w * 0.19, size.h * 0.54)))
+        screen.blit(repeat_pwd_txt, repeat_pwd_txt.get_rect(midleft = (size.w * 0.19, size.h * 0.67)))
+        screen.blit(submit_signup_txt ,   submit_signup_txt.get_rect(center = (submit_signup.rect.center)))
+        screen.blit(email_input, email_input.get_rect(midleft = (size.w * 0.19, size.h * 0.45)))
+        screen.blit(pwd_input, pwd_input.get_rect(midleft = (size.w * 0.19, size.h * 0.58)))
+        screen.blit(repeat_pwd_input, repeat_pwd_input.get_rect(midleft = (size.w * 0.19, size.h * 0.71)))
 
 
         #If error then set alpha so message appears then slowly fade away
 
-        username_error.set_alpha(username_alpha)
-        screen.blit(username_error,  username_error.get_rect(center = (size.w/2, size.h/2)))
+        email_error.set_alpha(email_alpha)
+        screen.blit(email_error,  email_error.get_rect(center = (size.w/2, size.h/2)))
 
-        password_mismatch.set_alpha(password_mismatch_alpha)
-        screen.blit(password_mismatch,  password_mismatch.get_rect(center = (size.w/2, size.h/2)))
+        pwd_mismatch.set_alpha(pwd_mismatch_alpha)
+        screen.blit(pwd_mismatch,  pwd_mismatch.get_rect(center = (size.w/2, size.h/2)))
 
-        password_length_error.set_alpha(password_length_error_alpha)
-        screen.blit(password_length_error,  password_length_error.get_rect(center = (size.w/2, size.h/2)))
+        pwd_len_error.set_alpha(pwd_len_error_alpha)
+        screen.blit(pwd_len_error,  pwd_len_error.get_rect(center = (size.w/2, size.h/2)))
 
         existed_error.set_alpha(existed_alpha)
         screen.blit(existed_error,  existed_error.get_rect(center = (size.w/2, size.h/2)))
 
-        mouse_animation.update()
-        mouse_animation.draw(screen)
+        click_ani.update()
+        click_ani.draw(screen)
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
         screen.blit(FPS, (0,0))
         
@@ -973,10 +516,10 @@ def Signup(username, password):
         pg.display.update()
 
 #Enter confirmation code
-def Enter_Code(username, password, en_code):
+def Enter_Code(email, pwd, en_code):
     insert = False
     verify_code = ''
-    wrong_code_alpha = 0
+    error_alpha = 0
 
     bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
     bg = pg.transform.smoothscale(bg.convert(), (size.w, size.h))
@@ -1008,7 +551,7 @@ def Enter_Code(username, password, en_code):
 
      
     while True:
-        wrong_code_alpha -= 7.5
+        error_alpha -= 7.5
         mouse_pos = pg.mouse.get_pos()
 
         for event in pg.event.get():
@@ -1016,26 +559,27 @@ def Enter_Code(username, password, en_code):
                 Shutdown()
 
             if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
 
                 #Go to Login Page
-                if(verify.Mouse_Click(mouse_pos)):
+                if(verify.Click(mouse_pos)):
                     insert = True
                 else:
                     insert = False
                 
-                if (close.Mouse_Click(mouse_pos)):
-                    Signup(username, password)
+                if (close.Click(mouse_pos)):
+                    Signup(email, pwd)
                 
-                if (submit.Mouse_Click(mouse_pos)):
+                if (submit.Click(mouse_pos)):
                     if hashlib.sha256(verify_code.encode()).hexdigest() == en_code:
-                        current_user = User_Data(username, password)
+                        current_user.email = email
+                        current_user.pwd = hashlib.sha256(pwd.encode()).hexdigest()
 
                         if current_user.Sign_Up():
                             Title(True)
 
                     else:
-                        wrong_code_alpha = 500
+                        error_alpha = 500
 
             if event.type == pg.KEYDOWN:
                 if insert:
@@ -1050,19 +594,19 @@ def Enter_Code(username, password, en_code):
         pg.draw.rect(screen, '#424769', box, 0, 10)
         pg.draw.rect(screen, '#000000', box_outline, 5, 10)
 
-        verify.Blit(0,10)
-        submit.Blit(0,10)
-        close.Blit(0,10)
+        for item in [verify, submit, close]:
+            item.Blit(0,10)
 
-        verify.Change_Color(mouse_pos, 0 ,10)
-        submit.Change_Color(mouse_pos, 0 ,10)
+        for item in [verify, submit]:
+            item.Hover(mouse_pos, 0, 10)
+
 
         screen.blit(enter_verify_text, enter_verify_text.get_rect(center = (verify.rect.center)))
         screen.blit(title, title.get_rect(center = (size.w/2, size.h * 0.325)))
         screen.blit(prompt, prompt.get_rect(center = (size.w/2, size.h * 0.385)))
         screen.blit(submit_text, submit_text.get_rect(center = (submit.rect.center)))
 
-        wrong_code.set_alpha(wrong_code_alpha)
+        wrong_code.set_alpha(error_alpha)
         screen.blit(wrong_code, wrong_code.get_rect(center = (submit.rect.center)))
 
         if (insert == False and verify_code == ''):
@@ -1087,11 +631,11 @@ def Title(restart_music):
     #Load Assets
     Background = pg.transform.scale(pg.image.load('Assets/background/village/village.png').convert_alpha(), (size.w*1.075, size.h*1.075))
         
-    Quit = Button('image', None, None, 'Assets/icon/Settings/shutdown_01.png', (60*size.w/1280, 60* size.w/1280), 
-                None, None, None, None, 'Assets/icon/Settings/shutdown_02.png', (size.w * 0.03, size.h * 0.95))
+    Quit = Button('image', None, None, 'Assets/icon/Settings/shutdown_01.png', (50*size.w/1280, 50* size.w/1280), 
+                None, None, None, None, 'Assets/icon/Settings/shutdown_02.png', (size.w * 0.025, size.h * 0.955))
 
-    Settings = Button('image', None, None, 'Assets/icon/Settings/setting_01.png', (60*size.w/1280, 60* size.w/1280), 
-                    None, None, None, None, 'Assets/icon/Settings/setting_02.png', (size.w * 0.97, size.h * 0.05))
+    Settings = Button('image', None, None, 'Assets/icon/Settings/setting_01.png', (50*size.w/1280, 50* size.w/1280), 
+                    None, None, None, None, 'Assets/icon/Settings/setting_02.png', (size.w * 0.975, size.h * 0.045))
     
     #Language Logics
     Prompt = Font(int(25 * size.w/1280)).render(Updt_Lang(lang, 'Title', 'Prompt'), True, '#000000')
@@ -1106,17 +650,17 @@ def Title(restart_music):
                 Shutdown()
 
             if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
 
                 #If Quit button is pressed, exit the game only when enter_game is False
-                if Quit.Mouse_Click(mouse_pos) == True and enter_game == False:
+                if Quit.Click(mouse_pos) == True and enter_game == False:
                     Shutdown()
                 
                 #Go to Settings Page
-                if (Settings.Mouse_Click(mouse_pos) == True and enter_game == False):
+                if (Settings.Click(mouse_pos) == True and enter_game == False):
                     sfx_channels.play(button_click)
                     pg.image.save(screen, 'Assets/temps/temp.png')
-                    Video_Menu('Start Menu', '', '')
+                    Video_Menu('Title', '', '')
                 
                 #If user click anywhere on the screen, set alpha to 255 and enter_game = True to stop all button function
                 elif enter_game == False:
@@ -1127,16 +671,17 @@ def Title(restart_music):
                 tru_fps = fps
                 fps = 0
         
+        #Base
+        screen.fill(0)
+
         #Background moves with cursor
-        Bg = Background_Animation(Background, (size.w / 2, size.h / 2), mouse_pos)
+        Bg = Bg_Ani(Background, (size.w / 2, size.h / 2), mouse_pos)
 
         Title = Font(int(100 * size.w / 1280)).render('Racing Bet', True, "#000000")
         
-        screen.fill(0)
-
         #Set alpha for fade in animation
-        for stuff in [Settings.image, Quit.image, Background]:
-            stuff.set_alpha(alpha)
+        for item in [Settings.image, Quit.image, Bg.image]:
+            item.set_alpha(alpha)
 
         #Make the prompt continuously flashing
         Prompt.set_alpha(255 * abs(sin(rad(alpha))))
@@ -1158,10 +703,10 @@ def Title(restart_music):
         #Change colors if the mouse hover above
         else:
             for button in [Quit, Settings]:
-                button.Change_Color(mouse_pos, 0 ,10)
+                button.Hover(mouse_pos, 0 ,10)
         
-        mouse_animation.update()
-        mouse_animation.draw(screen)
+        click_ani.update()
+        click_ani.draw(screen)
 
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
         screen.blit(FPS, (0,0))
@@ -1176,31 +721,35 @@ def In_Game_Menu(alpha):
     Target_Menu = ''
     fps = 0
     tru_fps = 0
+    minigame_error_alpha = 0
+    play_error_alpha = 0
 
     #Load Assets
     Background = pg.transform.smoothscale(pg.image.load('Assets/background/Street/citystreet.png').convert_alpha(), (512, 288))
     Background = pg.transform.smoothscale(Background, (size.w*1.075, size.h*1.075))
 
-    Settings = Button('image', None, None, 'Assets/icon/Settings/setting_01.png', (60*size.w/1280, 60* size.w/1280), 
-                    None, None, None, None, 'Assets/icon/Settings/setting_02.png', (size.w * 0.97, size.h * 0.05))
-    
-    Return = Button('image', None, None, 'Assets/icon/Settings/return_01.png', (60*size.w/1280, 60* size.w/1280), 
-                    None, None, None, None, 'Assets/icon/Settings/return_02.png', (size.w * 0.03, size.h * 0.95))
-
-    Coins_box = pg.rect.Rect((0,0), ((size.w*0.25, size.h * 0.05)))
-    Coins_box.center = ((size.w*0.775, size.h * 0.275))
-
-    Coins = pg.image.load('Assets/coin.png').convert_alpha()
-    Coins = pg.transform.rotozoom(Coins, 0, 1.5)
-
+    Settings = Button('image', None, None, 'Assets/icon/Settings/setting_01.png', (50*size.w/1280, 50* size.w/1280), 
+                    None, None, None, None, 'Assets/icon/Settings/setting_02.png', (size.w * 0.975, size.h * 0.045))
 
     Play = Button('image', None, None, 'Assets/icon/Settings/play.png', (size.w*0.25, size.h * 0.15), None, None, None, None, 'Assets/icon/Settings/play_hover.png', (size.w*0.775, size.h * 0.4))
     Mini_Game = Button('image', None, None, 'Assets/icon/Settings/minigame.png', (size.w*0.25, size.h * 0.15), None, None, None, None, 'Assets/icon/Settings/minigame_hover.png', (size.w*0.775, size.h * 0.6))
     Rank = Button('image', None, None, 'Assets/icon/Settings/rank.png', (size.w*0.25, size.h * 0.15), None, None, None, None, 'Assets/icon/Settings/rank_hover.png', (size.w*0.775, size.h * 0.8))
-    
-    
+
+    Coins_box = pg.rect.Rect((0,0), ((size.w*0.25, size.h * 0.06)))
+    Coins_box.center = ((size.w*0.775, size.h * 0.26))
+
+    Coins_img = pg.image.load('Assets/coin.png').convert_alpha()
+    Coins_img = pg.transform.rotozoom(Coins_img, 0, 2.5)
+
+    Coins_Text = Font(int(25*size.w/1280)).render(f'{current_user.coin}', True, "#FFFFFF")
+
+    minigame_error = Font(int(60 * size.w/1280)).render("You have enough coin, can't enter minigame", True, '#FF0000')
+    play_error = Font(int(60 * size.w/1280)).render("You don't have enough coin. Play minigame for more", True, '#FF0000')
+
     while True:
         alpha += 7.5
+        minigame_error_alpha -= 7.5
+        play_error_alpha -= 7.5
         fps += 1
         mouse_pos = pg.mouse.get_pos()
 
@@ -1209,34 +758,39 @@ def In_Game_Menu(alpha):
                 Shutdown()
 
             if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
 
                 #Set the alpha for fade out animation when user click on a menu
                 if Change_Menu == False:
-                    if Play.Mouse_Click(mouse_pos):
-                        Change_Menu = True
-                        Target_Menu = 'Play'
-                        alpha = 255
+                    if Play.Click(mouse_pos):
+                        if current_user.coin < 200:
+                            play_error_alpha = 500
+                        else:
+                            Change_Menu = True
+                            Target_Menu = 'Play'
+                            alpha = 255
 
-                    if Mini_Game.Mouse_Click(mouse_pos):
-                        Change_Menu = True
-                        Target_Menu = 'Mini Game'
-                        alpha = 255
+                    if Mini_Game.Click(mouse_pos):
+                        if current_user.coin >= 200:
+                            minigame_error_alpha = 500
+                        else:
+                            Change_Menu = True
+                            Target_Menu = 'Mini Game'
+                            alpha = 255
 
-                    if Rank.Mouse_Click(mouse_pos):
+                    if Rank.Click(mouse_pos):
                         Change_Menu = True
                         Target_Menu = 'Rank'
                         alpha = 255
 
                     #Go to Settings Page
-                    if Settings.Mouse_Click(mouse_pos):
+                    if Settings.Click(mouse_pos):
                         pg.image.save(screen, 'Assets/temps/temp.png')
                         Video_Menu('In_Game_Menu', '', '')
-                    
-                    #Return to title screen
-                    if Return.Mouse_Click(mouse_pos):
-                        Title(True)
             
+            if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                print(True)
+                current_user.Update_Coin(1)
             #Debug: FPS
             if event.type == Bg_cycle:
                 tru_fps = fps
@@ -1245,44 +799,52 @@ def In_Game_Menu(alpha):
         screen.fill(0)
 
         #Background move with cursor
-        Bg = Background_Animation(Background, (size.w / 2, size.h / 2), mouse_pos)
-
-        #Fade in animations
-        for item in [Background, Settings.image, Play.image, Mini_Game.image, Rank.image, Return.image]:
-            item.set_alpha(alpha)
-
+        Bg = Bg_Ani(Background, (size.w / 2, size.h / 2), mouse_pos)
         Bg.Draw()
 
+        #Fade in animations
+        for item in [Background, Settings.image, Play.image, Mini_Game.image, Rank.image]:
+            item.set_alpha(alpha)
+
         #Load Assets onto screen
-        for item in [Play, Mini_Game, Rank, Settings, Return]:
+        for item in [Play, Mini_Game, Rank, Settings]:
             item.Blit(0,10)
 
         pg.draw.rect(screen, "#FFFFFF", Coins_box, 2, 10)
-        screen.blit(Coins, Coins.get_rect(center = (size.w*0.75, size.h * 0.275)))
+
+        screen.blit(Coins_img, Coins_img.get_rect(center = (size.w*0.755, size.h * 0.26)))
+        screen.blit(Coins_Text, Coins_Text.get_rect(center = (size.w*0.795, size.h * 0.26)))
+
+        minigame_error.set_alpha(minigame_error_alpha)
+        screen.blit(minigame_error, minigame_error.get_rect(center = (size.w/2, size.h/2)))
+
+        play_error.set_alpha(play_error_alpha)
+        screen.blit(play_error, play_error.get_rect(center = (size.w/2, size.h/2)))
+
         #Fade out animation logics
         if Change_Menu:
             alpha -= 15
-            if Target_Menu == 'Play':
-                if alpha < 0:
-                    Choose_Character_Set(-20, '', '')
-            elif Target_Menu == 'Mini Game':
-                if alpha < 0:
+            if alpha < 0:
+                if Target_Menu == 'Play':
+                    Choose_Character_Set(-20, 5, 3)
+
+                elif Target_Menu == 'Mini Game':
                     Mini_Game_Menu()
-            elif Target_Menu == 'Rank':
-                if alpha < 0:
+
+                elif Target_Menu == 'Rank':
                     pass
 
         #Change colors if the mouse hover above and only when alpha is high enough (finished fade in animation)
         elif alpha > 225 and Change_Menu == False:
-            for button in [Settings, Play, Mini_Game, Rank, Return]:
-                button.Change_Color(mouse_pos, 0 ,10)
+            for button in [Settings, Play, Mini_Game, Rank]:
+                button.Hover(mouse_pos, 0 ,10)
         
 
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
         screen.blit(FPS, (0,0))
     
-        mouse_animation.update()
-        mouse_animation.draw(screen)
+        click_ani.update()
+        click_ani.draw(screen)
 
         pg.time.Clock().tick(60)
         pg.display.update()
@@ -1461,7 +1023,7 @@ def Mini_Game_Menu():
 
             if not self.dead and self.counter % 7 == 6 and self.blinking == False:
                 self.pre_score += 1
-                if self.pre_score % 5 == 0:
+                if self.pre_score % 4 == 0:
                     self.score += 1
 
                 if self.pre_score % 100 == 0 and self.pre_score != 0:
@@ -1742,7 +1304,7 @@ def Mini_Game_Menu():
                 time_clock.tick(FPS)
                 gold = gamer_Dino.score
                 if gamer_Dino.dead:
-                    print(gold)
+                    current_user.Update_Coin(gold)
                     g_Over = True
 
 
@@ -1775,21 +1337,24 @@ def Mini_Game_Menu():
                 SCREEN = pg.display.set_mode((size.w, size.h))
                 while True:
                     SCREEN.fill((255, 255, 255))
-                    text = font.render("GAME OVER", True, (0, 0, 0))
-                    score = font.render("Your gold       : " + str(gold), True, (0, 0, 0))
+                    text = Font(int(100 * size.w / 1280)).render("GAME OVER", True, (0, 0, 0))
+                    score = Font(int(30 * size.w / 1280)).render("Your gold      : " + str(gold), True, (0, 0, 0))
                     scoreRect = score.get_rect()
-                    scoreRect.center = (size.w // 2, size.h // 2 + 50)
+                    scoreRect.center = (size.w * 0.5, size.h * 0.4)
                     SCREEN.blit(score, scoreRect)
                     textRect = text.get_rect()
-                    textRect.center = (size.w // 2, size.h // 2)
+                    textRect.center = (size.w * 0.5, size.h * 0.25)
                     SCREEN.blit(text, textRect)
-                    SCREEN.blit(coin_symbol,(663 * size.w / 1280 , 396 * size.w /1280))
+                    SCREEN.blit(coin_symbol,(675 * size.w / 1280 , 277 * size.w /1280))
+                    prompt = Font(int(20 * size.w / 1280)).render("- Press ESC to return to main menu -", True, "#000000")
+                    SCREEN.blit(prompt, prompt.get_rect(center = (size.w/2, size.h* 0.6)))
                     pg.display.update()
                     for event in pg.event.get():
                         if event.type == pg.QUIT:
-                            sys.exit()
-                        elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                            Shutdown()
+                        elif event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                             In_Game_Menu(-20)
+
                     time_clock.tick(FPS)
                 
         pg.quit()
@@ -1802,30 +1367,37 @@ def Mini_Game_Menu():
 
     main()
 #Choose character
-def Choose_Character_Set(alpha, character_set, race_length):
+def Choose_Character_Set(alpha, chr_set, race_len):
     Change_Menu = False
+    Update_Bg = True
     fps = 0
     tru_fps = 0
 
     #Load Assets
-    Background = pg.transform.scale(pg.image.load('Assets/icon/Settings/Cafe.png').convert_alpha(), (512, 288))
-    Background = pg.transform.smoothscale(Background, (size.w*1.15, size.h*1.15))
+    Bg_List = ['Assets/background/ocean.png', 
+                'Assets/background/forest.png',
+                'Assets/background/villager.png',
+                'Assets/background/street.png',
+                'Assets/background/Street/citystreet.png',
+                'Assets/background/Street/citystreet.png']
 
-    User_Info_Tab = pg.Surface((size.w, size.h * 0.1), pg.SRCALPHA)
-    User_Info_Tab.fill('#2d3250')
-
-    SetA = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-2.png', (size.w * 0.1, size.h * 0.25)) 
-    SetB = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-2.png', (size.w * 0.3, size.h * 0.25))
-    SetC = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-2.png', (size.w * 0.5, size.h * 0.25))
-    SetD = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-2.png', (size.w * 0.7, size.h * 0.25))
-    SetE = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-2.png', (size.w * 0.9, size.h * 0.25))
-
-    Settings = Button('image', None, None, 'Assets/icon/Settings/setting_01.png', (60*size.w/1280, 60* size.w/1280), 
-                    None, None, None, None, 'Assets/icon/Settings/setting_02.png', (size.w * 0.97, size.h * 0.05))
     
-    Continue = Button('image', None, None, 'Assets/icon/Settings/continue_01.png', (60*size.w/1280, 60* size.w/1280), None, None, None, None, 'Assets/icon/Settings/continue_02.png', (size.w*0.975, size.h * 0.95))
+    Prompt = Font(int(60 * size.w /1280)).render(Updt_Lang(lang, 'Select_Char', 'Char_Set'), True, "#FFFFFF")
 
-    Return = Button('image', None, None, 'Assets/icon/Settings/return_01.png', (60*size.w/1280, 60* size.w/1280), None, None, None, None, 'Assets/icon/Settings/return_02.png', (size.w*0.025, size.h * 0.95)) 
+    SetA = Button('image', None, None, 'Assets/background/ocean.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/ocean.png', (size.w * 0.1, size.h * 0.35)) 
+    SetB = Button('image', None, None, 'Assets/background/forest.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest.png', (size.w * 0.3, size.h * 0.35))
+    SetC = Button('image', None, None, 'Assets/background/villager.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/villager.png', (size.w * 0.5, size.h * 0.35))
+    SetD = Button('image', None, None, 'Assets/background/street.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/street.png', (size.w * 0.7, size.h * 0.35))
+    SetE = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.9, size.h * 0.35))
+
+    bounding_box = pg.rect.Rect((0,0), (size.w * 0.1505, size.h * 0.205))
+
+    Settings = Button('image', None, None, 'Assets/icon/Settings/setting_01.png', (50*size.w/1280, 50* size.w/1280), 
+                    None, None, None, None, 'Assets/icon/Settings/setting_02.png', (size.w * 0.975, size.h * 0.045))
+    
+    Continue = Button('image', None, None, 'Assets/icon/Settings/continue_01.png', (50*size.w/1280, 50* size.w/1280), None, None, None, None, 'Assets/icon/Settings/continue_02.png', (size.w*0.98, size.h * 0.955))
+
+    Return = Button('image', None, None, 'Assets/icon/Settings/return_01.png', (50*size.w/1280, 50* size.w/1280), None, None, None, None, 'Assets/icon/Settings/return_02.png', (size.w*0.02, size.h * 0.955)) 
 
     while True:
         alpha += 7.5
@@ -1837,51 +1409,85 @@ def Choose_Character_Set(alpha, character_set, race_length):
                 Shutdown()
 
             if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
 
                 #Go to Settings Page
                 if Change_Menu == False:
-                    if Settings.Mouse_Click(mouse_pos):
+                    if Settings.Click(mouse_pos):
                         pg.image.save(screen, 'Assets/temps/temp.png')
-                        Video_Menu('Choose_Character_Set', character_set, race_length)
+                        Video_Menu('Choose_Character_Set', chr_set, race_len)
                     
                     #Change character set when user click on it
-                    if Continue.Mouse_Click(mouse_pos) and character_set != '':
-                        Choose_Race_Length(-20, character_set, race_length)
-                    if SetA.Mouse_Click(mouse_pos):
-                        character_set = 'SetA'
-                    if SetB.Mouse_Click(mouse_pos):
-                        character_set = 'SetB'
-                    if SetC.Mouse_Click(mouse_pos):
-                        character_set = 'SetC'
-                    if SetD.Mouse_Click(mouse_pos):
-                        character_set = 'SetD'
-                    if SetE.Mouse_Click(mouse_pos):
-                        character_set = 'SetE'
+                    if Continue.Click(mouse_pos) and chr_set != 5:
+                        Choose_Race_Length(-20, chr_set, race_len)
+
+                    if SetA.Click(mouse_pos):
+                        chr_set = 0
+                        Update_Bg = True
+
+                    if SetB.Click(mouse_pos):
+                        chr_set = 1
+                        Update_Bg = True
+
+                    if SetC.Click(mouse_pos):
+                        chr_set = 2
+                        Update_Bg = True
+
+                    if SetD.Click(mouse_pos):
+                        chr_set = 3
+                        Update_Bg = True
+
+                    if SetE.Click(mouse_pos):
+                        chr_set = 4
+                        Update_Bg = True
 
                     #Return to In_Game_Menu with alpha of -20 for fade in animations
-                    if Return.Mouse_Click(mouse_pos):
+                    if Return.Click(mouse_pos):
                         In_Game_Menu(-20)
             
             if event.type == Bg_cycle:
                 tru_fps = fps
                 fps = 0
 
+        if Update_Bg:
+            Background = pg.transform.scale(pg.image.load(Bg_List[chr_set]).convert_alpha(), (512, 288))
+            Background = pg.transform.smoothscale(Background, (size.w*1.075, size.h*1.075))
+        
+    
+        match chr_set:
+            case 0:
+                bounding_box.center = SetA.rect.center
+
+            case 1:
+                bounding_box.center = SetB.rect.center
+            
+            case 2:
+                bounding_box.center = SetC.rect.center
+            
+            case 3:
+                bounding_box.center = SetD.rect.center
+            
+            case 4:
+                bounding_box.center = SetE.rect.center
+
+            
+        Update_Bg = False
+        
         screen.fill(0)
 
         #Background moves with cursor
-        Bg = Background_Animation(Background, (size.w / 2, size.h / 2), mouse_pos)
+        Bg = Bg_Ani(Background, (size.w / 2, size.h / 2), mouse_pos)
 
         #Temporary: Show what you have selected
-        Selected = Font(40).render(f'Selected: {character_set}', True, '#ffffff')
+        Selected = Font(40).render(f'{Updt_Lang(lang, 'Select_Char', f'{chr_set}')}', True, '#ffffff')
 
         #Fade in animations
-        for stuff in [Background, User_Info_Tab, Return.image, Continue.image, Settings.image, SetA.image, SetB.image, SetC.image, SetD.image, SetE.image, Selected]:
+        for stuff in [Background, Return.image, Continue.image, Settings.image, SetA.image, SetB.image, SetC.image, SetD.image, SetE.image, Selected]:
             stuff.set_alpha(alpha)
 
         Bg.Draw()
-        screen.blit(User_Info_Tab, (0,0))
-        screen.blit(Selected, Selected.get_rect(center = (size.w/2, size.h/2)))
+        screen.blit(Prompt, Prompt.get_rect(center = (size.w /2, size.h * 0.125)))
+        screen.blit(Selected, Selected.get_rect(center = (size.w/2, size.h * 0.55)))
 
         #Blit assets onto screen
         for item in [Settings, Return, Continue, SetA, SetB, SetC, SetD, SetE]:
@@ -1890,41 +1496,53 @@ def Choose_Character_Set(alpha, character_set, race_length):
         #Change colors if the mouse hover above and only when alpha is high enough (finished fade in animation)
         if alpha > 225 and Change_Menu == False:
             for button in [Settings, Continue, Return, SetA, SetB, SetC, SetD, SetE]:
-                button.Change_Color(mouse_pos, 0 ,10)
+                button.Hover(mouse_pos, 0 ,10)
+                
         
+        if chr_set != 5:
+            pg.draw.rect(screen, "#FFFFFF", bounding_box, 5, 0)
+            
 
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
         screen.blit(FPS, (0,0))
     
-        mouse_animation.update()
-        mouse_animation.draw(screen)
+        click_ani.update()
+        click_ani.draw(screen)
 
         pg.time.Clock().tick(60)
         pg.display.update()
 
 #Choose race length
-def Choose_Race_Length(alpha, character_set, race_length):
+def Choose_Race_Length(alpha, chr_set, race_len):
     Change_Menu = False
     fps = 0
     tru_fps = 0
+    Bg_List = ['Assets/background/ocean.png', 
+                'Assets/background/forest.png',
+                'Assets/background/villager.png',
+                'Assets/background/street.png',
+                'Assets/background/Street/citystreet.png',
+                'Assets/background/Street/citystreet.png']
 
     #Load Assets
-    Background = pg.transform.scale(pg.image.load('Assets/icon/Settings/Cafe.png').convert_alpha(), (512, 288))
-    Background = pg.transform.smoothscale(Background, (size.w*1.15, size.h*1.15))
+    Background = pg.transform.scale(pg.image.load(Bg_List[chr_set]).convert_alpha(), (512, 288))
+    Background = pg.transform.smoothscale(Background, (size.w*1.075, size.h*1.075))
 
-    User_Info_Tab = pg.Surface((size.w, size.h * 0.1), pg.SRCALPHA)
-    User_Info_Tab.fill('#2d3250')
+    Prompt = Font(int(60 * size.w /1280)).render(Updt_Lang(lang, 'Race_Len', 'Len'), True, "#FFFFFF")
+    bounding_box = pg.rect.Rect((0,0), (size.w * 0.1505, size.h * 0.205))
 
-    LengthA = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-2.png', (size.w * 0.25, size.h * 0.25)) 
-    LengthB = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-2.png', (size.w * 0.5, size.h * 0.25))
-    LengthC = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-2.png', (size.w * 0.75, size.h * 0.25))
+    LengthA = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.25, size.h * 0.35)) 
+    LengthB = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.5, size.h * 0.35))
+    LengthC = Button('image', None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.15, size.h * 0.2), None, None, None, None, 'Assets/background/forest/forest-1.png', (size.w * 0.75, size.h * 0.35))
     
-    Settings = Button('image', None, None, 'Assets/icon/Settings/setting_01.png', (60*size.w/1280, 60* size.w/1280), 
-                    None, None, None, None, 'Assets/icon/Settings/setting_02.png', (size.w * 0.97, size.h * 0.05))
+    Settings = Button('image', None, None, 'Assets/icon/Settings/setting_01.png', (50*size.w/1280, 50* size.w/1280), 
+                    None, None, None, None, 'Assets/icon/Settings/setting_02.png', (size.w * 0.975, size.h * 0.045))
     
-    Continue = Button('image', None, None, 'Assets/icon/Settings/continue_01.png', (60*size.w/1280, 60* size.w/1280), None, None, None, None, 'Assets/icon/Settings/continue_02.png', (size.w*0.975, size.h * 0.95))
+    Continue = Button('image', None, None, 'Assets/icon/Settings/continue_01.png', (50*size.w/1280, 50* size.w/1280), None, None, None, None, 'Assets/icon/Settings/continue_02.png', (size.w*0.98, size.h * 0.955))
 
-    Return = Button('image', None, None, 'Assets/icon/Settings/return_01.png', (60*size.w/1280, 60* size.w/1280), None, None, None, None, 'Assets/icon/Settings/return_02.png', (size.w*0.025, size.h * 0.95)) 
+
+    Return = Button('image', None, None, 'Assets/icon/Settings/return_01.png', (50*size.w/1280, 50* size.w/1280), None, None, None, None, 'Assets/icon/Settings/return_02.png', (size.w*0.02, size.h * 0.955)) 
+
 
     while True:
         alpha += 7.5
@@ -1936,53 +1554,68 @@ def Choose_Race_Length(alpha, character_set, race_length):
                 Shutdown()
 
             if event.type == pg.MOUSEBUTTONDOWN:
-                mouse_animation.add(Click_Animation(mouse_pos, 5, size.w))
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
 
 
                 if Change_Menu == False:
 
                     #Go to Settings Page
-                    if Settings.Mouse_Click(mouse_pos):
+                    if Settings.Click(mouse_pos):
                         pg.image.save(screen, 'Assets/temps/temp.png')
-                        Video_Menu('Choose_Race_Length', character_set, race_length)
+                        Video_Menu('Choose_Race_Length', chr_set, race_len)
 
                     #Change character set when user click on it
-                    if LengthA.Mouse_Click(mouse_pos):
-                        race_length = 'Short'
-                    if LengthB.Mouse_Click(mouse_pos):
-                        race_length = 'Medium'
-                    if LengthC.Mouse_Click(mouse_pos):
-                        race_length = 'Long'
+                    if LengthA.Click(mouse_pos):
+                        race_len = 0
+
+                    if LengthB.Click(mouse_pos):
+                        race_len = 1
+
+                    if LengthC.Click(mouse_pos):
+                        race_len = 2
+
                     
                     #Debug: if user click start then print out what user has choosen 
-                    if Continue.Mouse_Click(mouse_pos) and race_length != '':
-                        print(f'Selected: {character_set}')
-                        print(f'Selected: {race_length}')
-
+                    if Continue.Click(mouse_pos) and race_len != 3 :
+                        #current_user.Update_Coin(-200)
+                        print(f'Selected: {chr_set}')
+                        print(f'Selected: {race_len}')
+                        Core_Game(chr_set, race_len)
+                        
                     #Return to Choose_Character screen and preserve what the user chose
-                    if Return.Mouse_Click(mouse_pos):
-                        Choose_Character_Set(-20, character_set, race_length)
+                    if Return.Click(mouse_pos):
+                        Choose_Character_Set(-20, chr_set, race_len)
             
             if event.type == Bg_cycle:
                 tru_fps = fps
                 fps = 0
 
+        match race_len:
+            case 0:
+                bounding_box.center = LengthA.rect.center
+            case 1:
+                bounding_box.center = LengthB.rect.center
+            case 2:
+                bounding_box.center = LengthC.rect.center
+        
+
         screen.fill(0)
 
         #Background moves with cursor
-        Bg = Background_Animation(Background, (size.w / 2, size.h / 2), mouse_pos)
+        Bg = Bg_Ani(Background, (size.w / 2, size.h / 2), mouse_pos)
 
         #Temporary:
-        Selected = Font(40).render(f'Selected: {race_length}', True, '#ffffff')
+        Selected = Font(40).render(f'{Updt_Lang(lang, 'Race_Len', f'{race_len}')}', True, '#ffffff')
 
         #Fade in animation
-        for item in [Background, User_Info_Tab, Return.image, Continue.image, Settings.image, LengthA.image, LengthB.image, LengthC.image, Selected]:
+        for item in [Background, Return.image, Continue.image, Settings.image, LengthA.image, LengthB.image, LengthC.image, Selected]:
             item.set_alpha(alpha)
 
         
         Bg.Draw()
-        screen.blit(User_Info_Tab, (0,0))
-        screen.blit(Selected, Selected.get_rect(center = (size.w/2, size.h/2)))
+        screen.blit(Prompt, Prompt.get_rect(center = (size.w /2, size.h * 0.125)))
+        screen.blit(Selected, Selected.get_rect(center = (size.w/2, size.h * 0.55)))
+        
 
         #Blit assets onto the screen
         for item in [Settings, Return, Continue, LengthA, LengthB, LengthC]:
@@ -1991,17 +1624,828 @@ def Choose_Race_Length(alpha, character_set, race_length):
         #Change colors if the mouse hover above and only when alpha is high enough (finished fade in animation)
         if alpha > 225 and Change_Menu == False:
             for button in [Settings, Continue, Return, LengthA, LengthB, LengthC]:
-                button.Change_Color(mouse_pos, 0 ,10)
+                button.Hover(mouse_pos, 0 ,10)
         
+
+        if race_len != 3:
+            pg.draw.rect(screen, "#FFFFFF", bounding_box, 5, 0)
 
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
         screen.blit(FPS, (0,0))
     
-        mouse_animation.update()
-        mouse_animation.draw(screen)
+        click_ani.update()
+        click_ani.draw(screen)
 
         pg.time.Clock().tick(60)
         pg.display.update()
 
+def Core_Game(theme, length):
+    theme_list = ['ocean', 'forest', 'villager', 'street'] 
+    baseSize = 90
+    bg = pg.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
+    bg = pg.transform.scale(bg, (1280,720))
+    fps = pg.time.Clock()
+    size = Screen_Info(screen.get_size())
+
+    class Char:
+        def __init__(self, x, y, speed, image_path):
+            self.x = x
+            self.y = y
+            self.speed = speed
+            self.act_i = 0
+            self.status = 'idle'
+            self.laps = 0
+            self.orientation = 1
+            # Tải hình ảnh từ đường dẫn được cung cấp
+            self.walk = [pg.image.load(image_path + f'/walk_1.png'),
+                        pg.image.load(image_path + f'/walk_2.png'),
+                        pg.image.load(image_path + f'/walk_3.png'),
+                        pg.image.load(image_path + f'/walk_4.png')]
+            self.stun = [pg.image.load(image_path + f'/death_1.png'),
+                        pg.image.load(image_path + f'/death_2.png'),
+                        pg.image.load(image_path + f'/death_3.png'),
+                        pg.image.load(image_path + f'/death_4.png')]
+            self.idle = [pg.image.load(image_path + f'/idle_1.png'),
+                        pg.image.load(image_path + f'/idle_2.png'),
+                        pg.image.load(image_path + f'/idle_3.png')]
+            for i in range(4):
+                self.walk[i]= pg.transform.scale(self.walk[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
+                self.stun[i]= pg.transform.scale(self.stun[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
+                if (i < 3):
+                    self.idle[i]= pg.transform.scale(self.idle[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
+        #   self.image = pg.transform.scale(self.image, (50, 50))  # Thu nhỏ kích thước hình ảnh
+            self.reverse = False
+            self.teleport = False
+            self.slow = False
+            self.speedup = False
+            self.effect_end_time = None
+            self.wait_until = None  # Thời gian mà xe phải đợi trước khi di chuyển tiếp
+
+        def draw(self,act_i,status):
+            if status == 'walk':
+                if self.orientation == 1:
+                    screen.blit(self.walk[act_i//15], (self.x, self.y)) # Vẽ hình ảnh
+                elif self.orientation == -1:
+                    screen.blit(pg.transform.flip(self.walk[act_i//15],1,0), (self.x, self.y))
+
+            elif status == 'stun':
+                if self.orientation == 1:
+                    screen.blit(self.stun[act_i//15], (self.x, self.y)) # Vẽ hình ảnh
+                elif self.orientation == -1:
+                    screen.blit(pg.transform.flip(self.stun[act_i//15],1,0), (self.x, self.y))
+
+            else:
+                if self.orientation == 1:
+                    screen.blit(self.idle[act_i//15], (self.x, self.y)) # Vẽ hình ảnh
+                elif self.orientation == -1:
+                    screen.blit(pg.transform.flip(self.idle[act_i//15],1,0), (self.x, self.y))
+
+            if status == 'idle':
+                if act_i == 44:
+                    return 0
+                else:
+                    return act_i+1
+            else:
+                if act_i == 59:
+                    if status == 'stun':
+                        return act_i
+                    else:   
+                        return 0
+                else:
+                    return act_i+1  # Vẽ hình ảnh thay vì hình vuông
+            
+        def move(self):
+            if self.wait_until and pg.time.get_ticks() < self.wait_until:
+                self.status = 'stun'
+                return  # Nếu xe đang trong thời gian chờ, không di chuyển nó
+            self.status = 'walk'
+            if self.reverse:
+                self.x -= self.speed
+            elif self.slow:
+                self.x += self.speed / 2
+            elif self.speedup:
+                self.x += self.speed * 3
+            else:
+                self.x += self.speed
+
+            if self.effect_end_time and pg.time.get_ticks() > self.effect_end_time:
+                self.reverse = False
+                self.slow = False
+                self.speedup = False
+                self.effect_end_time = None
+        
+        def is_clicked(self, pos):
+            return self.x <= pos[0] <= self.x + baseSize * size.w / 1280 and self.y <= pos[1] <= self.y + baseSize * size.h / 720
+
+        def collides_with(self, obstacle):
+            return self.x < obstacle.x + baseSize * size.w / 1280 and self.x + baseSize * size.w / 1280 > obstacle.x and self.y < obstacle.y + baseSize * size.h / 720 and self.y + baseSize * size.h / 720 > obstacle.y
+
+    # Tạo danh sách các xe với hình ảnh tương ứng
+    chars = [Char(50, 30 + (i + 1)*0.15*size.h, uniform(1, 2) * size.w / 1280, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}') for i in range(5)]
+
+    class Obstacle:
+        def __init__(self, x, y, image_paths):
+            self.x = x
+            self.y = y
+            self.image_paths = image_paths
+            self.set_image('Assets/Obstacles/obstacle_box.png')
+            self.changed = False  # Thêm thuộc tính này để theo dõi xem hình ảnh đã được thay đổi chưa
+            self.change_time = None  # Thêm thuộc tính này để theo dõi thời gian mà hình ảnh đã được thay đổi
+
+        def set_image(self, image_path):
+            self.image = pg.image.load(image_path)  # Tải hình ảnh từ đường dẫn được cung cấp
+            self.image = pg.transform.scale(self.image, (baseSize * size.w / 1280, baseSize * size.h / 720))  # Thu nhỏ kích thước hình ảnh
+
+        def set_random_image(self):
+            if not self.changed:
+                self.image_path = choice(self.image_paths)  # Lưu trữ hình ảnh hiện tại
+                self.set_image(self.image_path)
+                self.changed = True
+                self.change_time = pg.time.get_ticks()
+                return self.image_path  # Trả về hình ảnh đã chọn
+
+        def draw(self):
+            screen.blit(self.image, (self.x, self.y))# Vẽ hình ảnh   
+    # Tạo danh sách các chướng ngại vật ở nửa đường
+    obstacle_images = ['Assets/Obstacles/obstacle_confinement.png', 'Assets/Obstacles/obstacle_finish.png', 
+                    'Assets/Obstacles/obstacle_reverse.png', 'Assets/Obstacles/obstacle_slow.png', 
+                    'Assets/Obstacles/obstacle_speed.png', 'Assets/Obstacles/obstacle_teleport.png', 
+                    'Assets/Obstacles/obstacle_tostart.png']
+    obstacles = [Obstacle(uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(i+1), obstacle_images) for i in range(5)]
+    # Hàm hiển thị menu và nhận lựa chọn từ người chơi
+    def show_menu():
+        running = True
+        selection = 0
+        charImage = Draw_to_Screen('text', None, None, None, None, '', 
+                                        Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.60, size.h * 0.5))
+        while running:
+            screen.blit(bg,(0,0))
+            text = Draw_to_Screen('text', None, None, None, None, 'Choose your character!', 
+                        Font(int(70 * size.w / 1280)), '#FFFFFF', (size.w * 0.5, size.h * 0.3))
+            
+            currentChar = Draw_to_Screen('text', None, None, None, None, 'Your character:', 
+                        Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.4, size.h * 0.5))
+            
+            Start = Button('rect', (size.w*0.4, size.h * 0.65), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
+            Start_text = Draw_to_Screen('text', None, None, None, None, 'Start', Font((40)), '#000000', Start.rect.center)
+            
+            text.Blit(0,0)
+            currentChar.Blit(0,0)
+            charImage.Blit(0,0)
+            Start.Blit(0,0)
+            Start_text.Blit(0,0)
+            fps.tick(60)
+            for char in chars:
+                char.act_i = char.draw(char.act_i,char.status)
+            pg.display.flip()
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()  # Thoát khỏi chương trình nếu người dùng đóng cửa sổ
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    pos = pg.mouse.get_pos()
+                    for i, char in enumerate(chars):
+                        if char.is_clicked(pos):
+                            charImage = Draw_to_Screen('image', None, None, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}/idle_1.png', ((baseSize * 1.2)*size.w/1280, (baseSize * 1.2)* size.w/1280), None, 
+                                        None, None, (size.w * 0.6, size.h * 0.5))
+                            selection = i                # Trả về chỉ số của xe mà người dùng đã chọn
+                        if Start.Click(pos):
+                            return selection
+                            
+                    
+
+    # Hỏi người chơi chọn xe
+    player_choice = show_menu()
+
+    # Khởi tạo số vàng của người chơi
+    player_gold = 0
+
+    # Tạo một danh sách để theo dõi thứ tự các xe về đích
+    finish_order = []
+
+    # Vòng lặp chính của game
+    running = True
+    for char in chars:
+        char.status = 'walk'
+    while running:
+        # Xử lý các sự kiện
+            fps.tick(60)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    running = False
+            screen.blit(bg,(0,0))
+            # Vẽ và di chuyển các xe
+            for char in chars:
+                char.act_i = char.draw(char.act_i, char.status)
+                char.move()
+                image_path = None  # Khởi tạo image_path với giá trị mặc định
+                for obstacle in obstacles:
+                    if char.collides_with(obstacle):
+                        image_path = obstacle.set_random_image()  # Lấy hình ảnh đã chọn
+                if image_path:  # Kiểm tra nếu image_path không phải là None
+            
+                    if 'obstacle_confinement.png' in image_path:  # Kiểm tra hình ảnh hiện tại của chướng ngại vật
+                        char.wait_until = pg.time.get_ticks() + 1000 # Đặt thời gian chờ cho xe
+                        char.status = 'stun'
+                    elif 'obstacle_finish.png' in image_path:
+                        if (char.speed > 0):
+                            char.x = 0.95 * size.w
+                        else:
+                            char.x = 0.05 * size.w
+                    elif 'obstacle_reverse.png' in image_path:
+                        char.reverse = True
+                        char.effect_end_time = pg.time.get_ticks() + 1000
+                    elif 'obstacle_slow.png' in image_path:
+                        char.slow = True
+                        char.effect_end_time = pg.time.get_ticks() + 1000
+                    elif 'obstacle_speed.png' in image_path:
+                        char.speedup = True
+                        char.effect_end_time = pg.time.get_ticks() + 500
+                    elif 'obstacle_teleport.png' in image_path:
+                        char.x += char.speed/(abs(char.speed)) * 200 * size.w / 1280
+                    elif 'obstacle_tostart.png' in image_path:
+                        if (char.speed > 0):
+                            char.x = 0.05 * size.w
+                        else:
+                            char.x = 0.95 * size.w
+
+                        
+            # Vẽ chướng ngại vật
+            for obstacle in obstacles:
+                obstacle.draw()
+
+            # Loại bỏ các chướng ngại vật đã thay đổi hình ảnh từ hơn 2 giây trước
+            obstacles = [obstacle for obstacle in obstacles if not obstacle.changed or pg.time.get_ticks() - obstacle.change_time < 2000]
+
+            # Cập nhật màn hình
+            pg.display.flip()
+
+            # Kiểm tra xem có xe nào về đích chưa
+            for i, char in enumerate(chars):
+                if (char.x >= 0.95*size.w and char.laps % 2 == 0) or (char.x <= 0.05*size.w and char.laps % 2 == 1):
+                    if char.laps == length and i not in finish_order:
+                        finish_order.append(i)
+                        char.speed = 0
+                        char.x = size.w*0.95
+                        char.status = 'idle'
+                        char.act_i = 0
+                        print(f"Xe số {i+1} đã về đích!")
+                        print(char.laps)
+                    else:
+                        obstacles.append(Obstacle(uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(i+1), obstacle_images))
+                        char.laps += 1
+                        char.speed = -1*char.speed
+                        char.orientation = -char.orientation
+
+            # Nếu tất cả các xe đều đã về đích, kết thúc trò chơi và công bố kết quả
+            if len(finish_order) == len(chars):
+                running = False
+                print("Tất cả các xe đã về đích!")
+                for i, char_index in enumerate(finish_order):
+                    if i == 0 and char_index == player_choice:
+                        player_gold += 20
+                        result_text = f"Your car comes first! You have received 20 gold. Your current gold amount is {player_gold}."
+                    else:
+                        result_text = f"Car number {char_index+1} came in {i+1}th place."
+            
+                    # Tạo font và vẽ văn bản lên màn hình
+                    font = pg.font.Font(None, 36)
+                    text = font.render(result_text, True, (255, 255, 255))
+                    screen.blit(text, (250 * size.w / 1280, (300 + i * 40) * size.h / 720))  # Thay đổi vị trí y để các dòng văn bản không chồng lên nhau
+
+                # Cập nhật màn hình để hiển thị văn bản
+                pg.display.flip()
+
+                # Đợi một chút trước khi thoát để người chơi có thể đọc kết quả
+                pg.time.wait(5000)
+
+#Settings Tab
+def Video_Menu(prev_menu, set_char, race_len):
+    global in_full_screen
+
+    #Update everything only once to improve performance
+    change_size = True
+
+    #Set the image of the previous menu as background
+    bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
+    
+
+    while True:
+
+        #Position of the mouse
+        mouse_pos = pg.mouse.get_pos()
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                Shutdown()
+
+            if event.type == pg.MOUSEBUTTONDOWN:
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
+
+                #Go to different setting menus
+                if Audio.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    Audio_Menu(prev_menu, set_char, race_len)
+
+                if Language.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    Language_Menu(prev_menu, set_char, race_len)
+
+                if User_Center.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    User_Center_Menu(prev_menu, set_char, race_len)
+
+                if Return.Click(mouse_pos) and prev_menu != 'Title':
+                    Title(True)
+
+                #If return is pressed, return to a previous menu
+                if Close.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+
+                    if prev_menu == 'Title':
+                        Title(False)
+
+                    elif prev_menu == 'In_Game_Menu':
+                        In_Game_Menu(0)
+
+                    elif prev_menu == 'Choose_Character_Set':
+                        Choose_Character_Set(-20, set_char, race_len)
+
+                    elif prev_menu == 'Choose_Race_Length':
+                        Choose_Race_Length(-20, set_char, race_len)
+                
+                #Change resolutions
+                if Full_Screen.Click(mouse_pos):
+                    sfx_channels.play(interface)
+                    in_full_screen = True
+                    size.Full_Screen()
+
+                if _1366x768.Click(mouse_pos):
+                    sfx_channels.play(interface)
+                    in_full_screen = False
+                    size.Window((1366, 768))
+
+                if _1280x720.Click(mouse_pos):
+                    sfx_channels.play(interface)
+                    in_full_screen = False
+                    size.Window((1280, 720))    
+
+            #Update everything within the menu when size changed
+            if event.type == pg.WINDOWSIZECHANGED:
+                change_size = True
+
+        #If a size change is detected, create new object that replace the old one with new resolution
+        if change_size:
+
+            bg = bg = pg.transform.smoothscale(bg, (size.w, size.h))
+            menu_box = pg.rect.Rect(size.w*0.125, size.h * 0.125, size.w*0.75, size.h * 0.75)
+
+            Video = Draw_to_Screen('rect', (size.w*0.125, size.h * 0.125), (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
+            Audio = Button('rect', Video.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+            Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+            User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+            Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+            Close = Button('image', None, None, 'Assets/icon/Settings/close.png', (40*size.w/1280, 40*size.w/1280), None, None, None, None , 'Assets/icon/Settings/close-1.png', (0,0))
+            Close.rect.center = menu_box.topright
+
+            Full_Screen = Button('rect', (size.w * 0.325, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+            _1366x768 = Button('rect', (size.w * 0.5125, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+            _1280x720 = Button('rect', (size.w * 0.7, size.h * 0.2), (size.w*0.15, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+            
+            Video_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Video' ), True, '#424769')
+            Audio_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Audio' ), True, '#424769')
+            Language_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Language' ), True, '#424769')
+            User_Center_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'User_Center' ), True, '#424769')
+            
+
+            Full_Screen_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Video', 'Full_Screen' ), True, '#424769')
+            _1366x768_text = Font(int(25 * size.w / 1280)).render('1366 x 768', True, '#424769')
+            _1280x720_text = Font(int(25 * size.w / 1280)).render('1280 x 720', True, '#424769')
+            Return_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Return' ), True, '#424769')
+            
+
+        #After all the object has been updated, change the variable to False
+        change_size = False
+
+        screen.blit(bg, (0,0))
+        pg.draw.rect(screen, '#2d3250', menu_box)
+        pg.draw.rect(screen, '#676f9d', [size.w*0.125, size.h * 0.125, size.w*0.175, size.h * 0.75])
+
+        #Blit Assets onto screen
+        for item in [Video, Audio, Language, User_Center, Return, Close]:
+            item.Blit(0,0)
+        
+        for item in [Full_Screen, _1366x768, _1280x720]:
+            item.Blit(0,10)
+
+        #Change colors if the mouse hover above
+        for button in [Audio, Language, User_Center]:
+            button.Hover(mouse_pos, 0 , 0)
+
+        for button in [Full_Screen, _1366x768, _1280x720, Close]:
+            button.Hover(mouse_pos, 0 , 10)
+        
+        if prev_menu != 'Title':
+            Return.Blit(0,0)
+            Return.Hover(mouse_pos, 0, 0)
+            screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
+            
+
+
+        #Blit Settings Text onto screen
+        screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
+        screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
+        screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
+        screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
+        
+
+        #Blit Video Texts onto screen
+        screen.blit(Full_Screen_text, Full_Screen_text.get_rect(center = (Full_Screen.rect.center)))
+        screen.blit(_1366x768_text, _1366x768_text.get_rect(center = (_1366x768.rect.center)))
+        screen.blit(_1280x720_text, _1280x720_text.get_rect(center = (_1280x720.rect.center)))
+
+        #Mouse Animation
+        click_ani.update()
+        click_ani.draw(screen)
+
+        pg.display.update()
+        pg.time.Clock().tick(60)
+
+def Audio_Menu(prev_menu, set_char, race_len):
+    global music_volume, sfx_volume
+    
+    #Load Assets
+    bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
+    bg = bg = pg.transform.smoothscale(bg, (size.w, size.h))
+    menu_box = pg.rect.Rect(size.w*0.125, size.h * 0.125, size.w*0.75, size.h * 0.75)
+
+    Video = Button('rect', (size.w*0.125, size.h * 0.125), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Audio = Draw_to_Screen('rect', Video.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
+    Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Close = Button('image', None, None, 'Assets/icon/Settings/close.png', (40*size.w/1280, 40*size.w/1280), None, None, None, None , 'Assets/icon/Settings/close-1.png', (0,0))
+    Close.rect.center = menu_box.topright
+
+    music_slider = pg.rect.Rect((0, 0), (300 * size.w/1280, 20 * size.h/720))
+    music_slider.center = (size.w * 0.7, size.h * 0.25)
+
+    music_circle = pg.rect.Rect((0,0), (30 * size.w/1280, 30 * size.w/1280))
+    music_circle.center = (music_volume * (music_slider.right - music_slider.left) + music_slider.left, size.h * 0.25)
+
+    sfx_slider = pg.rect.Rect((0, 0), (300 * size.w/1280, 20 * size.h/720))
+    sfx_slider.center = (size.w * 0.7, size.h * 0.4)
+
+    sfx_circle = pg.rect.Rect((0,0), (30 * size.w/1280, 30 * size.w/1280))
+    sfx_circle.center = (sfx_volume * (sfx_slider.right - sfx_slider.left) + sfx_slider.left, size.h * 0.4)
+
+    Video_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Video' ), True, '#424769')
+    Audio_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Audio' ), True, '#424769')
+    Language_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Language' ), True, '#424769')
+    User_Center_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'User_Center' ), True, '#424769')
+    Return_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Return' ), True, '#424769')
+
+    music_text = Font(int(25*size.w/1280)).render(Updt_Lang(lang, 'Audio', 'Music' ), True, '#FFFFFF')
+    sfx_text = Font(int(25*size.w/1280)).render(Updt_Lang(lang, 'Audio', 'SFX' ), True, '#FFFFFF')
+
+    while True:
+
+        #Position of the mouse
+        mouse_pos = pg.mouse.get_pos()
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                Shutdown()
+
+            if event.type == pg.MOUSEBUTTONDOWN:
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
+
+                #Go to different setting menus
+                if Video.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    Video_Menu(prev_menu, set_char, race_len)
+
+                if Language.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    Language_Menu(prev_menu, set_char, race_len)
+
+                if User_Center.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    User_Center_Menu(prev_menu, set_char, race_len)
+                    
+                if Return.Click(mouse_pos) and prev_menu != 'Title':
+                    Title(True)
+
+                #If return is pressed, return to a previous menu
+                if Close.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+
+                    if prev_menu == 'Title':
+                        Title(False)
+
+                    elif prev_menu == 'In_Game_Menu':
+                        In_Game_Menu(0)
+
+                    elif prev_menu == 'Choose_Character_Set':
+                        Choose_Character_Set(-20, set_char, race_len)
+
+                    elif prev_menu == 'Choose_Race_Length':
+                        Choose_Race_Length(-20, set_char, race_len)
+
+
+        screen.blit(bg, (0,0))
+        pg.draw.rect(screen, '#2d3250', menu_box)
+        pg.draw.rect(screen, '#676f9d', [size.w*0.125, size.h * 0.125, size.w*0.175, size.h * 0.75])
+
+        #Draw the music sliders
+        pg.draw.rect(screen, 'light grey', music_slider, 0, 15)
+        pg.draw.rect(screen, '#000000', music_circle, 0, 30)
+        pg.draw.rect(screen, 'light grey', sfx_slider, 0, 15)
+        pg.draw.rect(screen, '#000000', sfx_circle, 0, 30)
+
+
+        #Change the music settings when mouse is pressed onto the circle
+        keys = pg.mouse.get_pressed()
+
+        if (music_circle.collidepoint(mouse_pos) and keys[0] == True):
+            
+            #Move music circle with mouse
+            music_circle.center = (mouse_pos[0], size.h * 0.25)
+            if music_circle.left <= music_slider.left: music_circle.left = music_slider.left
+            if music_circle.right >= music_slider.right: music_circle.right = music_slider.right
+
+            #Change music
+            music_volume = round((music_circle.center[0] - music_slider.midleft[0]) / (300 * size.w/1280), 2)
+            if music_volume <= 0.05: music_volume = 0
+            if music_volume >= 0.95: music_volume = 1.0
+
+            music_channels.set_volume(music_volume)
+
+        elif (sfx_circle.collidepoint(mouse_pos) and keys[0] == True):
+
+            #Move sfx circle with mouse
+            sfx_circle.center = (mouse_pos[0], size.h * 0.4)
+            if sfx_circle.left <= sfx_slider.left: sfx_circle.left = sfx_slider.left
+            if sfx_circle.right >= sfx_slider.right: sfx_circle.right = sfx_slider.right
+
+            #Change music
+            sfx_volume = round((sfx_circle.center[0] - sfx_slider.midleft[0]) / (300 * size.w/1280), 2)
+            if sfx_volume <= 0.05: sfx_volume = 0
+            if sfx_volume >= 0.95: sfx_volume = 1.0
+
+            sfx_channels.set_volume(sfx_volume)
+
+        #Blit Assets onto screen
+        for item in [Video, Audio, Language, User_Center, Close]:
+            item.Blit(0,0)
+
+        #Change colors if the mouse hover above
+        for button in [Video, Language, User_Center, Close]:
+            button.Hover(mouse_pos, 0 ,0)
+        
+        #Blit Settings Text onto screen
+        screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
+        screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
+        screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
+        screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
+
+        screen.blit(music_text, music_text.get_rect(midleft = (size.w * 0.35, size.h * 0.25)))
+        screen.blit(sfx_text, sfx_text.get_rect(midleft = (size.w * 0.35, size.h * 0.4)))
+
+        if prev_menu != 'Title':
+            Return.Blit(0,0)
+            Return.Hover(mouse_pos, 0, 0)
+            screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
+
+        #Mouse animation
+        click_ani.update()
+        click_ani.draw(screen)
+
+        pg.display.update()
+        pg.time.Clock().tick(60)
+
+def Language_Menu(prev_menu, set_char, race_len):
+    global lang
+    Change_Language = True
+
+    #Load Assets
+    bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
+    bg = pg.transform.smoothscale(bg, (size.w, size.h))
+    menu_box = pg.rect.Rect(size.w*0.125, size.h * 0.125, size.w*0.75, size.h * 0.75)
+
+    Video = Button('rect', (size.w*0.125, size.h * 0.125), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Audio = Button('rect', Video.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d','#5d648c', None, None)
+    Language = Draw_to_Screen('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
+    User_Center = Button('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Close = Button('image', None, None, 'Assets/icon/Settings/close.png', (40*size.w/1280, 40*size.w/1280), None, None, None, None , 'Assets/icon/Settings/close-1.png', (0,0))
+    Close.rect.center = menu_box.topright
+
+    Choose_US = Button('rect', (size.w*0.375, size.h * 0.2), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+    Choose_VN = Button('rect', (size.w*0.625, size.h * 0.2), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+
+    Choose_US_text = Font(int(25 * size.w / 1280)).render('English', True, '#424769')
+    Choose_VN_text = Font(int(25 * size.w / 1280)).render('Tiếng Việt', True, '#424769')
+
+    while True:
+
+        #Position of the mouse
+        mouse_pos = pg.mouse.get_pos()
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                Shutdown()
+
+            if event.type == pg.MOUSEBUTTONDOWN:
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
+
+                #Change global langauge settings
+                if Choose_US.Click(mouse_pos) == True:
+                    sfx_channels.play(interface)
+                    Change_Language = True
+                    lang = 'US'
+
+                if Choose_VN.Click(mouse_pos) == True:
+                    sfx_channels.play(interface)
+                    Change_Language = True
+                    lang = 'VN'
+
+                #Go to different setting menus
+                if Video.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    Video_Menu(prev_menu, set_char, race_len)
+
+                if Audio.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    Audio_Menu(prev_menu, set_char, race_len)
+
+                if User_Center.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    User_Center_Menu(prev_menu, set_char, race_len)
+                
+                if Return.Click(mouse_pos) and prev_menu != 'Title':
+                    Title(True)
+
+                #If return is pressed, return to a previous menu
+                if Close.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+
+                    if prev_menu == 'Title':
+                        Title(False)
+
+                    elif prev_menu == 'In_Game_Menu':
+                        In_Game_Menu(0)
+
+                    elif prev_menu == 'Choose_Character_Set':
+                        Choose_Character_Set(-20, set_char, race_len)
+
+                    elif prev_menu == 'Choose_Race_Length':
+                        Choose_Race_Length(-20, set_char, race_len)
+
+        #Update global lang
+        if Change_Language == True:
+            Video_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Video' ), True, '#424769')
+            Audio_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Audio' ), True, '#424769')
+            Language_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Language' ), True, '#424769')
+            User_Center_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'User_Center' ), True, '#424769')
+            Return_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Return' ), True, '#424769')
+
+        #After update, return variable to False
+        Change_Language == False
+
+        screen.blit(bg, (0,0))
+        pg.draw.rect(screen, '#2d3250', menu_box)
+        pg.draw.rect(screen, '#676f9d', [size.w*0.125, size.h * 0.125, size.w*0.175, size.h * 0.75])
+
+        #Blit Assets onto screen
+        for item in [Choose_US, Choose_VN]:
+            item.Blit(0,10)
+        
+        for item in [Video, Audio, Language, User_Center, Close]:
+            item.Blit(0,0)
+
+        #Change colors if the mouse hover above
+        for button in [Choose_US, Choose_VN]:
+            button.Hover(mouse_pos, 0 ,10)
+
+        for button in [Video, Audio, User_Center, Close]:
+            button.Hover(mouse_pos, 0 ,0)
+        
+        #Blit settings text onto the screen
+        screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
+        screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
+        screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
+        screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
+
+        screen.blit(Choose_US_text, Choose_US_text.get_rect(center = (Choose_US.rect.center)))
+        screen.blit(Choose_VN_text, Choose_VN_text.get_rect(center = (Choose_VN.rect.center)))
+
+        if prev_menu != 'Title':
+            Return.Blit(0,0)
+            Return.Hover(mouse_pos, 0, 0)
+            screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
+
+        click_ani.update()
+        click_ani.draw(screen)
+
+        pg.display.update()
+        pg.time.Clock().tick(60)
+
+def User_Center_Menu(prev_menu, set_char, race_len):
+
+    #Load Assets
+    bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
+    bg = pg.transform.smoothscale(bg, (size.w, size.h))
+    menu_box = pg.rect.Rect(size.w*0.125, size.h * 0.125, size.w*0.75, size.h * 0.75)
+
+    Video = Button('rect', (size.w*0.125, size.h * 0.125), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Audio = Button('rect', Video.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Language = Button('rect', Audio.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    User_Center = Draw_to_Screen('rect', Language.rect.bottomleft, (size.w*0.175, size.h * 0.1), None, None, None, None, '#f9b17a', None)
+    Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    Close = Button('image', None, None, 'Assets/icon/Settings/close.png', (40*size.w/1280, 40*size.w/1280), None, None, None, None , 'Assets/icon/Settings/close-1.png', (0,0))
+    Close.rect.center = menu_box.topright
+    
+
+    Video_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Video' ), True, '#424769')
+    Audio_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Audio' ), True, '#424769')
+    Language_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Language' ), True, '#424769')
+    User_Center_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'User_Center' ), True, '#424769')
+    Return_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Return' ), True, '#424769')
+
+    while True:
+
+        #Get mouse position
+        mouse_pos = pg.mouse.get_pos()
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                Shutdown()
+
+            if event.type == pg.MOUSEBUTTONDOWN:
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
+
+                #Go to different setting menus
+                if Video.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    Video_Menu(prev_menu, set_char, race_len)
+
+                if Audio.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    Audio_Menu(prev_menu, set_char, race_len)
+
+                if Language.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+                    Language_Menu(prev_menu, set_char, race_len)
+                
+                if Return.Click(mouse_pos) and prev_menu != 'Title':
+                    Title(True)
+
+                #If return is pressed, return to a previous menu
+                if Close.Click(mouse_pos):
+                    sfx_channels.play(button_click)
+
+                    if prev_menu == 'Title':
+                        Title(False)
+
+                    elif prev_menu == 'In_Game_Menu':
+                        In_Game_Menu(0)
+
+                    elif prev_menu == 'Choose_Character_Set':
+                        Choose_Character_Set(-20, set_char, race_len)
+
+                    elif prev_menu == 'Choose_Race_Length':
+                        Choose_Race_Length(-20, set_char, race_len)
+
+        screen.blit(bg, (0,0))
+        pg.draw.rect(screen, '#2d3250', menu_box)
+        pg.draw.rect(screen, '#676f9d', [size.w*0.125, size.h * 0.125, size.w*0.175, size.h * 0.75])
+
+        #Blit Assets onto screen
+        for item in [Video, Audio, Language, User_Center, Close]:
+            item.Blit(0,0)
+
+        #Change colors if the mouse hover above
+        for button in [Video, Audio, Language, Close]:
+            button.Hover(mouse_pos, 0 ,0)
+        
+        #Blit text onto the screen
+        screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
+        screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
+        screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
+        screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
+
+        if prev_menu != 'Title':
+            Return.Blit(0,0)
+            Return.Hover(mouse_pos, 0, 0)
+            screen.blit(Return_text, Return_text.get_rect(center = (Return.rect.center)))
+
+        click_ani.update()
+        click_ani.draw(screen)
+
+        pg.display.update()
+        pg.time.Clock().tick(60)
+
 Load_Config()
-In_Game_Menu(-20)
+Login('test', '1234567890')

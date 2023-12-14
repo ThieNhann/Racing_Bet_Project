@@ -1,30 +1,30 @@
 {
     "Login":
     {
-        "Select_Login"   :  "Login",
-        "Select_Signup"  :  "Sign Up",
-        "Title"          :  "Welcome",
-        "Username_text"  :  "Username",
-        "Password_text"  :  "Password",
-        "Login_Button"   :  "Login",
-        "FaceID_Button"  :  "Face ID",
-        "Forgot_Password":  "Forgot password?",
-        "Login_Failed"   :  "Username or password is incorrect"
+        "To_Login"      :  "Login",
+        "To_Signup"     :  "Sign Up",
+        "Title"         :  "Welcome",
+        "Email_Txt"     :  "Email",
+        "Pwd_Txt"       :  "Password",
+        "Submit_Login"  :  "Login",
+        "FaceID_Btn"    :  "Face ID",
+        "Forgot_Pwd"    :  "Forgot password?",
+        "Login_Failed"  :  "Username or password is incorrect"
     },
 
     "Sign_Up":
     {
-        "Select_Login"          :  "Login",
-        "Select_Signup"         :  "Sign Up",
-        "Title"                 :  "Welcome",
-        "Username_text"         :  "Username",
-        "Password_text"         :  "Password",
-        "Repeat_Password_text"  :  "Repeat Password",
-        "Signup_button"         :  "Sign Up",
-        "Username_Error"        :  "The email is in wrong format",
-        "Password_Length_Error" :  "Password must have at least 8 characters",
-        "Password_Mismatch"     :  "Password doesn't match",
-        "Existed"               :  "Account with this email already existed"
+        "To_Login"          :  "Login",
+        "To_Signup"         :  "Sign Up",
+        "Title"             :  "Welcome",
+        "Email_Txt"         :  "Email",
+        "Pwd_Txt"           :  "Password",
+        "Repeat_Pwd_Txt"    :  "Repeat Password",
+        "Submit_Signup"        :  "Sign Up",
+        "Email_Error"       :  "The email is in wrong format",
+        "Pwd_Len_Error"     :  "Password must have at least 8 characters",
+        "Pwd_Mismatch"      :  "Password doesn't match",
+        "Existed"           :  "Account with this email already existed"
         
     },
 
@@ -39,7 +39,7 @@
         "Audio"         :  "Audio",
         "Language"      :  "Language",
         "User_Center"   :  "User Center",
-        "Return"        :  "Return"
+        "Return"        :  "Title Screen"
     },
 
     "Video":
@@ -51,6 +51,26 @@
     {
         "Music"   :  "Music",
         "SFX"     :  "Sound Effects"  
+    },
+
+    "Select_Char":
+    {
+        "Char_Set"  :   "Choose a character set",
+        "0"         :   "Selected: Ocean",
+        "1"         :   "Selected: Forest",
+        "2"         :   "Selected: Village",
+        "3"         :   "Selected: Street",
+        "4"         :   "HCMUS",
+        "5"         :   "Selected: None"
+    },
+
+    "Race_Len":
+    {
+        "Len"       :   "Choose length of the race",
+        "0"         :   "Selected: Short (1 lap)",
+        "1"         :   "Selected: Medium (2 lap)",
+        "2"         :   "Selected: Long (3 lap)",
+        "3"         :   "Selected: None"
     }
 
     

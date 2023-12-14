@@ -21,10 +21,10 @@ cur = conn.cursor()
 cur.execute("""
 CREATE TABLE IF NOT EXISTS User_Data(
             User_ID INTEGER PRIMARY KEY,
-            Username VAR CHAR(255) NOT NULL,
+            Email VAR CHAR(255) NOT NULL,
             Password VAR CHAR(255) NOT NULL,
-            Coins VAR CHAR (255) NOT NULL
-)
+            Username VAR CHAR (255),
+            Coins VAR CHAR (255) NOT NULL)
 """)
 
 cur.execute("""
@@ -49,7 +49,7 @@ class Screen_Info:
         self.w, self.h = current_size
         pg.display.set_mode((self.w, self.h), pg.SRCALPHA| pg.NOFRAME)
 
-class Click_Animation(pg.sprite.Sprite):
+class Click_Ani(pg.sprite.Sprite):
     def __init__(self, instant_mouse_pos, r, size) -> None:
         super().__init__()
         self.r = r
@@ -71,7 +71,7 @@ class Click_Animation(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center = (self.pos))
         self.Kill()
 
-class Background_Animation():
+class Bg_Ani():
     def __init__(self, bg, pos, mouse_pos):
         self.image = bg
         self.x, self.y = pos
@@ -133,7 +133,7 @@ class Button(Draw_to_Screen):
             self.alter_image = pg.transform.scale(pg.image.load(self.alter_image_file).convert_alpha(), (self.image_scale))
         
 
-    def Change_Color(self, mouse_pos, width, radius):
+    def Hover(self, mouse_pos, width, radius):
         if self.rect.collidepoint(mouse_pos):
             if self.type == 'rect':
                 pg.draw.rect(screen, self.alter_color, self.rect, width, radius)
@@ -150,7 +150,7 @@ class Button(Draw_to_Screen):
                 screen.blit(self.text, self.rect)
 
     
-    def Mouse_Click(self, mouse_pos):
+    def Click(self, mouse_pos):
         if self.rect.collidepoint(mouse_pos):  
             return True
         return False
@@ -166,29 +166,41 @@ def Font(size):
     return pg.font.Font('font/arial.ttf', size)
 
 class User_Data:
-    def __init__(self, username, password):
-        self.username = username
-        self.password = hashlib.sha256(password.encode()).hexdigest()
+    def __init__(self):
+        self.email = None
+        self.pwd = None
 
     def Login(self):
-        cur.execute("SELECT * FROM User_Data WHERE Username = ? AND Password = ?", (self.username, self.password))
+        cur.execute("SELECT * FROM User_Data WHERE Email = ? AND Password = ?", (self.email, self.pwd))
         if cur.fetchall():
+            cur.execute("SELECT Coins FROM User_Data WHERE Email= ?", (self.email,))
+            self.coin = int(cur.fetchone()[0])
             return True
         else:
             return False
 
     def Sign_Up_Validate(self):
-        cur.execute("SELECT * FROM User_Data WHERE Username = ?", (self.username,))
-
+        cur.execute("SELECT * FROM User_Data WHERE Email = ?", (self.email,))
         if  cur.fetchall():
             return False
         else :
             return True
     
     def Sign_Up(self):
-        cur.execute("INSERT INTO User_Data(Username, Password, Coins) VALUES (?,?,?)", (self.username, self.password, 200))
+        cur.execute("INSERT INTO User_Data(Email, Password, Username, Coins) VALUES (?,?,?,?)", (self.email, self.pwd, 'Lol', 200))
         conn.commit()
+
+        cur.execute("SELECT Coins FROM User_Data WHERE Email = ?", (self.email,))
+        self.coin = int(cur.fetchone()[0])
         return True
+
+    def Update_Coin(self, change):
+        self.coin += change
+        cur.execute("""UPDATE User_Data
+                    SET Coins = ?
+                    WHERE Email = ?
+                    """, (self.coin, self.email))
+        conn.commit()
             
         
         

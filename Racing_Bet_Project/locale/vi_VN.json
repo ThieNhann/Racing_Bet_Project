@@ -1,10 +1,10 @@
 {
     "Login":
     {
-        "Select_Login"   :  "Đăng nhập",
-        "Select_Signup"  :  "Đăng ký",
+        "To_Login"       :  "Đăng nhập",
+        "To_Signup"      :  "Đăng ký",
         "Title"          :  "Chào mừng",
-        "Username_text"  :  "Tên đăng nhập",
+        "Username_text"  :  "Email",
         "Password_text"  :  "Mật khẩu",
         "Login_Button"   :  "Đăng nhập",
         "FaceID_Button"  :  "Face ID",
@@ -14,10 +14,10 @@
 
     "Sign_Up":
     {
-        "Select_Login"          :  "Đăng nhập",
-        "Select_Signup"         :  "Đăng ký",
+        "To_Login"              :  "Đăng nhập",
+        "To_Signup"             :  "Đăng ký",
         "Title"                 :  "Chào mừng",
-        "Username_text"         :  "Tên đăng nhập",
+        "Username_text"         :  "Email",
         "Password_text"         :  "Mật khẩu",
         "Repeat_Password_text"  :  "Nhập lại mật khẩu",
         "Signup_button"         :  "Đăng ký",
@@ -38,7 +38,7 @@
         "Audio"         :  "Âm thanh",
         "Language"      :  "Ngôn ngữ",
         "User_Center"   :  "Người dùng",
-        "Return"        :  "Trở về"
+        "Return"        :  "Màn hình chính"
     },
 
     "Video":
@@ -50,7 +50,26 @@
     {
         "Music"   :  "Âm nhạc",
         "SFX"     :  "Hiệu ứng âm thanh"  
-    }
+    },
 
+    "Select_Char":
+    {
+        "Char_Set"  :   "Chọn set nhân vật",
+        "0"         :   "Đã chọn: Biển",
+        "1"         :   "Đã chọn: Rừng",
+        "2"         :   "Đã chọn: Ngôi làng",
+        "3"         :   "Đã chọn: Đường phố",
+        "4"         :   "Đã chọn: HCMUS",
+        "5"         :   "Đã chọn: Chưa có"
+    },
+
+    "Race_Len":
+    {
+        "Len"       :   "Chọn độ dài đường đua",
+        "0"         :   "Đã chọn: Ngắn (1 lap)",
+        "1"         :   "Đã chọn: Trung Binh (2 lap)",
+        "2"         :   "Đã chọn: Dài (3 lap)",
+        "3"         :   "Đã chọn: Chưa có"
+    }
 
 }
