@@ -2,7 +2,7 @@
 import random
 import sys
 from Experiment_Class import *
-import result_screen as result
+import Result_Screen as result
 
 # Khởi tạo Pygame
 pygame.init()
