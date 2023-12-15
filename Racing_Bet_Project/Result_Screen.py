@@ -4,16 +4,15 @@ import os
 from Experiment_Class import *
 
 # pygame.init()
-def Show_Result(ranking_list, player_choice, game_theme):
+def Show_Result(ranking_list, player_choice, game_theme, size):
     theme_list = ["ocean", "forest", "villager", "street"]
     theme = game_theme
-    WIDTH, HEIGHT = 1280, 720
+    WIDTH, HEIGHT = size.w, size.h
     GOLD = (255, 215, 0)
     chr_select = player_choice + 1  # playera choose)
                     #1. bear   2.boar    3. deer   4.fox    5.wolf
     rank = ""
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    size = Screen_Info(screen.get_size())
 
     class Stage:
         def __init__(self, name, width, height, color):

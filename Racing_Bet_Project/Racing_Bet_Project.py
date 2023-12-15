@@ -9,10 +9,10 @@ pygame.init()
 
 # Thiết lập kích thước màn hình
 theme_list = ['ocean', 'forest', 'villager', 'street']
-theme = 2  
-length = 0
+theme = 1  
+length = 2
 baseSize = 90
-baseSpeed = 5
+baseSpeed = 2 # thay đổi speed nhân vật (for testing)
 screen = pygame.display.set_mode((1280,720))
 bg = pygame.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
 bg = pygame.transform.scale(bg, (1280,720))
@@ -27,6 +27,7 @@ class Char:
         self.status = 'idle'
         self.laps = 0
         self.orientation = 1
+        self.laps_display = Draw_to_Screen('text', None, None, None, None, f'{self.laps}/{length}', Font((40)), '#FFFFFF', (self.x - 20 * size.w / 1280, self.y))
         # Tải hình ảnh từ đường dẫn được cung cấp
         self.walk = [pygame.image.load(image_path + f'/walk_1.png'),
                      pygame.image.load(image_path + f'/walk_2.png'),
@@ -91,13 +92,17 @@ class Char:
             self.status = 'walk'
         if self.reverse:
             self.x -= self.speed
+            self.orientation = -(self.speed/abs(self.speed))
         elif self.slow:
             self.x += self.speed / 2
         elif self.speedup:
             self.x += self.speed * 3
         else:
             self.x += self.speed
-
+        
+        if not (self.reverse or self.finished):
+            char.orientation = char.speed/abs(char.speed)
+        
         if self.effect_end_time and pygame.time.get_ticks() > self.effect_end_time:
             self.reverse = False
             self.slow = False
@@ -127,8 +132,17 @@ class Obstacle:
         self.image = pygame.transform.scale(self.image, (baseSize * size.w / 1280, baseSize * size.h / 720))  # Thu nhỏ kích thước hình ảnh
 
     def set_random_image(self):
+        rare_chance = 5     # Điều chỉnh tỉ lệ obstacle to_start và to_finish (1 = 0.1%)   (phần còn lại chia đều)
         if not self.changed:
-            self.image_path = random.choice(self.image_paths)  # Lưu trữ hình ảnh hiện tại
+            image_picker = random.randint(1, 1000);
+            if image_picker <= rare_chance:
+                self.image_path = self.image_paths[5]
+            elif image_picker > 1000 - rare_chance:
+                self.image_path = self.image_paths[6]
+            else:
+                self.image_path = self.image_paths[image_picker % 5]
+
+            #self.image_path = random.choice(self.image_paths)  # Lưu trữ hình ảnh hiện tại
             self.set_image(self.image_path)
             self.changed = True
             self.change_time = pygame.time.get_ticks()
@@ -137,15 +151,15 @@ class Obstacle:
     def draw(self):
         screen.blit(self.image, (self.x, self.y))# Vẽ hình ảnh   
 # Tạo danh sách các chướng ngại vật ở nửa đường
-obstacle_images = ['Assets/Obstacles/obstacle_confinement.png', 'Assets/Obstacles/obstacle_finish.png', 
+obstacle_images = ['Assets/Obstacles/obstacle_confinement.png',  
                    'Assets/Obstacles/obstacle_reverse.png', 'Assets/Obstacles/obstacle_slow.png', 
                    'Assets/Obstacles/obstacle_speed.png', 'Assets/Obstacles/obstacle_teleport.png', 
-                   'Assets/Obstacles/obstacle_tostart.png']
+                   'Assets/Obstacles/obstacle_tostart.png', 'Assets/Obstacles/obstacle_finish.png']
 obstacles = [Obstacle(random.uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(i+1), obstacle_images) for i in range(5)]
 # Hàm hiển thị menu và nhận lựa chọn từ người chơi
 def show_menu():
     running = True
-    selection = 0
+    selection = -1
     charImage = Draw_to_Screen('text', None, None, None, None, '', 
                                     Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.60, size.h * 0.5))
     while running:
@@ -181,7 +195,7 @@ def show_menu():
                         charImage = Draw_to_Screen('image', None, None, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}/idle_1.png', ((baseSize * 1.2)*size.w/1280, (baseSize * 1.2)* size.w/1280), None, 
                                     None, None, (size.w * 0.6, size.h * 0.5))
                         selection = i                # Trả về chỉ số của xe mà người dùng đã chọn
-                    if Start.Click(pos):
+                    if Start.Click(pos) and selection != -1:
                         return selection
                         
                 
@@ -194,7 +208,7 @@ player_gold = 0
 
 # Tạo một danh sách để theo dõi thứ tự các xe về đích
 finish_order = []
-ranking_list = [0, 0, 0, 0, 0]
+ranking_list = []
 
 # Vòng lặp chính của game
 running = True
@@ -216,7 +230,7 @@ while running:
                     pos = pygame.mouse.get_pos()
                     if Finish.Click(pos):
                         running = False
-                        result.Show_Result(ranking_list, player_choice, theme)
+                        result.Show_Result(ranking_list, player_choice, theme, size)
         screen.blit(bg,(0,0))
         
         if all_Finish:
@@ -227,6 +241,8 @@ while running:
         for char in chars:
             char.act_i = char.draw(char.act_i, char.status)
             char.move()
+            char.laps_display = Draw_to_Screen('text', None, None, None, None, f'{char.laps}/{length+1}', Font((40)), '#FFFFFF', (char.x - 30 * size.w / 1280, char.y))
+            char.laps_display.Blit(0,0)
             image_path = None  # Khởi tạo image_path với giá trị mặc định
             for obstacle in obstacles:
                 if char.collides_with(obstacle):
@@ -237,10 +253,13 @@ while running:
                     char.wait_until = pygame.time.get_ticks() + 1000 # Đặt thời gian chờ cho xe
                     char.status = 'stun'
                 elif 'obstacle_finish.png' in image_path:
-                    if (char.speed > 0):
-                        char.x = 0.95 * size.w
+                    if (length % 2 == 0):
+                        char.x = 0.92 * size.w
+                        char.orientation = 1
                     else:
                         char.x = 0.05 * size.w
+                        char.orientation = -1
+                    char.laps = length
                 elif 'obstacle_reverse.png' in image_path:
                     char.reverse = True
                     char.effect_end_time = pygame.time.get_ticks() + 1000
@@ -253,10 +272,10 @@ while running:
                 elif 'obstacle_teleport.png' in image_path:
                     char.x += char.speed/(abs(char.speed)) * 200 * size.w / 1280
                 elif 'obstacle_tostart.png' in image_path:
-                    if (char.speed > 0):
-                        char.x = 0.05 * size.w
-                    else:
-                        char.x = 0.95 * size.w
+                    char.x = 0.05 * size.w
+                    char.laps = 0
+                    char.speed = abs(char.speed)
+                    char.orientation = 1
                                     
         # Vẽ chướng ngại vật
         for obstacle in obstacles:
@@ -270,35 +289,26 @@ while running:
 
         # Kiểm tra xem có xe nào về đích chưa
         for i, char in enumerate(chars):
-            if (char.x >= 0.95*size.w and char.laps % 2 == 0) or (char.x <= 0.05*size.w and char.laps % 2 == 1):
+            if (char.x >= 0.92*size.w and char.laps % 2 == 0) or (char.x <= 0.05*size.w and char.laps % 2 == 1):
                 if char.laps == length and i not in finish_order:
                     finish_order.append(i)
-                    if len(finish_order) == 1:
-                        ranking_list[2] = i + 1
-                    elif len(finish_order) == 2:
-                        ranking_list[3] = i + 1
-                    elif len(finish_order) == 3:
-                        ranking_list[1] = i + 1
-                    elif len(finish_order) == 4:
-                        ranking_list[0] = i + 1
-                    elif len(finish_order) == 5:
-                        ranking_list[4] = i + 1
+                    ranking_list.insert(0, i + 1)
                     print(ranking_list)
                     char.speed = 0
                     if length % 2 == 0:
-                        char.x = size.w*0.95
+                        char.x = size.w*0.92
                     else:
                         char.x = size.w*0.05
                     char.status = 'idle'
                     char.act_i = 0
+                    char.laps += 1
                     char.finished = True
+                    char.laps_display = Draw_to_Screen('text', None, None, None, None, f'{char.laps}/{length+1}', Font((40)), '#FFFFFF', (char.x - 30 * size.w / 1280, char.y))
                     print(f"Xe số {i+1} đã về đích!")
-                    print(char.laps)
                 elif not char.finished:
                     obstacles.append(Obstacle(random.uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(i+1), obstacle_images))
                     char.laps += 1
                     char.speed = -1*char.speed
-                    char.orientation = -char.orientation
 
         
         # Nếu tất cả các xe đều đã về đích, kết thúc trò chơi và công bố kết quả
