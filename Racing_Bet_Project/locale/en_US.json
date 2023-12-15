@@ -93,8 +93,33 @@
         "1"         :   "Selected: Medium (2 lap)",
         "2"         :   "Selected: Long (3 lap)",
         "3"         :   "Selected: None"
+    },
+
+    "History":
+    {
+        "Title"     :   "History",
+        "Prompt"    :   "- Showing 5 most recent matches -",
+        "Empty"     :   "~ List is empty ~"
+    },
+
+    "History_Char":
+    {
+        "0"         :   "Ocean",
+        "1"         :   "Forest",
+        "2"         :   "Village",
+        "3"         :   "Street",
+        "4"         :   "HCMUS"
+    },
+
+    "History_Race":
+    {
+        "0"         :   "Short",
+        "1"         :   "Medium",
+        "2"         :   "Long"
     }
 
+
+    
     
 
 

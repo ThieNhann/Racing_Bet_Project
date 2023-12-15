@@ -4,7 +4,7 @@ import sys
 import os
 import smtplib
 import ssl
-import Result_Screen as result
+import Result_Screen as Result_Screen
 from email_validator import validate_email
 from email.message import EmailMessage
 from math import sin, radians as rad
@@ -1458,32 +1458,32 @@ def History_Menu():
     chr_set = None
     race_len = None
 
-
-    print(current_user.Get_History())
-    '''chr_set = current_user.Get_History()[i][2]
-    race_len = current_user.Get_History()[i][3]
-    result = current_user.Get_History()[i][4]
-    coin = current_user.Get_History()[i][5]
-
-    objectName = 'his' + f'{i}'
-    objectName = History(, )
-    print(history_id[i])'''
-
-
-
     Background = pg.transform.smoothscale(pg.image.load('Assets/background/Street/citystreet.png').convert_alpha(), (512, 288))
     Background = pg.transform.smoothscale(Background, (size.w*1.075, size.h*1.075))
+
+    Title = Font(60).render(Updt_Lang(lang, 'History', 'Title'), True, "#FFFFFF")
+
+    Prompt = Font(20).render(Updt_Lang(lang, 'History', 'Prompt'), True, "#FFFFFF")
 
     Add_Record = Button('rect', (0,0), (size.w * 0.25, size.h * 0.1), None, None, None, None, '#000000', '#FFFFFF', None, None)
     Add_Record.rect.center = (size.w/2, size.h/4)
     Add_Record_Txt = Font(40).render('Add Record', True, "#00FF00")
 
-    Get_Record = Button('rect', (0,0), (size.w * 0.25, size.h * 0.1), None, None, None, None, '#000000', '#FFFFFF', None, None)
-    Get_Record.rect.center = (size.w/2, size.h/1.5)
-    Get_Record_Txt = Font(40).render('Get Record', True, "#00FF00")
-
-    Box = pg.rect.Rect((0,0), (size.w * 0.5, size.h * 0.9))
+    Box = pg.rect.Rect((0,0), (size.w * 0.75, size.h * 0.9))
     Box.center = (size.w/2, size.h/2)
+
+    box_outline = pg.rect.Rect((0,0), (size.w * 0.75, size.h * 0.9))
+    box_outline.center = (size.w/2, size.h/2)
+
+    Return = Button('image', None, None, 'Assets/icon/Settings/return_01.png', (50*size.w/1280, 50* size.w/1280), None, None, None, None, 'Assets/icon/Settings/return_02.png', (size.w*0.02, size.h * 0.955)) 
+
+    Chr_Set = Font(30).render("Selected Set", True, "#FFFFFF")
+    Race_Len = Font(30).render("Race Length", True, "#FFFFFF")
+    Result = Font(30).render("Result", True, "#FFFFFF")
+    Coins_Change = Font(30).render("Coin Gained", True, "#FFFFFF")
+
+    Empty = Font(30).render(Updt_Lang(lang, 'History', 'Empty'), True, "#FFFFFF")
+
 
     while True:
         mouse_pos = pg.mouse.get_pos()
@@ -1495,24 +1495,49 @@ def History_Menu():
             if event.type == pg.MOUSEBUTTONDOWN:
                 click_ani.add(Click_Ani(mouse_pos, 5, size.w))
                 if Add_Record.Click(mouse_pos):
-                    win = randrange(0,1)
+                    win = randrange(0,2)
                     coin = randrange(-200, 200)
-                    chr_set = randrange(0,4)
-                    race_len = randrange(0,2)
+                    chr_set = randrange(0,5)
+                    race_len = randrange(0,3)
                     current_user.Save_History(chr_set, race_len, win, coin)
                 
-                if Get_Record.Click(mouse_pos):
-                    pass
+                if Return.Click(mouse_pos):
+                        In_Game_Menu(-20)
+
               
         screen.blit(Background, (0,0))
-        pg.draw.rect(screen, '#424769', Box)
+        pg.draw.rect(screen, '#424769', Box, 0 , 10)
+        pg.draw.rect(screen, '#000000', box_outline, 5 , 10)
 
-        for item in [Add_Record, Get_Record]:
+        for item in [Add_Record, Return]:
             item.Blit(0,0)
             item.Hover(mouse_pos, 0, 0)
-            
+
+        if len(current_user.Get_History()) == 0:
+            screen.blit(Empty, Empty.get_rect(center = (size.w/2, size.h * 0.35)))
+        else:
+            for i in range(0, len(current_user.Get_History())):
+                history_id = History(current_user.Get_History()[i], lang, size.w)
+                history_id.chr_set_rect.center = (size.w * 0.25, size.h * 0.35 + size.h * 0.1 * (i+1))
+                history_id.race_len_rect.center = (size.w * 0.416, size.h * 0.35 + size.h* 0.1 * (i+1))
+                history_id.result_rect.center = (size.w * 0.583, size.h * 0.35 + size.h* 0.1 * (i+1))
+                history_id.coins_change_rect.center = (size.w * 0.75, size.h * 0.35 + size.h* 0.1 * (i+1))
+
+                screen.blit(history_id.chr_set, history_id.chr_set_rect)
+                screen.blit(history_id.race_len, history_id.race_len_rect)
+                screen.blit(history_id.result, history_id.result_rect)
+                screen.blit(history_id.coins_change, history_id.coins_change_rect)
+
+
+        screen.blit(Title, Title.get_rect(center = (size.w * 0.5, size.h * 0.15)))
+        screen.blit(Prompt, Prompt.get_rect(center = (size.w * 0.5, size.h * 0.225)))
+
+        screen.blit(Chr_Set, Chr_Set.get_rect(center = (size.w * 0.25, size.h * 0.3)))
+        screen.blit(Race_Len, Race_Len.get_rect(center = (size.w * 0.425, size.h * 0.3)))
+        screen.blit(Result, Result.get_rect(center = (size.w * 0.575, size.h * 0.3)))
+        screen.blit(Coins_Change, Coins_Change.get_rect(center = (size.w * 0.75, size.h * 0.3))) 
+
         screen.blit(Add_Record_Txt, Add_Record_Txt.get_rect(center = Add_Record.rect.center))
-        screen.blit(Get_Record_Txt, Get_Record_Txt.get_rect(center = Get_Record.rect.center))
 
         click_ani.update()
         click_ani.draw(screen)
@@ -2010,7 +2035,7 @@ def Core_Game(theme, length):
                     if all_Finish:
                         if Finish.Click(mouse_pos):
                             running = False
-                            result.Show_Result(ranking_list, player_choice, theme, screen)
+                            Result_Screen.Show_Result(ranking_list, player_choice, theme, screen)
                             In_Game_Menu(-20)
 
             screen.blit(bg,(0,0))

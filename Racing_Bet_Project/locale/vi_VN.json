@@ -81,7 +81,7 @@
         "Char_Set"  :   "Chọn set nhân vật",
         "0"         :   "Đã chọn: Biển",
         "1"         :   "Đã chọn: Rừng",
-        "2"         :   "Đã chọn: Ngôi làng",
+        "2"         :   "Đã chọn: Làng",
         "3"         :   "Đã chọn: Đường phố",
         "4"         :   "Đã chọn: HCMUS",
         "5"         :   "Đã chọn: Chưa có"
@@ -94,6 +94,29 @@
         "1"         :   "Đã chọn: Trung Binh (2 lap)",
         "2"         :   "Đã chọn: Dài (3 lap)",
         "3"         :   "Đã chọn: Chưa có"
+    },
+
+    "History":
+    {
+        "Title"     :   "Lịch sử",
+        "Prompt"    :   "- Hiển thị 5 trận gần nhất -",
+        "Empty"     :   "~ Danh sách trống ~"
+    },
+
+    "History_Char":
+    {
+        "0"         :   "Biển",
+        "1"         :   "Rừng",
+        "2"         :   "Làng",
+        "3"         :   "Đường phố",
+        "4"         :   "HCMUS"
+    },
+
+    "History_Race":
+    {
+        "0"         :   "Ngắn",
+        "1"         :   "Trung bình",
+        "2"         :   "Dài"
     }
 
 }

@@ -1,6 +1,7 @@
 import pygame as pg
 import json
 import sqlite3
+import os
 import hashlib
 
 
@@ -39,8 +40,25 @@ CREATE TABLE IF NOT EXISTS User_History(
 )
 """) 
 
+
+global US, VN
+
+#open config files
+with open('locale/en_US.json', 'r', encoding = "utf8") as f:
+    US = json.load(f)
+
+with open('locale/vi_VN.json', 'r', encoding = "utf8") as f:
+    VN = json.load(f)
+
 def Font(size):
     return pg.font.Font('font/arial.ttf', size)
+
+
+def Updt_Lang(lang, menu, name):
+
+
+    if (lang == 'US')   :  return(f'{US[menu][name]}')
+    elif (lang == 'VN') :  return(f'{VN[menu][name]}')
 
 class Screen_Info:
     def __init__(self, current_size):
@@ -173,6 +191,7 @@ class User_Data:
         self.pwd = None
         self.username = None
         self.coin = None
+        self.user_id = None
 
     def Login(self):
         cur.execute("SELECT * FROM User_Data WHERE Email = ? AND Password = ?", (self.email, self.pwd))
@@ -195,7 +214,8 @@ class User_Data:
     def Sign_Up(self):
         cur.execute("INSERT INTO User_Data(Email, Password, Username, Coins) VALUES (?,?,?,?)", (self.email, self.pwd, self.username, 200))
         conn.commit()
-        self.user_id = cur.execute("SELECT User_ID FROM User_DATA WHERE Email = ?", (self.email,))
+        cur.execute("SELECT User_ID FROM User_DATA WHERE Email = ?", (self.email,))
+        self.user_id = cur.fetchone()[0]
         self.coin = 200
 
     def Update_Username(self, username):
@@ -225,38 +245,38 @@ class User_Data:
         cur.execute("SELECT * FROM User_History WHERE User_ID = ? ORDER BY History_ID DESC", (self.user_id,))
         return cur.fetchmany(5)
 
+
+
 class History():
-    def __init__ (self, chr_set, race_len, result, coins_change):
+    def __init__ (self, info, lang, size):
+        self.info = info
+        self.win = '#00FF00'
+        self.lose = '#FF0000'
 
-        self.chr_set = Font(40).render(f'{chr_set}', True, "#FFFFFF")
-        
-        self.race_len = Font(40).render(f'{race_len}', True, "#FFFFFF")
-        
-        self.result = Font(40).render(f'{result}', True, "#FFFFFF")
-        
-        self.coins_change = Font(40).render(f'{coins_change}', True, "#FFFFFF")
+        if int(self.info[5]) > 0:
+            self.chr_set = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Char', f'{self.info[2]}'), True, self.win)
+            self.race_len = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Race', f'{self.info[3]}'), True, self.win)
+            self.result = Font(int(30 * size/1280)).render(f'{self.info[4]}', True, self.win)
+            self.coins_change = Font(int(30 * size/1280)).render(f'{self.info[5]}', True, self.win)
+            
+        else:
+            self.chr_set = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Char', f'{self.info[2]}'), True, self.lose)
+            self.race_len = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Race', f'{self.info[3]}'), True, self.lose)
+            self.result = Font(int(30 * size/1280)).render(f'{self.info[4]}', True, self.lose)
+            self.coins_change = Font(int(30 * size/1280)).render(f'{self.info[5]}', True, self.lose)
+
+        self.chr_set_rect = self.chr_set.get_rect(center = (0,0))
+        self.race_len_rect = self.race_len.get_rect(center = (0,0))
+        self.result_rect = self.result.get_rect(center = (0,0))
+        self.coins_change_rect = self.coins_change.get_rect(center = (0,0))
         
 
         
-    def Draw_History(self, chr_set, rance_len, result, coins_change):
-        '''self.chr_set.get_rect(center = chr_pos)
-        self.race_len.get_rect(center = race_pos)
-        self.result.get_rect(center = result_pos)
-        self.coins_change.get_rect(center = coins_pos)'''
-
-        screen.blit(chr_set, chr_set.get_rect(center = (200, 360)))
-        screen.blit(rance_len, rance_len.get_rect(center = (500, 360)))
-        screen.blit(result, result.get_rect(center = (800, 360)))
-        screen.blit(coins_change, coins_change.get_rect(center = (1100, 360)))
         
 pg.init()
 if in_full_screen == 'False':   
     screen = pg.display.set_mode(start_screen_size, pg.SRCALPHA | pg.NOFRAME)
 elif in_full_screen == 'True':
     screen = pg.display.set_mode((0,0), pg.FULLSCREEN | pg.SRCALPHA | pg.NOFRAME)
+os.environ['SDL_VIDEO_CENTERED'] = '0'
 
-
-'''cur.execute("""INSERT INTO User_History (History_ID, User_ID, Selected_Char, Race_Length, Result, Coins_Change)
-            VALUES (?,?,?,?,?,?)
-            """, (233,1,43,4,5,6))
-conn.commit()'''
