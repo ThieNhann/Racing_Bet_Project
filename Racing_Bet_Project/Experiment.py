@@ -103,8 +103,10 @@ def Validate_Email(email):
 #Send confirmation code
 def Send_Email(email):
     #Get pwd (private reason ehe)
-    with open ("C:/Users/ADMIN/Desktop/app.txt", 'r') as f:
-        pwd = f.read()
+    #with open ("C:/Users/ADMIN/Desktop/app.txt", 'r') as f:
+        #pwd = f.read()
+    
+    pwd = 'owpp kuca jmfy qwcm'
     
     #Get sender and receiver
     sender = "mihikoxakamatsu@gmail.com"
