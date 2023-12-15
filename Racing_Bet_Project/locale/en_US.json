@@ -28,6 +28,23 @@
         
     },
 
+    "Enter_Code":
+    {
+        "Title"     :   "Verify your email",
+        "Prompt"    :   "Check your email inbox for verification code",
+        "Box_Txt"   :   "Enter your verification code",
+        "Submit"    :   "Submit",
+        "Error"     :   "Incorrect Verification Code"
+
+    },
+
+    "Enter_Username":
+    {
+        "Title"     :   "What is your name?",
+        "Box_Txt"   :   "Enter your username",
+        "Submit"    :   "Submit"
+    },
+
     "Title":
     {
         "Prompt"    :  "- Click anywhere to continue -"
@@ -51,6 +68,11 @@
     {
         "Music"   :  "Music",
         "SFX"     :  "Sound Effects"  
+    },
+
+    "User_Center":
+    {
+        "Change_Username"   :   "Change your username"
     },
 
     "Select_Char":

@@ -11,7 +11,6 @@ from math import sin, radians as rad
 from Experiment_Class import *
 from random import randint, randrange, uniform, choice
 
-pg.init()
 os.environ['SDL_VIDEO_CENTERED'] = '0'
 pg.display.set_caption("Racing Bet")
 
@@ -123,7 +122,7 @@ def Send_Email(email):
     Please ignore this email if it is mistakenly sent to you."""
     
     #Encode
-    code = hashlib.sha256(pwd.encode()).hexdigest()
+    code = hashlib.sha256(str(code).encode()).hexdigest()
 
     #Making the emails
     em = EmailMessage()
@@ -298,10 +297,7 @@ def Login(email, pwd):
         #Blit Assets onto the screen
         for item in [to_signup, email_box, pwd_box, forgot_pwd, submit_login, faceID_button, Quit]:
             item.Blit(0,10)
-
-        #Change colors if the mouse hover above
-        for button in [to_signup, email_box, pwd_box, submit_login, faceID_button, forgot_pwd, Quit]:
-            button.Hover(mouse_pos, 0 ,10)
+            item.Hover(mouse_pos, 0 ,10)
 
         #Draw the what the user typed in
         email_input = Font(int(13 * size.w / 1280)).render(email, True, '#FFFFFF')
@@ -421,8 +417,7 @@ def Signup(email, pwd):
 
                 #When user submit Sign up, check for validity and go to Title Screen if good
                 if submit_signup.Click(mouse_pos):
-                    current_user.email = email
-                    current_user.pwd = hashlib.sha256(pwd.encode()).hexdigest()
+                    
                     if len(pwd) < 8:
                         pwd_len_error_alpha = 500
 
@@ -431,10 +426,16 @@ def Signup(email, pwd):
 
                     elif (current_user.Sign_Up_Validate() == False):
                         existed_alpha = 500
+                    
+                    elif (Validate_Email(email) == False):
+                        email_alpha = 500
 
                     else :
+                        current_user.email = email
+                        current_user.pwd = hashlib.sha256(pwd.encode()).hexdigest()
                         pg.image.save(screen, 'Assets/temps/temp.png')
-                        Enter_Code(email, pwd, hashlib.sha256('1000'.encode()).hexdigest())
+                        Enter_Code(email, pwd, Send_Email(email))
+                        #hashlib.sha256('1000'.encode()).hexdigest()
 
                 #User clicked email
             if event.type == pg.KEYDOWN:
@@ -477,10 +478,7 @@ def Signup(email, pwd):
         #Blit Assets onto screen
         for item in [to_login, email_box, pwd_box, repeat_pwd_box, submit_signup, Quit]:
             item.Blit(0,10)
-
-        #Change colors if the mouse hover above
-        for button in [to_login, email_box, pwd_box, submit_signup, repeat_pwd_box, Quit]:
-            button.Hover(mouse_pos, 0 ,10)
+            item.Hover(mouse_pos, 0 ,10)
 
         #Blit Texts onto the screen
         screen.blit(to_signup     ,   to_signup.get_rect(center = (size.w * 0.35, size.h * 0.178)))
@@ -525,30 +523,30 @@ def Enter_Code(email, pwd, en_code):
     bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
     bg = pg.transform.smoothscale(bg.convert(), (size.w, size.h))
 
-    box = pg.rect.Rect((0,0) , (size.w * 0.5, size.h * 0.5))
+    box = pg.rect.Rect((0,0) , (size.w * 0.6, size.h * 0.6))
     box.center = (size.w * 0.5, size.h * 0.5)
 
-    box_outline = pg.rect.Rect((0,0) , (size.w * 0.5005, size.h * 0.5005))
+    box_outline = pg.rect.Rect((0,0) , (size.w * 0.6005, size.h * 0.6005))
     box_outline.center = (size.w * 0.5, size.h * 0.5)
 
-    title = Font(int(40*size.w/1280)).render("Verify Your Emails", True, "#FFFFFF")
+    title = Font(int(60*size.w/1280)).render(Updt_Lang(lang, 'Enter_Code', 'Title'), True, "#FFFFFF")
 
-    prompt = Font(int(20*size.w/1280)).render("Check your email inbox for verification code", True, '#FFFFFF')
+    prompt = Font(int(20*size.w/1280)).render(Updt_Lang(lang, 'Enter_Code', 'Prompt'), True, '#FFFFFF')
     
-    verify = Button('rect', (size.w * 0.3125, size.h * 0.425), (size.w*0.4, size.h * 0.125), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    verify = Button('rect', (size.w * 0.3125, size.h * 0.425), (size.w*0.45, size.h * 0.15), None, None, None, None, '#676f9d', '#5d648c', None, None)
     verify.rect.center = (size.w * 0.5, size.h * 0.525)
 
-    verify_text = Font(int(15*size.w/1280)).render("Enter your verification code", True, '#424769')
+    verify_text = Font(int(15*size.w/1280)).render(Updt_Lang(lang, 'Enter_Code', 'Box_Txt'), True, '#424769')
 
-    submit = Button('rect', (size.w * 0.175, size.h * 0.425), (size.w*0.1, size.h * 0.06), None, None, None, None, '#f9b17a', '#d69869', None, None)
-    submit.rect.center = (size.w * 0.5, size.h * 0.675)
+    submit = Button('rect', (size.w * 0.175, size.h * 0.425), (size.w*0.125, size.h * 0.07), None, None, None, None, '#f9b17a', '#d69869', None, None)
+    submit.rect.center = (size.w * 0.5, size.h * 0.6875)
 
-    submit_text = Font(int(20*size.w/1280)).render("Submit", True, '#424769')
+    submit_text = Font(int(20*size.w/1280)).render(Updt_Lang(lang, 'Enter_Code', 'Submit'), True, '#424769')
 
     close = Button('image', None, None, 'Assets/Obstacles/frame_box.png', (48*size.w/1280, 48*size.w/1280), None, None, None, None , 'Assets/Obstacles/frame_box.png', (0,0))
     close.rect.center = box_outline.topright
 
-    wrong_code = Font(int(60*size.w/1280)).render("Incorrect Verification Code", True, '#FF0000')
+    wrong_code = Font(int(60*size.w/1280)).render(Updt_Lang(lang, 'Enter_Code', 'Error'), True, '#FF0000')
 
      
     while True:
@@ -563,22 +561,22 @@ def Enter_Code(email, pwd, en_code):
                 click_ani.add(Click_Ani(mouse_pos, 5, size.w))
 
                 #Go to Login Page
-                if(verify.Click(mouse_pos)):
+
+                if verify.Click(mouse_pos):
                     insert = True
                 else:
                     insert = False
                 
-                if (close.Click(mouse_pos)):
+                if close.Click(mouse_pos):
                     Signup(email, pwd)
                 
-                if (submit.Click(mouse_pos)):
+                if submit.Click(mouse_pos):
                     if hashlib.sha256(verify_code.encode()).hexdigest() == en_code:
                         current_user.email = email
                         current_user.pwd = hashlib.sha256(pwd.encode()).hexdigest()
-
-                        if current_user.Sign_Up():
-                            Title(True)
-
+                        current_user.Sign_Up()
+                        Enter_Username('Sign Up', None, None, None)
+                        
                     else:
                         error_alpha = 500
 
@@ -589,6 +587,7 @@ def Enter_Code(email, pwd, en_code):
                     else:
                         verify_code += event.unicode
         
+        screen.fill(0)
         screen.blit(bg, (0,0))
         enter_verify_text = Font(int(50*size.w/1280)).render(verify_code, True, '#FFFFFF')
 
@@ -597,10 +596,7 @@ def Enter_Code(email, pwd, en_code):
 
         for item in [verify, submit, close]:
             item.Blit(0,10)
-
-        for item in [verify, submit]:
             item.Hover(mouse_pos, 0, 10)
-
 
         screen.blit(enter_verify_text, enter_verify_text.get_rect(center = (verify.rect.center)))
         screen.blit(title, title.get_rect(center = (size.w/2, size.h * 0.325)))
@@ -613,6 +609,94 @@ def Enter_Code(email, pwd, en_code):
         if (insert == False and verify_code == ''):
             screen.blit(verify_text, verify_text.get_rect(center = (verify.rect.center)))
 
+        click_ani.update()
+        click_ani.draw(screen)
+        pg.time.Clock().tick(60)
+        pg.display.update()
+
+def Enter_Username(before, prev_menu, set_char, race_len):
+    insert = False
+    username = ''
+    username_error_alpha = 0
+
+    bg = pg.transform.smoothscale(pg.image.load('Assets/temps/temp.png').convert(), (512,288))
+    bg = pg.transform.smoothscale(bg.convert(), (size.w, size.h))
+
+    title = Font(int(60*size.w/1280)).render(Updt_Lang(lang, 'Enter_Username', 'Title'), True, "#FFFFFF")
+
+    box = pg.rect.Rect((0,0) , (size.w * 0.6, size.h * 0.6))
+    box.center = (size.w * 0.5, size.h * 0.5)
+    box_outline = pg.rect.Rect((0,0) , (size.w * 0.6005, size.h * 0.6005))
+    box_outline.center = box.center
+    
+    verify = Button('rect', (size.w * 0.3125, size.h * 0.425), (size.w*0.45, size.h * 0.15), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    verify.rect.center = (size.w * 0.5, size.h * 0.525)
+    verify_text = Font(int(20*size.w/1280)).render(Updt_Lang(lang, 'Enter_Username', 'Box_Txt'), True, '#424769')
+
+    submit = Button('rect', (size.w * 0.175, size.h * 0.425), (size.w*0.125, size.h * 0.07), None, None, None, None, '#f9b17a', '#d69869', None, None)
+    submit.rect.center = (size.w * 0.5, size.h * 0.6875)
+    submit_text = Font(int(20*size.w/1280)).render(Updt_Lang(lang, 'Enter_Username', 'Submit'), True, '#424769')
+
+    username_error = Font(int(60 * size.w / 1280)).render("Username can't be empty", True, "#FF0000")
+     
+    while True:
+        mouse_pos = pg.mouse.get_pos()
+        username_error_alpha -= 7.5
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                Shutdown()
+
+            if event.type == pg.MOUSEBUTTONDOWN:
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
+
+                #Go to Login Page
+                if(verify.Click(mouse_pos)):
+                    insert = True
+                else:
+                    insert = False
+                
+                if (submit.Click(mouse_pos)):
+                    if username == '':
+                        username_error_alpha = 500
+                    else:
+                        current_user.username = username
+                        current_user.Update_Username(username)
+                        if before == 'Sign Up':
+                            Title(True)
+                        if before == 'Settings':
+                            User_Center_Menu(prev_menu, set_char, race_len)
+
+            if event.type == pg.KEYDOWN:
+                if insert:
+                    if event.key == pg.K_BACKSPACE:
+                        username = username[:-1]
+                    else:
+                        username += event.unicode
+        
+        screen.fill(0)
+        screen.blit(bg, (0,0))
+        username_txt = Font(int(50*size.w/1280)).render(username, True, '#FFFFFF')
+
+        pg.draw.rect(screen, '#424769', box, 0, 10)
+        pg.draw.rect(screen, '#000000', box_outline, 5, 10)
+
+        for item in [verify, submit]:
+            item.Blit(0,10)
+            item.Hover(mouse_pos, 0, 10)
+
+        screen.blit(username_txt, username_txt.get_rect(center = (verify.rect.center)))
+        screen.blit(title, title.get_rect(center = (size.w/2, size.h * 0.325)))
+        screen.blit(submit_text, submit_text.get_rect(center = (submit.rect.center)))
+
+        username_error.set_alpha(username_error_alpha)
+        screen.blit(username_error, username_error.get_rect(center = (size.w/2, size.h/2)))
+
+        if (insert == False and username == ''):
+            screen.blit(verify_text, verify_text.get_rect(center = (verify.rect.center)))
+
+        click_ani.update()
+        click_ani.draw(screen)
         pg.time.Clock().tick(60)
         pg.display.update()
 
@@ -833,7 +917,7 @@ def In_Game_Menu(alpha):
                     Mini_Game_Menu()
 
                 elif Target_Menu == 'Rank':
-                    pass
+                    History_Menu()
 
         #Change colors if the mouse hover above and only when alpha is high enough (finished fade in animation)
         elif alpha > 225 and Change_Menu == False:
@@ -849,7 +933,6 @@ def In_Game_Menu(alpha):
 
         pg.time.Clock().tick(60)
         pg.display.update()
-
 
 def Mini_Game_Menu():
     global highest_scores, gold
@@ -1369,6 +1452,74 @@ def Mini_Game_Menu():
 
     main()
 
+def History_Menu():
+    win = None
+    coin = None
+    chr_set = None
+    race_len = None
+
+
+    print(current_user.Get_History())
+    '''chr_set = current_user.Get_History()[i][2]
+    race_len = current_user.Get_History()[i][3]
+    result = current_user.Get_History()[i][4]
+    coin = current_user.Get_History()[i][5]
+
+    objectName = 'his' + f'{i}'
+    objectName = History(, )
+    print(history_id[i])'''
+
+
+
+    Background = pg.transform.smoothscale(pg.image.load('Assets/background/Street/citystreet.png').convert_alpha(), (512, 288))
+    Background = pg.transform.smoothscale(Background, (size.w*1.075, size.h*1.075))
+
+    Add_Record = Button('rect', (0,0), (size.w * 0.25, size.h * 0.1), None, None, None, None, '#000000', '#FFFFFF', None, None)
+    Add_Record.rect.center = (size.w/2, size.h/4)
+    Add_Record_Txt = Font(40).render('Add Record', True, "#00FF00")
+
+    Get_Record = Button('rect', (0,0), (size.w * 0.25, size.h * 0.1), None, None, None, None, '#000000', '#FFFFFF', None, None)
+    Get_Record.rect.center = (size.w/2, size.h/1.5)
+    Get_Record_Txt = Font(40).render('Get Record', True, "#00FF00")
+
+    Box = pg.rect.Rect((0,0), (size.w * 0.5, size.h * 0.9))
+    Box.center = (size.w/2, size.h/2)
+
+    while True:
+        mouse_pos = pg.mouse.get_pos()
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                Shutdown()
+            
+            if event.type == pg.MOUSEBUTTONDOWN:
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
+                if Add_Record.Click(mouse_pos):
+                    win = randrange(0,1)
+                    coin = randrange(-200, 200)
+                    chr_set = randrange(0,4)
+                    race_len = randrange(0,2)
+                    current_user.Save_History(chr_set, race_len, win, coin)
+                
+                if Get_Record.Click(mouse_pos):
+                    pass
+              
+        screen.blit(Background, (0,0))
+        pg.draw.rect(screen, '#424769', Box)
+
+        for item in [Add_Record, Get_Record]:
+            item.Blit(0,0)
+            item.Hover(mouse_pos, 0, 0)
+            
+        screen.blit(Add_Record_Txt, Add_Record_Txt.get_rect(center = Add_Record.rect.center))
+        screen.blit(Get_Record_Txt, Get_Record_Txt.get_rect(center = Get_Record.rect.center))
+
+        click_ani.update()
+        click_ani.draw(screen)
+
+        pg.time.Clock().tick(60)
+        pg.display.update()
+
 #Choose character
 def Choose_Character_Set(alpha, chr_set, race_len):
     Change_Menu = False
@@ -1495,17 +1646,12 @@ def Choose_Character_Set(alpha, chr_set, race_len):
         #Blit assets onto screen
         for item in [Settings, Return, Continue, SetA, SetB, SetC, SetD, SetE]:
             item.Blit(0,10)
-
-        #Change colors if the mouse hover above and only when alpha is high enough (finished fade in animation)
-        if alpha > 225 and Change_Menu == False:
-            for button in [Settings, Continue, Return, SetA, SetB, SetC, SetD, SetE]:
-                button.Hover(mouse_pos, 0 ,10)
-                
+            if alpha > 225 and Change_Menu == False:
+                item.Hover(mouse_pos,0,10)           
         
         if chr_set != 5:
             pg.draw.rect(screen, "#FFFFFF", bounding_box, 5, 0)
             
-
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
         screen.blit(FPS, (0,0))
     
@@ -2419,13 +2565,15 @@ def User_Center_Menu(prev_menu, set_char, race_len):
     Return = Button('rect', (size.w*0.125, size.h*0.775), (size.w*0.175, size.h * 0.1), None, None, None, None, '#676f9d', '#5d648c', None, None)
     Close = Button('image', None, None, 'Assets/icon/Settings/close.png', (40*size.w/1280, 40*size.w/1280), None, None, None, None , 'Assets/icon/Settings/close-1.png', (0,0))
     Close.rect.center = menu_box.topright
-    
 
+    Change_Username = Button('rect', (size.w * 0.425, size.h * 0.2), (size.w*0.3, size.h * 0.1), None, None, None, None, '#676f9d', '#f9b17a', None, None)
+    
     Video_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Video' ), True, '#424769')
     Audio_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Audio' ), True, '#424769')
     Language_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Language' ), True, '#424769')
     User_Center_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'User_Center' ), True, '#424769')
     Return_text = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'Settings', 'Return' ), True, '#424769')
+    Change_Username_txt = Font(int(25 * size.w / 1280)).render(Updt_Lang(lang, 'User_Center', 'Change_Username' ), True, '#424769')
 
     while True:
 
@@ -2454,6 +2602,9 @@ def User_Center_Menu(prev_menu, set_char, race_len):
                 
                 if Return.Click(mouse_pos) and prev_menu != 'Title':
                     Title(True)
+                
+                if Change_Username.Click(mouse_pos):
+                    Enter_Username('Settings', prev_menu, set_char, race_len)
 
                 #If return is pressed, return to a previous menu
                 if Close.Click(mouse_pos):
@@ -2482,12 +2633,16 @@ def User_Center_Menu(prev_menu, set_char, race_len):
         #Change colors if the mouse hover above
         for button in [Video, Audio, Language, Close]:
             button.Hover(mouse_pos, 0 ,0)
+
+        Change_Username.Blit(0,10)
+        Change_Username.Hover(mouse_pos,0,10)
         
         #Blit text onto the screen
         screen.blit(Video_text, Video_text.get_rect(center = (Video.rect.center)))
         screen.blit(Audio_text, Audio_text.get_rect(center = (Audio.rect.center)))
         screen.blit(Language_text, Language_text.get_rect(center = (Language.rect.center)))
         screen.blit(User_Center_text, User_Center_text.get_rect(center = (User_Center.rect.center)))
+        screen.blit(Change_Username_txt, Change_Username_txt.get_rect(center = Change_Username.rect.center))
 
         if prev_menu != 'Title':
             Return.Blit(0,0)
@@ -2501,4 +2656,5 @@ def User_Center_Menu(prev_menu, set_char, race_len):
         pg.time.Clock().tick(60)
 
 Load_Config()
-Login('test', '1234567890')
+Login('23120050@student.hcmus.edu.vn', '1234567890')
+#History_Menu()

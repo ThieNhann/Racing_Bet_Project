@@ -30,12 +30,17 @@ CREATE TABLE IF NOT EXISTS User_Data(
 cur.execute("""
 CREATE TABLE IF NOT EXISTS User_History(
             History_ID INTEGER PRIMARY KEY,
-            USER_ID INTEGER,
-            SELECTED_CHAR VAR CHAR(255),
-            RESULT VAR CHAR(255),
+            User_ID INTEGER,
+            Selected_Char VAR CHAR(255),
+            Race_Length VAR CHAR(255),
+            Result VAR CHAR(255),
+            Coins_Change VAR CHAR (255),
             FOREIGN KEY(USER_ID) REFERENCES User_Data(User_ID)
 )
 """) 
+
+def Font(size):
+    return pg.font.Font('font/arial.ttf', size)
 
 class Screen_Info:
     def __init__(self, current_size):
@@ -162,19 +167,20 @@ class Button(Draw_to_Screen):
             self.alter_color = alter_color
             self.text = self.font.render(self.text_content, True, self.color)
 
-def Font(size):
-    return pg.font.Font('font/arial.ttf', size)
-
 class User_Data:
     def __init__(self):
         self.email = None
         self.pwd = None
+        self.username = None
+        self.coin = None
 
     def Login(self):
         cur.execute("SELECT * FROM User_Data WHERE Email = ? AND Password = ?", (self.email, self.pwd))
         if cur.fetchall():
             cur.execute("SELECT Coins FROM User_Data WHERE Email= ?", (self.email,))
             self.coin = int(cur.fetchone()[0])
+            cur.execute("SELECT User_ID FROM User_Data WHERE Email= ?", (self.email,))
+            self.user_id = (cur.fetchone()[0])
             return True
         else:
             return False
@@ -187,12 +193,15 @@ class User_Data:
             return True
     
     def Sign_Up(self):
-        cur.execute("INSERT INTO User_Data(Email, Password, Username, Coins) VALUES (?,?,?,?)", (self.email, self.pwd, 'Lol', 200))
+        cur.execute("INSERT INTO User_Data(Email, Password, Username, Coins) VALUES (?,?,?,?)", (self.email, self.pwd, self.username, 200))
         conn.commit()
+        self.user_id = cur.execute("SELECT User_ID FROM User_DATA WHERE Email = ?", (self.email,))
+        self.coin = 200
 
-        cur.execute("SELECT Coins FROM User_Data WHERE Email = ?", (self.email,))
-        self.coin = int(cur.fetchone()[0])
-        return True
+    def Update_Username(self, username):
+        self.username = username
+        cur.execute("UPDATE User_Data SET Username = ? WHERE Email = ?", (self.username, self.email))
+        conn.commit()
 
     def Update_Coin(self, change):
         self.coin += change
@@ -201,13 +210,53 @@ class User_Data:
                     WHERE Email = ?
                     """, (self.coin, self.email))
         conn.commit()
-            
+    
+    def Save_History(self, chr_set, race_len, win, coin):
+        cur.execute("""INSERT INTO User_History 
+                    (User_ID,
+                    Selected_Char, 
+                    Race_Length, 
+                    Result, 
+                    Coins_Change)
+                    VALUES (?,?,?,?,?)""",(self.user_id, chr_set, race_len, win, coin))
+        conn.commit()
+
+    def Get_History(self):
+        cur.execute("SELECT * FROM User_History WHERE User_ID = ? ORDER BY History_ID DESC", (self.user_id,))
+        return cur.fetchmany(5)
+
+class History():
+    def __init__ (self, chr_set, race_len, result, coins_change):
+
+        self.chr_set = Font(40).render(f'{chr_set}', True, "#FFFFFF")
         
+        self.race_len = Font(40).render(f'{race_len}', True, "#FFFFFF")
+        
+        self.result = Font(40).render(f'{result}', True, "#FFFFFF")
+        
+        self.coins_change = Font(40).render(f'{coins_change}', True, "#FFFFFF")
         
 
+        
+    def Draw_History(self, chr_set, rance_len, result, coins_change):
+        '''self.chr_set.get_rect(center = chr_pos)
+        self.race_len.get_rect(center = race_pos)
+        self.result.get_rect(center = result_pos)
+        self.coins_change.get_rect(center = coins_pos)'''
 
+        screen.blit(chr_set, chr_set.get_rect(center = (200, 360)))
+        screen.blit(rance_len, rance_len.get_rect(center = (500, 360)))
+        screen.blit(result, result.get_rect(center = (800, 360)))
+        screen.blit(coins_change, coins_change.get_rect(center = (1100, 360)))
+        
 pg.init()
 if in_full_screen == 'False':   
     screen = pg.display.set_mode(start_screen_size, pg.SRCALPHA | pg.NOFRAME)
 elif in_full_screen == 'True':
     screen = pg.display.set_mode((0,0), pg.FULLSCREEN | pg.SRCALPHA | pg.NOFRAME)
+
+
+'''cur.execute("""INSERT INTO User_History (History_ID, User_ID, Selected_Char, Race_Length, Result, Coins_Change)
+            VALUES (?,?,?,?,?,?)
+            """, (233,1,43,4,5,6))
+conn.commit()'''

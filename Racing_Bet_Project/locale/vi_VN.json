@@ -12,6 +12,25 @@
         "Login_Failed"  :  "Email hoặc mật khẩu sai"
     },
 
+
+    "Enter_Code":
+    {
+        "Title"     :   "Xác thực email",
+        "Prompt"    :   "Kiểm tra hộp thư thoại của bạn cho mã xác thực",
+        "Box_Txt"   :   "Nhập mã xác thực",
+        "Submit"    :   "Gửi",
+        "Error"     :   "Sai mã xác thực"
+
+    },
+
+    "Enter_Username":
+    {
+        "Title"     :   "Tên của bạn?",
+        "Box_Txt"   :   "Nhập tên người dùng",
+        "Submit"    :   "Gửi"
+    },
+
+
     "Sign_Up":
     {
         "To_Login"          :  "Đăng nhập",
@@ -50,6 +69,11 @@
     {
         "Music"   :  "Âm nhạc",
         "SFX"     :  "Hiệu ứng âm thanh"  
+    },
+
+    "User_Center":
+    {
+        "Change_Username"   :   "Đổi tên người dùng"
     },
 
     "Select_Char":
