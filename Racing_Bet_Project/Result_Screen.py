@@ -2,6 +2,8 @@ import pygame
 import sys
 import os
 from Experiment_Class import *
+#from PIL import Image
+#import pyscreenshot as ImageGrab
 import numpy as np 
 import cv2 
 import pyautogui 
@@ -10,7 +12,7 @@ import math
 
 # pygame.init()
 def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
-    theme_list = ["ocean", "forest", "villager", "street"]
+    theme_list = ["ocean", "forest", "villager", "street", "member"]
     theme = game_theme
     WIDTH, HEIGHT = size.w, size.h
     GOLD = (255, 215, 0)
@@ -86,20 +88,6 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
     
     Next = Button('rect', (size.w*0.4, size.h * 0.9), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
     Next_text = Draw_to_Screen('text', None, None, None, None, 'Next', Font((40)), '#000000', Next.rect.center)
-
-    #temporary, delete after having finish order(order trong core game)
-    #while True:
-    #    play_order = input("Enter the order of the player seperate by spaces (e.g., 3 1 4 2 5): ")
-    #    player_order = play_order.split()  # Split the input into a list of strings
-    #    try:
-    #        player_order = [int(num) for num in player_order]  # Convert strings to integers#
-
-    #        if len(player_order) != len(sorted_stages):
-    #            print("Error: The number of player provided does not match the number of stages.")
-    #        else:
-    #            break  # Exit the loop if the input is valid
-    #    except ValueError:
-    #        print("Error: Please enter a valid sequence of numbers separated by spaces.")
 
     player_order = ranking_list
 
@@ -223,6 +211,9 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
                         now = datetime.now()
                         current_time = now.strftime("%H-%M-%S")
                         today = date.today()
+#                        bbox = (math.floor(size.w * 0.18), math.floor(size.h * 0.15), math.floor(size.w * (0.18 + 0.605)), math.floor(size.h * (0.15 + 0.755)))
+#                        region_screenshot = ImageGrab.grab(bbox=bbox)
+#                        region_screenshot.save(f'screenshot/screenshot_{current_time}_{today}.png')
                         screenshot = pyautogui.screenshot(region = (math.floor(size.w * 0.18), math.floor(size.h * 0.15), math.floor(size.w * 0.605), math.floor(size.h * 0.755))) 
                         screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
                         cv2.imwrite(f'screenshot/screenshot_{current_time}_{today}.png', screenshot) 
