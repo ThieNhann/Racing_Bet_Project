@@ -15,7 +15,6 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
     theme_list = ["ocean", "forest", "villager", "street", "member"]
     theme = game_theme
     WIDTH, HEIGHT = size.w, size.h
-    print(WIDTH)
     GOLD = (255, 215, 0)
     chr_select = player_choice + 1  # playera choose)
                     #1. bear   2.boar    3. deer   4.fox    5.wolf
@@ -177,17 +176,16 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
         j = ranking_list[i] - 1
         char = chars_list[j]
         rank = 5 - i - 1
-        char.rank_display = Draw_to_Screen('text', None, None, None, None, rank_list[rank], Font((40)), '#FFFFFF', (size.w * 0.25, size.h * (0.2 + 0.15 * rank)))
-        char.name_display = Draw_to_Screen('text', None, None, None, None, char.name, Font((40)), '#FFFFFF', (size.w * 0.4, size.h * (0.2 + 0.15 * rank)))
+        char.rank = rank
+        char.rank_display = Draw_to_Screen('text', None, None, None, None, f'{char.name} came in {rank_list[rank]} place', Font((40)), '#FFFFFF', (size.w * 0.35, size.h * (0.2 + 0.15 * rank)))
         if j == player_choice:
-            char.player_chose = Draw_to_Screen('text', None, None, None, None, "Chose by player", Font((40)), '#FFFFFF', (size.w * 0.6, size.h * (0.2 + 0.15 * rank)))
+            char.player_chose = Draw_to_Screen('text', None, None, None, None, "Chosen by player", Font((40)), '#e8bd3d', (size.w * 0.35, size.h * (0.25 + 0.15 * rank)))
         else:
             char.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (size.w * 0.55, size.h * (0.2 + 0.15 * rank)))
     horizontal_lines = [Draw_to_Screen('rect', (size.w * 0.18, size.h * (0.15 + 0.15 * i)), (size.w * 0.6, size.h * 0.005), None, None, None, None, '#ffffff', None) for i in range(7)]
     vertical_lines = []
     vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.18, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
-    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.3, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
-    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.5, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.6, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
     vertical_lines.append(Draw_to_Screen('rect', (size.w * (0.18 + 0.6) , size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
     running = True
     while running:
@@ -196,8 +194,8 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
         Result_text.Blit(0,0)
         for char in chars_list:
             char.rank_display.Blit(0,0)
-            char.name_display.Blit(0,0)
             char.player_chose.Blit(0,0)
+            screen.blit(char.idle[1], (size.w * 0.6, size.h * (0.15 + 0.15 * char.rank)))
         Next.Blit(0,0)
         Next_text.Blit(0,0)
         for line in horizontal_lines:
