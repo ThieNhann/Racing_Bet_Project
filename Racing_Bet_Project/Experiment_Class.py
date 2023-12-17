@@ -196,10 +196,12 @@ class User_Data:
     def Login(self):
         cur.execute("SELECT * FROM User_Data WHERE Email = ? AND Password = ?", (self.email, self.pwd))
         if cur.fetchall():
-            cur.execute("SELECT Coins FROM User_Data WHERE Email= ?", (self.email,))
-            self.coin = int(cur.fetchone()[0])
-            cur.execute("SELECT User_ID FROM User_Data WHERE Email= ?", (self.email,))
-            self.user_id = (cur.fetchone()[0])
+            cur.execute("SELECT * FROM User_Data WHERE Email= ?", (self.email,))
+            info = cur.fetchone()
+            self.user_id = info[0]
+            self.username = info[3]
+            self.coin = int(info[4])
+            
             return True
         else:
             return False
@@ -243,11 +245,9 @@ class User_Data:
 
     def Get_History(self):
         cur.execute("SELECT * FROM User_History WHERE User_ID = ? ORDER BY History_ID DESC", (self.user_id,))
-        return cur.fetchmany(5)
+        return cur.fetchmany(6)
 
-
-
-class History():
+class Game_History():
     def __init__ (self, info, lang, size):
         self.info = info
         self.win = '#00FF00'
@@ -256,13 +256,13 @@ class History():
         if int(self.info[5]) > 0:
             self.chr_set = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Char', f'{self.info[2]}'), True, self.win)
             self.race_len = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Race', f'{self.info[3]}'), True, self.win)
-            self.result = Font(int(30 * size/1280)).render(f'{self.info[4]}', True, self.win)
+            self.result = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Result', f'{self.info[4]}'), True, self.win)
             self.coins_change = Font(int(30 * size/1280)).render(f'{self.info[5]}', True, self.win)
             
         else:
             self.chr_set = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Char', f'{self.info[2]}'), True, self.lose)
             self.race_len = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Race', f'{self.info[3]}'), True, self.lose)
-            self.result = Font(int(30 * size/1280)).render(f'{self.info[4]}', True, self.lose)
+            self.result = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Result', f'{self.info[4]}'), True, self.lose)
             self.coins_change = Font(int(30 * size/1280)).render(f'{self.info[5]}', True, self.lose)
 
         self.chr_set_rect = self.chr_set.get_rect(center = (0,0))
@@ -270,9 +270,7 @@ class History():
         self.result_rect = self.result.get_rect(center = (0,0))
         self.coins_change_rect = self.coins_change.get_rect(center = (0,0))
         
-
-        
-        
+      
 pg.init()
 if in_full_screen == 'False':   
     screen = pg.display.set_mode(start_screen_size, pg.SRCALPHA | pg.NOFRAME)
