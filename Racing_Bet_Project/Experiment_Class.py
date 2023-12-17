@@ -146,6 +146,16 @@ class Draw_to_Screen():
         
         if self.type == 'rect':
             pg.draw.rect(screen, self.color, self.rect, width, radius)
+    
+    def Con_Blit(self, loc, width, radius):
+        if self.type == 'image':
+            loc.blit(self.image, self.rect)
+
+        if self.type == 'text':
+            loc.blit(self.text, self.rect)
+        
+        if self.type == 'rect':
+            pg.draw.rect(loc, self.color, self.rect, width, radius)
       
 class Button(Draw_to_Screen):
     def __init__(self, type, rect_pos, rect_size, image_file, image_scaling, text_content, font, color, alter_color, alter_image_file, pos):

@@ -9,6 +9,7 @@ import cv2
 import pyautogui 
 from datetime import date, datetime
 import math
+import subprocess
 
 # pygame.init()
 def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
@@ -171,37 +172,52 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
         
     rank_list = ['1st', '2nd', '3rd', '4th', '5th']
     
-    Result_text = Draw_to_Screen('text', None, None, None, None, 'RESULT', Font((70)), '#FFFFFF', (size.w * 0.3, size.h * 0.1))
+    Result_text = Draw_to_Screen('text', None, None, None, None, 'RESULT', Font((70)), '#FFFFFF', (size.w * 0.1, size.h * 0.1))
     for i in range(5):
         j = ranking_list[i] - 1
         char = chars_list[j]
         rank = 5 - i - 1
         char.rank = rank
-        char.rank_display = Draw_to_Screen('text', None, None, None, None, f'{char.name} came in {rank_list[rank]} place', Font((40)), '#FFFFFF', (size.w * 0.35, size.h * (0.2 + 0.15 * rank)))
+        char.rank_display = Draw_to_Screen('text', None, None, None, None, f'{char.name} : {rank_list[rank]} place', Font((25)), '#FFFFFF', (0,0))
+        char.rank_display.rect.center = (size.w * 0.1325, size.h * (0.225 + 0.14 * rank))
         if j == player_choice:
-            char.player_chose = Draw_to_Screen('text', None, None, None, None, "Chosen by player", Font((40)), '#e8bd3d', (size.w * 0.35, size.h * (0.25 + 0.15 * rank)))
+            char.player_chose = Draw_to_Screen('text', None, None, None, None, "Chosen by player", Font((25)), '#e8bd3d', (size.w * 0.425, size.h * (0.2 + 0.15 * rank)))
         else:
-            char.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (size.w * 0.55, size.h * (0.2 + 0.15 * rank)))
-    horizontal_lines = [Draw_to_Screen('rect', (size.w * 0.18, size.h * (0.15 + 0.15 * i)), (size.w * 0.6, size.h * 0.005), None, None, None, None, '#ffffff', None) for i in range(7)]
+            char.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((25)), '#FFFFFF', (size.w * 0.4, size.h * (0.2 + 0.15 * rank)))
+    horizontal_lines = [Draw_to_Screen('rect', (size.w * 0, size.h * (0.15 + 0.1415 * i)), (size.w * 0.6, size.h * 0.005), None, None, None, None, '#ffffff', None) for i in range(7)]
     vertical_lines = []
-    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.18, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
-    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.6, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
-    vertical_lines.append(Draw_to_Screen('rect', (size.w * (0.18 + 0.6) , size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.25, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.6025, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    test = pg.surface.Surface((size.w * 0.6125, size.h * 0.86))
+    test.set_alpha(150)
+    test.fill(0)
     running = True
     while running:
+        screen.fill(0)
+
         screen.blit(background_image, (0, 0))
         screen.blit(black_surface, (0, 0))
-        Result_text.Blit(0,0)
+
+        Result_text.Con_Blit(test,0,0)
+
         for char in chars_list:
-            char.rank_display.Blit(0,0)
-            char.player_chose.Blit(0,0)
-            screen.blit(char.idle[1], (size.w * 0.6, size.h * (0.15 + 0.15 * char.rank)))
+            char.rank_display.Con_Blit(test,0,0)
+            char.player_chose.Con_Blit(test,0,0)
+            test.blit(char.idle[1], (size.w * 0.6, size.h * (0.15 + 0.15 * char.rank)))
+
         Next.Blit(0,0)
         Next_text.Blit(0,0)
+
         for line in horizontal_lines:
-            line.Blit(0,0)
+            line.Con_Blit(test, 0,0)
         for line in vertical_lines:
-            line.Blit(0,0)
+            line.Con_Blit(test, 0,0)
+
+        screen.blit(test, (size.w * 0.175, size.h * 0.05))
+
+
+
         for event in pygame.event.get():
             if (event.type == pygame.MOUSEBUTTONDOWN):
                     pos = pygame.mouse.get_pos()
@@ -216,6 +232,9 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
                         screenshot = pyautogui.screenshot(region = (math.floor(size.w * 0.18), math.floor(size.h * 0.15), math.floor(size.w * 0.605), math.floor(size.h * 0.755))) 
                         screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
                         cv2.imwrite(f'screenshot/screenshot_{current_time}_{today}.png', screenshot) 
+                        pg.image.save(test, 'balls.png')
+                        subprocess.run(["python", "convert.py"])
+                        
                         return
         pygame.display.flip()
         clock.tick(60)

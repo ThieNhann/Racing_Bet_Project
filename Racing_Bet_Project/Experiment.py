@@ -8,6 +8,8 @@ import cv2
 import numpy as np
 import pyautogui
 import Result_Screen as Result_Screen
+import subprocess
+import requests
 from datetime import date, datetime
 from email_validator import validate_email
 from email.message import EmailMessage
@@ -1520,22 +1522,22 @@ def History_Menu():
                         In_Game_Menu(-20)
                 
                 if button01.Click(mouse_pos) and index_1 == True:
-                    pass
+                    View_Ranks(current_user.Get_History()[0][6])
 
                 if button02.Click(mouse_pos) and index_2 == True:
-                    pass
+                    View_Ranks(current_user.Get_History()[1][6])
 
                 if button03.Click(mouse_pos) and index_3 == True:
-                    pass
+                    View_Ranks(current_user.Get_History()[2][6])
 
                 if button04.Click(mouse_pos) and index_4 == True:
-                    pass
+                    View_Ranks(current_user.Get_History()[3][6])
 
                 if button05.Click(mouse_pos) and index_5 == True:
-                    pass
+                    View_Ranks(current_user.Get_History()[4][6])
 
                 if button06.Click(mouse_pos) and index_6 == True:
-                    pass
+                    View_Ranks(current_user.Get_History()[5][6])
               
         screen.blit(background, (0,0))
         pg.draw.rect(screen, '#424769', box, 0 , 10)
@@ -1606,6 +1608,63 @@ def History_Menu():
 
         
 
+        click_ani.update()
+        click_ani.draw(screen)
+
+        pg.time.Clock().tick(60)
+        pg.display.update()
+
+def View_Ranks(image_path):
+    error_alpha = 0
+    error = False
+    background = pg.transform.smoothscale(pg.image.load('Assets/in_game_bg.png').convert_alpha(), (512, 288))
+    background = pg.transform.smoothscale(background, (size.w*1.075, size.h*1.075))
+
+    try:
+        image = pg.transform.smoothscale(pg.image.load(f'{image_path}').convert_alpha(), (size.w*0.6, size.h*0.75))
+        image_rect = image.get_rect(center = (size.w/2, size.h/2))
+
+    except:
+        error_alpha = 255
+        error = True
+        
+    image_error = Font(60).render("There is an error with image :/", True, "#FF0000")
+    image_error_rect = image_error.get_rect(center = (size.w/2, size.h/2))
+    box = pg.rect.Rect((0,0), (size.w * 0.75, size.h * 0.9))
+    box.center = (size.w/2, size.h/2)
+
+    box_outline = pg.rect.Rect((0,0), (size.w * 0.75, size.h * 0.9))
+    box_outline.center = (size.w/2, size.h/2)
+
+    close = Button('image', None, None, 'Assets/icon/Settings/close.png', (40*size.w/1280, 40*size.w/1280), None, None, None, None , 'Assets/icon/Settings/close-1.png', (0,0))
+    close.rect.center = box_outline.topright
+
+    while True:
+        mouse_pos = pg.mouse.get_pos()
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                Shutdown()
+            
+            if event.type == pg.MOUSEBUTTONDOWN:
+                click_ani.add(Click_Ani(mouse_pos, 5, size.w))
+                
+                if close.Click(mouse_pos):
+                        In_Game_Menu(-20)
+        
+        screen.blit(background, (0,0))
+        pg.draw.rect(screen, '#424769', box, 0 , 10)
+        pg.draw.rect(screen, '#000000', box_outline, 5 , 10)
+
+        for item in [close]:
+            item.Blit(0,0)
+            item.Hover(mouse_pos, 0, 0)
+
+        if error == False:
+            screen.blit(image, image_rect)
+        
+        image_error.set_alpha(error_alpha)
+        screen.blit(image_error, image_error_rect)
         click_ani.update()
         click_ani.draw(screen)
 
@@ -1890,6 +1949,8 @@ def Choose_Race_Length(alpha, chr_set, race_len):
         pg.display.update()
 
 def Core_Game(theme, length):
+
+# Thiết lập kích thước màn hình
     theme_list = ['ocean', 'forest', 'villager', 'street', 'member']
 
     something = randint(1, 10101010101)
@@ -1903,10 +1964,12 @@ def Core_Game(theme, length):
                 'Eddie','Julio','Tonya','Wilbert','Vickie','Betsy','Jaime','Leigh','Walter','Loretta',
                 'Susie','Rodney','Grace','Kyle','Rachael','Bryant','Erika','Shelia','Kristi','Harry']
 
+
+
     name_set = sample(range(0, 49), 5)
 
     baseSize = 90
-    baseSpeed = 2 # thay đổi speed nhân vật (for testing)
+    baseSpeed = 4 # thay đổi speed nhân vật (for testing)
     bg = pg.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
     bg = pg.transform.scale(bg, (size.w, size.h))
     fps = pg.time.Clock()
@@ -2156,7 +2219,6 @@ def Core_Game(theme, length):
 
     # Hỏi người chơi chọn xe
     player_choice = show_menu()
-    print(player_choice)
 
     # Khởi tạo số vàng của người chơi
     player_gold = 0
@@ -2185,28 +2247,22 @@ def Core_Game(theme, length):
                         pos = pg.mouse.get_pos()
                         if Finish.Click(pos):
                             running = False
-                            print(f'chose: {player_choice}')
+
                             match ranking_list.index(player_choice + 1):
                                 case 0:
                                     current_user.Update_History('5th', -200)
-                                    print(True)
                                 case 1:
                                     current_user.Update_History('4th', -200)
-                                    print(True)
                                 case 2:
                                     current_user.Update_History('3rd', -200)
-                                    print(True)
                                 case 3:
                                     current_user.Update_History('2nd', -200)
-                                    print(True)
                                 case 4:
-                                    current_user.Update_History('1st', 400)
+                                    current_user.Update_History('1st', -200)
                                     current_user.Update_Coin(400)
-                                    print(True)
 
                             Show_Result(ranking_list, player_choice, theme, size, chars)
             screen.blit(bg,(0,0))
-            
             if all_Finish:
                 Finish.Blit(0,0)
                 Finish_text.Blit(0,0)
@@ -2305,7 +2361,6 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
     chr_select = player_choice + 1  # playera choose)
                     #1. bear   2.boar    3. deer   4.fox    5.wolf
     rank = ""
-    screen = pg.display.set_mode((WIDTH, HEIGHT))
 
     class Stage:
         def __init__(self, name, width, height, color):
@@ -2352,7 +2407,7 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
 
     clock = pg.time.Clock()
 
-    spacing, running, animation_speed, delay_between_stages = 8, True, 5, 120
+    spacing, running, animation_speed, delay_between_stages = 8, True, 10, 40
 
     baseSize = 100
     all_animations = [load_images(f"Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i}", 4) for i in range(1, 6)]
@@ -2457,58 +2512,134 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
         
     rank_list = ['1st', '2nd', '3rd', '4th', '5th']
     
-    Result_text = Draw_to_Screen('text', None, None, None, None, 'RESULT', Font((70)), '#FFFFFF', (size.w * 0.3, size.h * 0.1))
+    Result_text = Draw_to_Screen('text', None, None, None, None, 'RESULT', Font((70)), '#FFFFFF', (size.w * 0.1, size.h * 0.1))
     for i in range(5):
         j = ranking_list[i] - 1
         char = chars_list[j]
         rank = 5 - i - 1
-        char.rank_display = Draw_to_Screen('text', None, None, None, None, rank_list[rank], Font((40)), '#FFFFFF', (size.w * 0.25, size.h * (0.2 + 0.15 * rank)))
-        char.name_display = Draw_to_Screen('text', None, None, None, None, char.name, Font((40)), '#FFFFFF', (size.w * 0.4, size.h * (0.2 + 0.15 * rank)))
+        char.rank = rank
+        char.rank_display = Draw_to_Screen('text', None, None, None, None, f'{char.name} : {rank_list[rank]} place', Font((25)), '#FFFFFF', (0,0))
+        char.rank_display.rect.center = (size.w * 0.1325, size.h * (0.225 + 0.14 * rank))
         if j == player_choice:
-            char.player_chose = Draw_to_Screen('text', None, None, None, None, "Chose by player", Font((40)), '#FFFFFF', (size.w * 0.6, size.h * (0.2 + 0.15 * rank)))
+            char.player_chose = Draw_to_Screen('text', None, None, None, None, "Chosen by player", Font((25)), '#e8bd3d', (size.w * 0.425, size.h * (0.225 + 0.15 * rank)))
         else:
-            char.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (size.w * 0.55, size.h * (0.2 + 0.15 * rank)))
-    horizontal_lines = [Draw_to_Screen('rect', (size.w * 0.18, size.h * (0.15 + 0.15 * i)), (size.w * 0.6, size.h * 0.005), None, None, None, None, '#ffffff', None) for i in range(7)]
+            char.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((25)), '#FFFFFF', (size.w * 0.4, size.h * (0.2 + 0.15 * rank)))
+    horizontal_lines = [Draw_to_Screen('rect', (size.w * 0, size.h * (0.15 + 0.1415 * i)), (size.w * 0.6, size.h * 0.005), None, None, None, None, '#ffffff', None) for i in range(7)]
     vertical_lines = []
-    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.18, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
-    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.3, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
-    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.5, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
-    vertical_lines.append(Draw_to_Screen('rect', (size.w * (0.18 + 0.6) , size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.25, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.6025, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    test = pg.surface.Surface((size.w * 0.6125, size.h * 0.86))
+    test.set_alpha(150)
+    test.fill(0)
     running = True
     while running:
+        screen.fill(0)
+
         screen.blit(background_image, (0, 0))
         screen.blit(black_surface, (0, 0))
-        Result_text.Blit(0,0)
+
+        Result_text.Con_Blit(test,0,0)
+
         for char in chars_list:
-            char.rank_display.Blit(0,0)
-            char.name_display.Blit(0,0)
-            char.player_chose.Blit(0,0)
+            char.rank_display.Con_Blit(test,0,0)
+            char.player_chose.Con_Blit(test,0,0)
+            test.blit(char.idle[1], (size.w * 0.6, size.h * (0.15 + 0.15 * char.rank)))
+
         Next.Blit(0,0)
         Next_text.Blit(0,0)
+
         for line in horizontal_lines:
-            line.Blit(0,0)
+            line.Con_Blit(test, 0,0)
         for line in vertical_lines:
-            line.Blit(0,0)
+            line.Con_Blit(test, 0,0)
+
+        screen.blit(test, (size.w * 0.175, size.h * 0.05))
+
+
+
         for event in pg.event.get():
+            pos = pg.mouse.get_pos()
             if (event.type == pg.MOUSEBUTTONDOWN):
-                    pos = pg.mouse.get_pos()
-                    if Next.Click(pos):
-                        running = False
-                        now = datetime.now()
-                        current_time = now.strftime("%H-%M-%S")
-                        today = date.today()
+                if Next.Click(pos):
+                    running = False
+                    now = datetime.now()
+                    current_time = now.strftime("%H-%M-%S")
+                    today = date.today()
 #                        bbox = (math.floor(size.w * 0.18), math.floor(size.h * 0.15), math.floor(size.w * (0.18 + 0.605)), math.floor(size.h * (0.15 + 0.755)))
 #                        region_screenshot = ImageGrab.grab(bbox=bbox)
 #                        region_screenshot.save(f'screenshot/screenshot_{current_time}_{today}.png')
-                        screenshot = pyautogui.screenshot(region = (floor(size.w * 0.18), floor(size.h * 0.15), floor(size.w * 0.605), floor(size.h * 0.755))) 
-                        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
-                        cv2.imwrite(f'screenshot/screenshot_{current_time}_{today}.png', screenshot) 
-                        current_user.Update_Image_Path(f'screenshot/screenshot_{current_time}_{today}.png')
-                        return
+                    pg.image.save(test, f'screenshot/screenshot_{current_time}_{today}.png')
+                    current_user.Update_Image_Path(f'screenshot/screenshot_{current_time}_{today}.png')
+                    Convert(f'screenshot/screenshot_{current_time}_{today}.png')
+                    Title(True)
+
         pg.display.flip()
         clock.tick(60)
     pg.quit()
     sys.exit()
+
+def Convert(image_path):
+    def image_to_text_online(api_key, path):
+        # URL của OCR.space API
+        ocr_api_url = "https://api.ocr.space/parse/image"
+
+        # Thực hiện POST request đến API
+        response = requests.post(
+            ocr_api_url,
+            files={"image": (path, open(path, "rb"))},
+            data={"apikey": api_key},
+        )
+
+        # Kiểm tra xem request có thành công không
+        if response.status_code == 200:
+            result = response.json()
+            if result["OCRExitCode"] == 1:
+                return result["ParsedResults"][0]["ParsedText"]
+            else:
+                return f"Lỗi: {result['ErrorMessage']}"
+        else:
+            return f"Lỗi HTTP: {response.status_code}"
+            
+
+    def save_text_to_file(text, output_file):
+        with open(output_file, "w", encoding="utf-8") as file:
+            file.write(text)
+
+
+    def convert_images_in_folder(api_key, image_path, output_folder):
+        '''# Lấy danh sách tất cả các tệp tin hình ảnh trong thư mục đầu vào
+        image_files = [f for f in os.listdir(input_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
+
+        # Lặp qua từng tệp tin hình ảnh và thực hiện chuyển đổi
+        for image_file in image_files:'''
+        #image_path = os.path.join(input_folder, image_file)
+
+        image_file = image_path.split('/')
+        image_file = image_file[len(image_file) - 1]
+
+        # Gọi hàm để chuyển đổi ảnh thành văn bản
+        result_text = image_to_text_online(api_key, image_path)
+
+        # Đặt đường dẫn và tên file cho kết quả
+        output_file = os.path.join(output_folder, f"{os.path.splitext(image_file)[0]}.txt")
+
+        # Gọi hàm để lưu kết quả vào file txt
+        save_text_to_file(result_text, output_file)
+
+        print(f"Kết quả đã được lưu vào file: {output_file}")
+        return
+
+    # Đặt API key của bạn và đường dẫn đến thư mục chứa ảnh
+    api_key = "4ec40bb7f288957"  # Thay bằng API key thực tế của bạn
+
+    output_text_folder = "convert_result"  # Thay bằng đường dẫn thực tế đến thư mục lưu txt
+
+    # Tạo thư mục đầu ra nếu nó không tồn tại
+    os.makedirs(output_text_folder, exist_ok=True)
+
+    # Gọi hàm để chuyển đổi tất cả các ảnh trong thư mục
+    convert_images_in_folder(api_key, image_path, output_text_folder)
 
 #Settings Tab
 def Video_Menu(prev_menu, set_char, race_len):

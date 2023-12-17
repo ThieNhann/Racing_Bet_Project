@@ -29,9 +29,9 @@ names = ['Kevin','Alberto','Carol','Claire','Chris','Henrietta','Sophie','Jane',
 name_set = random.sample(range(0, 49), 5)
 
 theme = 4
-length = 1
+length = 0
 baseSize = 90
-baseSpeed = 4 # thay đổi speed nhân vật (for testing)
+baseSpeed = 10 # thay đổi speed nhân vật (for testing)
 screen = pygame.display.set_mode((1280, 720))
 bg = pygame.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
 bg = pygame.transform.scale(bg, (1280,720))
@@ -307,13 +307,12 @@ while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if (event.type == pygame.MOUSEBUTTONDOWN) and all_Finish:
+            if (event.type == pygame.MOUSEBUTTONDOWN):
                     pos = pygame.mouse.get_pos()
                     if Finish.Click(pos):
                         running = False
                         result.Show_Result(ranking_list, player_choice, theme, size, chars)
         screen.blit(bg,(0,0))
-        subprocess.run(["python", "convert.py"])
         if all_Finish:
             Finish.Blit(0,0)
             Finish_text.Blit(0,0)
