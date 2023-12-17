@@ -9,22 +9,25 @@ import Result_Screen as result
 # Khởi tạo Pygame
 pygame.init()
 # Thiết lập kích thước màn hình
-theme_list = ['ocean', 'forest', 'villager', 'street']
+theme_list = ['ocean', 'forest', 'villager', 'street', 'member']
 
-something = random.randint(1, 10101010101)
-if something == 727:
-    THE_MOST_NORMAL_CAT = 'Cat is me. Literally me. No other animal can come close to relating to me like this. There is no way you can convince me this is not me. Cat could not possibly be anymore me. It is me, and nobody can convince me otherwise. If anyone approached me on the topic of this not possibly being me, then I immediately shut them down with overwhelming evidence that this animal is me. This animal is me, it is indisputable. Why anyone would try to argue that this animal is not me is beyond me. If you held two pictures of me and the cat side by side, you would see no difference. I can safely look at this chart every day and say "Yup, that is me". I can practically see this animal every time I look at myself in the mirror. I go outside and people stop me to comment how similar I look and act to this animal. I chuckle softly as I am assured everyday this animal is me in every way. I can smile each time I get out of bed every morning knowing that I have found my identity with this animal and I know my place in this world. It is really quite funny how similiar the cat is to me. It is almost like we are identical twins. When I first saw the cat, I had an existential crisis. What if this animal was the real me and I was the fictional being. What if this animal actually became aware of my existence? Did it have the ability to become self aware itself?'
-else:
-    THE_MOST_NORMAL_CAT = 'Just a cat'
+something = random.randint(1, 10101010101);
+THE_MOST_NORMAL_CAT = 'Cat is me. Literally me. No other animal can come close to relating to me like this. There is no way you can convince me this is not me. Cat could not possibly be anymore me. It is me, and nobody can convince me otherwise. If anyone approached me on the topic of this not possibly being me, then I immediately shut them down with overwhelming evidence that this animal is me. This animal is me, it is indisputable. Why anyone would try to argue that this animal is not me is beyond me. If you held two pictures of me and the cat side by side, you would see no difference. I can safely look at this chart every day and say "Yup, that is me". I can practically see this animal every time I look at myself in the mirror. I go outside and people stop me to comment how similar I look and act to this animal. I chuckle softly as I am assured everyday this animal is me in every way. I can smile each time I get out of bed every morning knowing that I have found my identity with this animal and I know my place in this world. It is really quite funny how similiar the cat is to me. It is almost like we are identical twins. When I first saw the cat, I had an existential crisis. What if this animal was the real me and I was the fictional being. What if this animal actually became aware of my existence? Did it have the ability to become self aware itself?'
     
-name_list = [['Anglerfish', 'Eel', 'Octopus', 'Shark', 'Turtle'], 
-             ['Bear', 'Boar', 'Deer', 'Fox', 'Wolf'], 
-             ['Nobleman', 'Oldman', 'Peasant', 'Villager', 'Worker'], 
-             ['Neko', THE_MOST_NORMAL_CAT, 'Dobermann', 'Shiba', 'Remy'],
-             ['ThieNhann', 'Lackiem1707', 'phuc-dep-trai', 'dzqt1', 'Nichikou']]
+name_list = ['ThieNhann', 'Lackiem1707', 'phuc-dep-trai', 'dzqt1', 'Nichikou']
 
-theme = 3
-length = 0
+names = ['Kevin','Alberto','Carol','Claire','Chris','Henrietta','Sophie','Jane','Candace','Tom',
+             'Lowell','Myrtle','Dana','Rosa','Byron','Ramon','Bryan','Dale','Matthew','Malcolm',
+             'Terrance','Lynn','Edith','Rodolfo','Antonia','Hector','Meredith','Vernon','Tami','Vicky',
+             'Eddie','Julio','Tonya','Wilbert','Vickie','Betsy','Jaime','Leigh','Walter','Loretta',
+             'Susie','Rodney','Grace','Kyle','Rachael','Bryant','Erika','Shelia','Kristi','Harry']
+
+
+
+name_set = random.sample(range(0, 49), 5)
+
+theme = 4
+length = 1
 baseSize = 90
 baseSpeed = 4 # thay đổi speed nhân vật (for testing)
 screen = pygame.display.set_mode((1280, 720))
@@ -32,18 +35,32 @@ bg = pygame.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
 bg = pygame.transform.scale(bg, (1280,720))
 fps = pygame.time.Clock()
 size = Screen_Info(screen.get_size())
+
+crown = []
+for i in range(8):
+    image = pygame.image.load(f"Assets/other/crown/frame_{i}_delay-0.2s.gif").convert()
+    image = pygame.transform.scale(image, (40 * size.w / 1280, 40 * size.h / 720))
+    crown.append(image)
+
 class Char:
     def __init__(self, x, y, speed, name, image_path):
         self.x = x
         self.y = y
+        if theme == 4:
+            self.y += 0.05 * size.h
         self.speed = speed
         self.name = name
         self.act_i = 0
+        self.crown_i = 0
         self.status = 'idle'
         self.laps = 0
         self.orientation = 1
+        self.baseY = self.y
         self.laps_display = Draw_to_Screen('text', None, None, None, None, f'{self.laps}/{length}', Font((40)), '#FFFFFF', (self.x - 20 * size.w / 1280, self.y + 20 * size.h / 720))
-        self.name_display = Draw_to_Screen('text', None, None, None, None, f'{self.name}', Font((40)), '#FFFFFF', (self.x + 30 * size.w / 1280, self.y + 5 * size.h / 720))
+        if theme == 3:
+            self.name_display = Draw_to_Screen('text', None, None, None, None, f'{self.name}', Font((40)), '#FFFFFF', (self.x + 40 * size.w / 1280, self.y + 0.15 * size.h))
+        else:
+            self.name_display = Draw_to_Screen('text', None, None, None, None, f'{self.name}', Font((40)), '#FFFFFF', (self.x + 40 * size.w / 1280, self.y + 0.1 * size.h))
         self.rank_display = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (0,0))
         self.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (0,0))
         # Tải hình ảnh từ đường dẫn được cung cấp
@@ -129,7 +146,13 @@ class Char:
             self.effect_end_time = None
              
         if self.first_finish:
-            pass
+            if self.act_i % 15 == 0:
+                if self.crown_i == 7:
+                    self.crown_i = 0
+                else:
+                    self.crown_i += 1
+            screen.blit(crown[self.crown_i], (self.x + 30 * size.w / 1280, self.y - 20 * size.h / 720))
+                
         
     def is_clicked(self, pos):
         return self.x <= pos[0] <= self.x + baseSize * size.w / 1280 and self.y <= pos[1] <= self.y + baseSize * size.h / 720
@@ -138,12 +161,20 @@ class Char:
         return self.x < obstacle.x + baseSize * size.w / 1280 and self.x + baseSize * size.w / 1280 > obstacle.x and self.y < obstacle.y + baseSize * size.h / 720 and self.y + baseSize * size.h / 720 > obstacle.y
 
 # Tạo danh sách các xe với hình ảnh tương ứng
-chars = [Char(50, 30 + (i + 1)*0.15*size.h, random.uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, name_list[theme][i], f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}')  for i in range(5)]
+if theme == 4:
+    chars = [Char(50, 30 + (i + 1)*0.15*size.h, random.uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, name_list[i], f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}')  for i in range(5)]
+else:
+    chars = [Char(50, 30 + (i + 1)*0.15*size.h, random.uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, names[name_set[i]], f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}')  for i in range(5)]
+
+if theme == 3 and something == 727:
+    chars[1].name = THE_MOST_NORMAL_CAT
 
 class Obstacle:
     def __init__(self, x, y, image_paths):
         self.x = x
         self.y = y
+        if theme == 4:
+            self.y += 0.05 * size.h
         self.image_paths = image_paths
         self.set_image('Assets/Obstacles/obstacle_box.png')
         self.changed = False  # Thêm thuộc tính này để theo dõi xem hình ảnh đã được thay đổi chưa
@@ -182,8 +213,15 @@ obstacles = [Obstacle(random.uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(
 def show_menu():
     running = True
     selection = -1
+    player_name = ''
+    rename = False
     charImage = Draw_to_Screen('text', None, None, None, None, '', 
                                     Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.60, size.h * 0.5))
+    rename_box = Button('rect', (size.w * 0.35, size.h * 0.7), (size.w*0.275, size.h * 0.1), None, None, None, None, '#FFFFFF', '#FFFFFF', None, None)
+    if theme == 4:
+        charname_text = Draw_to_Screen('text', None, None, None, None, "Your character name (please don't change it):", Font((60)), '#FFFFFF', (size.w * 0.5, size.h * 0.65)) 
+    else:
+        charname_text = Draw_to_Screen('text', None, None, None, None, 'Choose your character name:', Font((60)), '#FFFFFF', (size.w * 0.5, size.h * 0.65)) 
     while running:
         screen.blit(bg,(0,0))
         font = pygame.font.Font(None, 36)
@@ -193,14 +231,20 @@ def show_menu():
         currentChar = Draw_to_Screen('text', None, None, None, None, 'Your character:', 
                     Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.4, size.h * 0.5))
         
-        Start = Button('rect', (size.w*0.4, size.h * 0.65), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
+        Start = Button('rect', (size.w*0.4, size.h * 0.85), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
         Start_text = Draw_to_Screen('text', None, None, None, None, 'Start', Font((40)), '#000000', Start.rect.center)
+        
+        rename_text = Draw_to_Screen('text', None, None, None, None, player_name, Font((40)), '#000000', rename_box.rect.center)
         
         text.Blit(0,0)
         currentChar.Blit(0,0)
         charImage.Blit(0,0)
         Start.Blit(0,0)
         Start_text.Blit(0,0)
+        rename_box.Blit(0,0)
+        rename_text.Blit(0,0)
+        charname_text.Blit(0,0)
+        
         fps.tick(60)
         for char in chars:
             char.act_i = char.draw(char.act_i,char.status)
@@ -217,9 +261,21 @@ def show_menu():
                     if char.is_clicked(pos):
                         charImage = Draw_to_Screen('image', None, None, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}/idle_1.png', ((baseSize * 1.2)*size.w/1280, (baseSize * 1.2)* size.w/1280), None, 
                                     None, None, (size.w * 0.6, size.h * 0.5))
+                        player_name = char.name
                         selection = i                # Trả về chỉ số của xe mà người dùng đã chọn
                     if Start.Click(pos) and selection != -1:
+                        if rename and player_name != '':
+                            chars[selection].name = player_name
                         return selection
+                    if rename_box.Click(pos) and theme != 4:
+                        rename = True
+                        
+            if event.type == pygame.KEYDOWN:
+                if rename:
+                    if event.key == pg.K_BACKSPACE:
+                        player_name = player_name[:-1]
+                    else:
+                        player_name += event.unicode
                         
                 
 
@@ -265,7 +321,10 @@ while running:
             char.act_i = char.draw(char.act_i, char.status)
             char.move()
             char.laps_display = Draw_to_Screen('text', None, None, None, None, f'{char.laps}/{length+1}', Font((20)), '#FFFFFF', (char.x - 15 * size.w / 1280, char.y + 20 * size.h / 720))
-            char.name_display = Draw_to_Screen('text', None, None, None, None, f'{char.name}', Font((30)), '#FFFFFF', (char.x + 30 * size.w / 1280, char.y + 5 * size.h / 720))
+            if theme == 3:
+                char.name_display = Draw_to_Screen('text', None, None, None, None, f'{char.name}', Font((40)), '#FFFFFF', (char.x + 40 * size.w / 1280, char.y + 0.15 * size.h))
+            else:
+                char.name_display = Draw_to_Screen('text', None, None, None, None, f'{char.name}', Font((40)), '#FFFFFF', (char.x + 40 * size.w / 1280, char.y + 0.1 * size.h))
             char.laps_display.Blit(0,0)
             char.name_display.Blit(0,0)
             image_path = None  # Khởi tạo image_path với giá trị mặc định
