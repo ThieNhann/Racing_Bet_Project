@@ -104,24 +104,24 @@
 
     "History_Char":
     {
-        "0"         :   "Ocean",
-        "1"         :   "Forest",
-        "2"         :   "Village",
-        "3"         :   "Street",
-        "4"         :   "HCMUS"
+        "Ocean"         :   "Ocean",
+        "Forest"         :   "Forest",
+        "Village"         :   "Village",
+        "Street"         :   "Street",
+        "School"         :   "School"
     },
 
     "History_Race":
     {
-        "0"         :   "Short",
-        "1"         :   "Medium",
-        "2"         :   "Long"
+        "Short"         :   "Short",
+        "Medium"         :   "Medium",
+        "Long"         :   "Long"
     },
 
     "History_Result":
     {
-        "0"         :   "Lost",
-        "1"         :   "Win"
+        "Lost"         :   "Lost",
+        "Win"         :   "Win"
     }
 
 

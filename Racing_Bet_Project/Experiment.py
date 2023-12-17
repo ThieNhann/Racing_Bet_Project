@@ -4,10 +4,14 @@ import sys
 import os
 import smtplib
 import ssl
+import cv2
+import numpy as np
+import pyautogui
 import Result_Screen as Result_Screen
+from datetime import date, datetime
 from email_validator import validate_email
 from email.message import EmailMessage
-from math import sin, radians as rad
+from math import sin, radians as rad, floor
 from Experiment_Class import *
 from random import randint, randrange, uniform, choice
 
@@ -801,14 +805,23 @@ def In_Game_Menu(alpha):
     play = Button('rect', (0,0), ((size.w*0.25, size.h * 0.15)), None, None, None, None, '#676f9d', '#5d648c', None, None)
     play.rect.center = (size.w*0.775, size.h * 0.4)
 
-    mini_Game = Button('rect', (0,0), ((size.w*0.25, size.h * 0.15)), None, None, None, None, '#676f9d', '#5d648c', None, None)
-    mini_Game.rect.center = (size.w*0.775, size.h * 0.6)
+    mini_game = Button('rect', (0,0), ((size.w*0.25, size.h * 0.15)), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    mini_game.rect.center = (size.w*0.775, size.h * 0.6)
 
     history = Button('rect', (0,0), ((size.w*0.25, size.h * 0.15)), None, None, None, None, '#676f9d', '#5d648c', None, None)
     history.rect.center = (size.w*0.775, size.h * 0.8)
 
     ani_surf = pg.surface.Surface((size.w, size.h))
     ani_surf.fill('#000000')
+
+    play_text = Font(40).render("Play", True, "#FFFFFF")
+    play_text_rect = play_text.get_rect(center = play.rect.center)
+
+    minigame_text = Font(40).render("Minigame", True, "#FFFFFF")
+    minigame_text_rect = minigame_text.get_rect(center = mini_game.rect.center)
+
+    history_text = Font(40).render("History", True, "#FFFFFF")
+    history_text_rect = history_text.get_rect(center = history.rect.center)
     
 
     #coins_box = pg.rect.Rect((0,0), ((size.w*0.25, size.h * 0.25)))
@@ -846,7 +859,7 @@ def In_Game_Menu(alpha):
                             change_menu = True
                             target_menu = 'Play'
 
-                    if mini_Game.Click(mouse_pos):
+                    if mini_game.Click(mouse_pos):
                         if current_user.coin >= 200:
                             minigame_error_alpha = 500
                         else:
@@ -878,29 +891,12 @@ def In_Game_Menu(alpha):
         bg.Draw()
 
         #Load Assets onto screen
-        for item in [play, mini_Game, history, settings]:
+        for item in [play, mini_game, history, settings]:
             item.Blit(0,10)
 
-        #pg.draw.rect(screen, "#FFFFFF", coins_box, 2, 10)
-
-        screen.blit(coins_img, coins_img.get_rect(midleft = (size.w*0.125, size.h * 0.575)))
-        screen.blit(username_text, username_text.get_rect(midleft = (size.w*0.125, size.h * 0.45)))
-        screen.blit(coins_Text, coins_Text.get_rect(midleft = (size.w*0.175, size.h * 0.575)))
-
-        minigame_error.set_alpha(minigame_error_alpha)
-        screen.blit(minigame_error, minigame_error.get_rect(center = (size.w/2, size.h/2)))
-
-        play_error.set_alpha(play_error_alpha)
-        screen.blit(play_error, play_error.get_rect(center = (size.w/2, size.h/2)))
-
-        print(alpha)
-
         if alpha <= 0: alpha = 0
-        ani_surf.set_alpha(alpha)
-        screen.blit(ani_surf, (0,0))
         
-        
-        #Fade out animation logics
+
         if change_menu:
             alpha += 15
             if alpha > 256:
@@ -915,8 +911,27 @@ def In_Game_Menu(alpha):
 
         #Change colors if the mouse hover above and only when alpha is high enough (finished fade in animation)
         elif alpha == 0 and change_menu == False:
-            for button in [settings, play, mini_Game, history]:
+            for button in [settings, play, mini_game, history]:
                 button.Hover(mouse_pos, 0 ,10)
+
+        #pg.draw.rect(screen, "#FFFFFF", coins_box, 2, 10)
+
+        screen.blit(coins_img, coins_img.get_rect(midleft = (size.w*0.125, size.h * 0.575)))
+        screen.blit(username_text, username_text.get_rect(midleft = (size.w*0.125, size.h * 0.45)))
+        screen.blit(coins_Text, coins_Text.get_rect(midleft = (size.w*0.175, size.h * 0.575)))
+        screen.blit(play_text, play_text_rect)
+        screen.blit(minigame_text, minigame_text_rect)
+        screen.blit(history_text, history_text_rect)
+
+        minigame_error.set_alpha(minigame_error_alpha)
+        screen.blit(minigame_error, minigame_error.get_rect(center = (size.w/2, size.h/2)))
+
+        play_error.set_alpha(play_error_alpha)
+        screen.blit(play_error, play_error.get_rect(center = (size.w/2, size.h/2)))
+
+        ani_surf.set_alpha(alpha)
+        screen.blit(ani_surf, (0,0))
+        #Fade out animation logics
         
 
         FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
@@ -1688,6 +1703,20 @@ def Choose_Race_Length(alpha, chr_set, race_len):
                 'Assets/test.jpg',
                 'Assets/in_game_bg.png']
 
+    preload_chr_set = {
+        0:  "Ocean",
+        1:  "Forest",
+        2:  "Village",
+        3:  "Street",
+        4:  "School"
+    }
+
+    preload_race_len = {
+        0:  "Short",
+        1:  "Medium",
+        2:  "Long"
+    }
+
     #Load Assets
     background = pg.transform.scale(pg.image.load(bg_List[chr_set]).convert_alpha(), (512, 288))
     background = pg.transform.smoothscale(background, (size.w*1.075, size.h*1.075))
@@ -1741,9 +1770,11 @@ def Choose_Race_Length(alpha, chr_set, race_len):
                     
                     #Debug: if user click start then print out what user has choosen 
                     if enter.Click(mouse_pos) and race_len != 3 :
-                        current_user.Update_Coin(-200)
+                        #current_user.Update_Coin(-200)
                         print(f'Selected: {chr_set}')
                         print(f'Selected: {race_len}')
+                        current_user.Save_History(preload_chr_set[chr_set], preload_race_len[race_len], "Lost", -200)
+                        current_user.Update_Coin(-200)
                         Core_Game(chr_set, race_len)
                         
                     #Return to Choose_Character screen and preserve what the user chose
@@ -1805,53 +1836,67 @@ def Choose_Race_Length(alpha, chr_set, race_len):
 
 def Core_Game(theme, length):
     theme_list = ['ocean', 'forest', 'villager', 'street']
+
+    something = randint(1, 10101010101)
+    if something == 727:
+        THE_MOST_NORMAL_CAT = 'Cat is me. Literally me. No other animal can come close to relating to me like this. There is no way you can convince me this is not me. Cat could not possibly be anymore me. It is me, and nobody can convince me otherwise. If anyone approached me on the topic of this not possibly being me, then I immediately shut them down with overwhelming evidence that this animal is me. This animal is me, it is indisputable. Why anyone would try to argue that this animal is not me is beyond me. If you held two pictures of me and the cat side by side, you would see no difference. I can safely look at this chart every day and say "Yup, that is me". I can practically see this animal every time I look at myself in the mirror. I go outside and people stop me to comment how similar I look and act to this animal. I chuckle softly as I am assured everyday this animal is me in every way. I can smile each time I get out of bed every morning knowing that I have found my identity with this animal and I know my place in this world. It is really quite funny how similiar the cat is to me. It is almost like we are identical twins. When I first saw the cat, I had an existential crisis. What if this animal was the real me and I was the fictional being. What if this animal actually became aware of my existence? Did it have the ability to become self aware itself?'
+    else:
+        THE_MOST_NORMAL_CAT = 'Just a cat'
+        
+    name_list = [['Anglerfish', 'Eel', 'Octopus', 'Shark', 'Turtle'], 
+                ['Bear', 'Boar', 'Deer', 'Fox', 'Wolf'], 
+                ['Nobleman', 'Oldman', 'Peasant', 'Villager', 'Worker'], 
+                ['Neko', THE_MOST_NORMAL_CAT, 'Dobermann', 'Shiba', 'Remy'],
+                ['ThieNhann', 'Lackiem1707', 'phuc-dep-trai', 'dzqt1', 'Nichikou']]
+
+    theme = 3
+    length = 0
     baseSize = 90
-    baseSpeed = 2
+    baseSpeed = 10 # thay đổi speed nhân vật (for testing)
 
     bg = pg.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
-    bg = pg.transform.scale(bg, (1280,720))
-
+    bg = pg.transform.scale(bg, (size.w, size.h))
     fps = pg.time.Clock()
-
     class Char:
-        def __init__(self, x, y, speed, image_path):
+        def __init__(self, x, y, speed, name, image_path):
             self.x = x
             self.y = y
             self.speed = speed
+            self.name = name
             self.act_i = 0
             self.status = 'idle'
             self.laps = 0
             self.orientation = 1
+            self.laps_display = Draw_to_Screen('text', None, None, None, None, f'{self.laps}/{length}', Font((40)), '#FFFFFF', (self.x - 20 * size.w / 1280, self.y + 20 * size.h / 720))
+            self.name_display = Draw_to_Screen('text', None, None, None, None, f'{self.name}', Font((40)), '#FFFFFF', (self.x + 30 * size.w / 1280, self.y + 5 * size.h / 720))
+            self.rank_display = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (0,0))
+            self.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (0,0))
             # Tải hình ảnh từ đường dẫn được cung cấp
             self.walk = [pg.image.load(image_path + f'/walk_1.png'),
                         pg.image.load(image_path + f'/walk_2.png'),
                         pg.image.load(image_path + f'/walk_3.png'),
                         pg.image.load(image_path + f'/walk_4.png')]
-            
             self.stun = [pg.image.load(image_path + f'/death_1.png'),
                         pg.image.load(image_path + f'/death_2.png'),
                         pg.image.load(image_path + f'/death_3.png'),
                         pg.image.load(image_path + f'/death_4.png')]
-            
             self.idle = [pg.image.load(image_path + f'/idle_1.png'),
                         pg.image.load(image_path + f'/idle_2.png'),
                         pg.image.load(image_path + f'/idle_3.png')]
-            
             for i in range(4):
                 self.walk[i]= pg.transform.scale(self.walk[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
                 self.stun[i]= pg.transform.scale(self.stun[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
-
                 if (i < 3):
                     self.idle[i]= pg.transform.scale(self.idle[i], (baseSize * size.w / 1280, baseSize * size.h / 720))
-
     #        self.image = pg.transform.scale(self.image, (50, 50))  # Thu nhỏ kích thước hình ảnh
             self.reverse = False
             self.teleport = False
             self.slow = False
             self.speedup = False
             self.finished = False
+            self.first_finish = False
             self.effect_end_time = None
-            self.wait_until = None  # Thời gian mà xe phải đợi trước khi di chuyển tiếp
+            self.wait_until = None  # Thời gian mà xe phải đợi trước khi di`` chuyển tiếp
 
         def draw(self,act_i,status):
             if status == 'walk':
@@ -1859,61 +1904,58 @@ def Core_Game(theme, length):
                     screen.blit(self.walk[act_i//15], (self.x, self.y)) # Vẽ hình ảnh
                 elif self.orientation == -1:
                     screen.blit(pg.transform.flip(self.walk[act_i//15],1,0), (self.x, self.y))
-
             elif status == 'stun':
                 if self.orientation == 1:
                     screen.blit(self.stun[act_i//15], (self.x, self.y)) # Vẽ hình ảnh
                 elif self.orientation == -1:
                     screen.blit(pg.transform.flip(self.stun[act_i//15],1,0), (self.x, self.y))
-
             else:
                 if self.orientation == 1:
                     screen.blit(self.idle[act_i//15], (self.x, self.y)) # Vẽ hình ảnh
                 elif self.orientation == -1:
                     screen.blit(pg.transform.flip(self.idle[act_i//15],1,0), (self.x, self.y))
-
             if status == 'idle':
                 if act_i == 44:
                     return 0
                 else:
-                    return act_i + 1
-                
+                    return act_i+1
             else:
                 if act_i == 59:
                     if status == 'stun':
                         return act_i
                     else:   
                         return 0
-                    
                 else:
-                    return act_i + 1  # Vẽ hình ảnh thay vì hình vuông
+                    return act_i+1  # Vẽ hình ảnh thay vì hình vuông
             
         def move(self):
             if self.wait_until and pg.time.get_ticks() < self.wait_until:
                 self.status = 'stun'
                 return  # Nếu xe đang trong thời gian chờ, không di chuyển nó
-            
             if not self.finished:
                 self.status = 'walk'
-
             if self.reverse:
                 self.x -= self.speed
-
+                self.orientation = -(self.speed/abs(self.speed))
             elif self.slow:
                 self.x += self.speed / 2
-
             elif self.speedup:
-                self.x += self.speed * 2.5
-
+                self.x += self.speed * 3
             else:
                 self.x += self.speed
-
+            
+            if not (self.reverse or self.finished):
+                char.orientation = char.speed/abs(char.speed)
+            
             if self.effect_end_time and pg.time.get_ticks() > self.effect_end_time:
                 self.reverse = False
                 self.slow = False
                 self.speedup = False
                 self.effect_end_time = None
-        
+                
+            if self.first_finish:
+                pass
+            
         def is_clicked(self, pos):
             return self.x <= pos[0] <= self.x + baseSize * size.w / 1280 and self.y <= pos[1] <= self.y + baseSize * size.h / 720
 
@@ -1921,7 +1963,7 @@ def Core_Game(theme, length):
             return self.x < obstacle.x + baseSize * size.w / 1280 and self.x + baseSize * size.w / 1280 > obstacle.x and self.y < obstacle.y + baseSize * size.h / 720 and self.y + baseSize * size.h / 720 > obstacle.y
 
     # Tạo danh sách các xe với hình ảnh tương ứng
-    chars = [Char(50, 30 + (i + 1)*0.15*size.h, uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}') for i in range(5)]
+    chars = [Char(50, 30 + (i + 1)*0.15*size.h, uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, name_list[theme][i], f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}')  for i in range(5)]
 
     class Obstacle:
         def __init__(self, x, y, image_paths):
@@ -1937,8 +1979,17 @@ def Core_Game(theme, length):
             self.image = pg.transform.scale(self.image, (baseSize * size.w / 1280, baseSize * size.h / 720))  # Thu nhỏ kích thước hình ảnh
 
         def set_random_image(self):
+            rare_chance = 5     # Điều chỉnh tỉ lệ obstacle to_start và to_finish (1 = 0.1%)   (phần còn lại chia đều)
             if not self.changed:
-                self.image_path = choice(self.image_paths)  # Lưu trữ hình ảnh hiện tại
+                image_picker = randint(1, 1000)
+                if image_picker <= rare_chance:
+                    self.image_path = self.image_paths[5]
+                elif image_picker > 1000 - rare_chance:
+                    self.image_path = self.image_paths[6]
+                else:
+                    self.image_path = self.image_paths[image_picker % 5]
+
+                #self.image_path = random.choice(self.image_paths)  # Lưu trữ hình ảnh hiện tại
                 self.set_image(self.image_path)
                 self.changed = True
                 self.change_time = pg.time.get_ticks()
@@ -1946,21 +1997,22 @@ def Core_Game(theme, length):
 
         def draw(self):
             screen.blit(self.image, (self.x, self.y))# Vẽ hình ảnh   
+   
     # Tạo danh sách các chướng ngại vật ở nửa đường
-    obstacle_images = ['Assets/Obstacles/obstacle_confinement.png', 'Assets/Obstacles/obstacle_finish.png', 
+    obstacle_images = ['Assets/Obstacles/obstacle_confinement.png',  
                     'Assets/Obstacles/obstacle_reverse.png', 'Assets/Obstacles/obstacle_slow.png', 
                     'Assets/Obstacles/obstacle_speed.png', 'Assets/Obstacles/obstacle_teleport.png', 
-                    'Assets/Obstacles/obstacle_tostart.png']
+                    'Assets/Obstacles/obstacle_tostart.png', 'Assets/Obstacles/obstacle_finish.png']
     obstacles = [Obstacle(uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(i+1), obstacle_images) for i in range(5)]
     # Hàm hiển thị menu và nhận lựa chọn từ người chơi
     def show_menu():
         running = True
-        selection = 0
+        selection = -1
         charImage = Draw_to_Screen('text', None, None, None, None, '', 
                                         Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.60, size.h * 0.5))
         while running:
             screen.blit(bg,(0,0))
-
+            font = pg.font.Font(None, 36)
             text = Draw_to_Screen('text', None, None, None, None, 'Choose your character!', 
                         Font(int(70 * size.w / 1280)), '#FFFFFF', (size.w * 0.5, size.h * 0.3))
             
@@ -1970,39 +2022,41 @@ def Core_Game(theme, length):
             Start = Button('rect', (size.w*0.4, size.h * 0.65), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
             Start_text = Draw_to_Screen('text', None, None, None, None, 'Start', Font((40)), '#000000', Start.rect.center)
             
-            for item in [text, currentChar, charImage, Start, Start_text]:
-                item.Blit(0,0)
-
+            text.Blit(0,0)
+            currentChar.Blit(0,0)
+            charImage.Blit(0,0)
+            Start.Blit(0,0)
+            Start_text.Blit(0,0)
             fps.tick(60)
             for char in chars:
                 char.act_i = char.draw(char.act_i,char.status)
-
+                char.name_display.Blit(0,0)
             pg.display.flip()
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
-                    Shutdown()  
-                    # Thoát khỏi chương trình nếu người dùng đóng cửa sổ
-
+                    pg.quit()
+                    sys.exit()  # Thoát khỏi chương trình nếu người dùng đóng cửa sổ
                 if event.type == pg.MOUSEBUTTONDOWN:
                     pos = pg.mouse.get_pos()
-
                     for i, char in enumerate(chars):
                         if char.is_clicked(pos):
                             charImage = Draw_to_Screen('image', None, None, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}/idle_1.png', ((baseSize * 1.2)*size.w/1280, (baseSize * 1.2)* size.w/1280), None, 
                                         None, None, (size.w * 0.6, size.h * 0.5))
                             selection = i                # Trả về chỉ số của xe mà người dùng đã chọn
-                        if Start.Click(pos):
+                        if Start.Click(pos) and selection != -1:
                             return selection
                             
-                    
-
+                
     # Hỏi người chơi chọn xe
     player_choice = show_menu()
 
+    # Khởi tạo số vàng của người chơi
+    player_gold = 0
+
     # Tạo một danh sách để theo dõi thứ tự các xe về đích
     finish_order = []
-    ranking_list = [0, 0, 0, 0, 0]
+    ranking_list = []
 
     # Vòng lặp chính của game
     running = True
@@ -2020,14 +2074,11 @@ def Core_Game(theme, length):
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     running = False
-                if (event.type == pg.MOUSEBUTTONDOWN):
-                    mouse_pos = pg.mouse.get_pos()
-                    if all_Finish:
-                        if Finish.Click(mouse_pos):
+                if (event.type == pg.MOUSEBUTTONDOWN) and all_Finish:
+                        pos = pg.mouse.get_pos()
+                        if Finish.Click(pos):
                             running = False
-                            Result_Screen.Show_Result(ranking_list, player_choice, theme, screen)
-                            In_Game_Menu(-20)
-
+                            Show_Result(ranking_list, player_choice, theme, size, chars)
             screen.blit(bg,(0,0))
             
             if all_Finish:
@@ -2038,6 +2089,10 @@ def Core_Game(theme, length):
             for char in chars:
                 char.act_i = char.draw(char.act_i, char.status)
                 char.move()
+                char.laps_display = Draw_to_Screen('text', None, None, None, None, f'{char.laps}/{length+1}', Font((20)), '#FFFFFF', (char.x - 15 * size.w / 1280, char.y + 20 * size.h / 720))
+                char.name_display = Draw_to_Screen('text', None, None, None, None, f'{char.name}', Font((30)), '#FFFFFF', (char.x + 30 * size.w / 1280, char.y + 5 * size.h / 720))
+                char.laps_display.Blit(0,0)
+                char.name_display.Blit(0,0)
                 image_path = None  # Khởi tạo image_path với giá trị mặc định
                 for obstacle in obstacles:
                     if char.collides_with(obstacle):
@@ -2048,10 +2103,13 @@ def Core_Game(theme, length):
                         char.wait_until = pg.time.get_ticks() + 1000 # Đặt thời gian chờ cho xe
                         char.status = 'stun'
                     elif 'obstacle_finish.png' in image_path:
-                        if (char.speed > 0):
-                            char.x = 0.95 * size.w
+                        if (length % 2 == 0):
+                            char.x = 0.92 * size.w
+                            char.orientation = 1
                         else:
                             char.x = 0.05 * size.w
+                            char.orientation = -1
+                        char.laps = length
                     elif 'obstacle_reverse.png' in image_path:
                         char.reverse = True
                         char.effect_end_time = pg.time.get_ticks() + 1000
@@ -2064,10 +2122,10 @@ def Core_Game(theme, length):
                     elif 'obstacle_teleport.png' in image_path:
                         char.x += char.speed/(abs(char.speed)) * 200 * size.w / 1280
                     elif 'obstacle_tostart.png' in image_path:
-                        if (char.speed > 0):
-                            char.x = 0.05 * size.w
-                        else:
-                            char.x = 0.95 * size.w
+                        char.x = 0.05 * size.w
+                        char.laps = 0
+                        char.speed = abs(char.speed)
+                        char.orientation = 1
                                         
             # Vẽ chướng ngại vật
             for obstacle in obstacles:
@@ -2081,58 +2139,258 @@ def Core_Game(theme, length):
 
             # Kiểm tra xem có xe nào về đích chưa
             for i, char in enumerate(chars):
-                if (char.x >= 0.95*size.w and char.laps % 2 == 0) or (char.x <= 0.05*size.w and char.laps % 2 == 1):
+                if (char.x >= 0.92*size.w and char.laps % 2 == 0) or (char.x <= 0.05*size.w and char.laps % 2 == 1):
                     if char.laps == length and i not in finish_order:
+                        if len(finish_order) == 0:
+                            char.first_finish = True
                         finish_order.append(i)
-                        if len(finish_order) == 1:
-                            ranking_list[2] = i + 1
-                        elif len(finish_order) == 2:
-                            ranking_list[3] = i + 1
-                        elif len(finish_order) == 3:
-                            ranking_list[1] = i + 1
-                        elif len(finish_order) == 4:
-                            ranking_list[0] = i + 1
-                        elif len(finish_order) == 5:
-                            ranking_list[4] = i + 1
+                        ranking_list.insert(0, i + 1)
                         print(ranking_list)
                         char.speed = 0
                         if length % 2 == 0:
-                            char.x = size.w*0.95
+                            char.x = size.w*0.92
                         else:
                             char.x = size.w*0.05
                         char.status = 'idle'
                         char.act_i = 0
+                        char.laps += 1
                         char.finished = True
-                        print(f"Xe số {i+1} đã về đích!")
-                        print(char.laps)
+                        char.laps_display = Draw_to_Screen('text', None, None, None, None, f'{char.laps}/{length+1}', Font((40)), '#FFFFFF', (char.x - 30 * size.w / 1280, char.y))
+                        print(f"Char {i+1} finished!")
                     elif not char.finished:
                         obstacles.append(Obstacle(uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(i+1), obstacle_images))
                         char.laps += 1
                         char.speed = -1*char.speed
-                        char.orientation = -char.orientation
 
             
             # Nếu tất cả các xe đều đã về đích, kết thúc trò chơi và công bố kết quả
             if len(finish_order) == len(chars):
                 all_Finish = True
-    #            print("Tất cả các xe đã về đích!")
-    #            for i, char_index in enumerate(finish_order):
-    #                if i == 0 and char_index == player_choice:
-    #                    player_gold += 20
-    #                    result_text = f"Your car comes first! You have received 20 gold. Your current gold amount is {player_gold}."
-    #                else:
-    #                    result_text = f"Car number {char_index+1} came in {i+1}th place."
-    #        
-    #                # Tạo font và vẽ văn bản lên màn hình
-    #                font = pg.font.Font(None, 36)
-    #                text = font.render(result_text, True, (255, 255, 255))
-    #                screen.blit(text, (250 * size.w / 1280, (300 + i * 40) * size.h / 720))  # Thay đổi vị trí y để các dòng văn bản không chồng lên nhau
+    pg.quit()
 
-                # Cập nhật màn hình để hiển thị văn bản
-                pg.display.flip()
+def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
+    theme_list = ["ocean", "forest", "villager", "street"]
+    theme = game_theme
+    WIDTH, HEIGHT = size.w, size.h
+    print(WIDTH)
+    GOLD = (255, 215, 0)
+    chr_select = player_choice + 1  # playera choose)
+                    #1. bear   2.boar    3. deer   4.fox    5.wolf
+    rank = ""
+    screen = pg.display.set_mode((WIDTH, HEIGHT))
 
-                # Đợi một chút trước khi thoát để người chơi có thể đọc kết quả
-                # pg.time.wait(5000)
+    class Stage:
+        def __init__(self, name, width, height, color):
+            self.name, self.width, self.height, self.color = name, width, height, color
+            self.border_width, self.final_y, self.appear_delay, self.appeared = 4, HEIGHT, None, False
+
+        def display(self, screen, x, y):
+            border_rect = pg.Rect(x - self.border_width, y - self.border_width,
+                                    self.width + 2 * self.border_width, self.height + 2 * self.border_width)
+            stage_rect = pg.Rect(x, y, self.width, self.height)
+            
+            # Check if the stage number matches the rank and change the color accordingly
+            if self.name.strip() == rank:
+                pg.draw.rect(screen, (255, 255, 0), stage_rect)  # Fill the stage with yellow
+            else:
+                pg.draw.rect(screen, (100, 100, 100), border_rect)
+                pg.draw.rect(screen, (150, 150, 150), stage_rect)
+
+            font = pg.font.Font(None, 30)
+            text = font.render(self.name, True, (0, 0, 0))
+            text_rect = text.get_rect(center=(x + self.width // 2, y + self.height // 2))
+            screen.blit(text, text_rect)
+
+            # Draw a smaller upside-down isosceles triangle above the player stand on the stage that has a number same as the rank
+            if self.name.strip() == rank:
+                triangle_top = (x + self.width // 2, y - 115 * size.h / 720)  # Bottom point of the triangle (moved higher by 150 pixels)
+                triangle_left = (x + self.width // 3, y - 145 * size.h / 720)  # Left point of the base (moved higher by 150 pixels)
+                triangle_right = (x + 2 * self.width // 3, y - 145 * size.h / 720)  # Right point of the base (moved higher by 150 pixels)
+                pg.draw.polygon(screen, (255, 255, 0), [triangle_top, triangle_left, triangle_right])  # Draw the triangle
+
+    def load_images(directory, num_images):
+        return [pg.transform.scale(pg.image.load(os.path.join(directory, f"walk_{i}.png")).convert_alpha(), (100 * size.w / 1280, 100 * size.h / 720)) for i in range(1, num_images + 1)]
+
+    #change name, width(size), height of stage
+    stage_info = [{"name": " 5th", "size": 256 * size.w / 1280, "height": 150 * size.h / 720}, {"name": " 4th", "size": 224 * size.w / 1280, "height": 225 * size.h / 720}, 
+                {"name": " 3rd", "size": 192 * size.w / 1280, "height": 300 * size.h / 720}, {"name": " 2nd", "size": 160 * size.w / 1280, "height": 375 * size.h / 720}, 
+                {"name": " 1st", "size": 128 * size.w / 1280, "height": 450 * size.h / 720}]
+
+    sorted_stages = [Stage(info["name"], info["size"], info["height"], GOLD) for info in stage_info]
+
+    pg.display.set_caption("Stages")
+
+    background_image = pg.transform.scale(pg.image.load(os.path.join("Assets/background", f"{theme_list[theme]}.png")).convert(), (WIDTH, HEIGHT))
+
+    clock = pg.time.Clock()
+
+    spacing, running, animation_speed, delay_between_stages = 8, True, 5, 120
+
+    baseSize = 100
+    all_animations = [load_images(f"Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i}", 4) for i in range(1, 6)]
+    for stage in sorted_stages: stage.appear_delay = sorted_stages.index(stage) * delay_between_stages
+
+    frame_counter, player_frame_counters = 0, [0] * len(all_animations)
+    show_player = [False] * len(sorted_stages)
+    player_appear_time = [0] * len(sorted_stages)
+
+    image_path = os.path.join("Assets/other", "result.png")  # Replace with the actual path to your image
+    result_image = pg.image.load(image_path).convert_alpha()
+    congrats_image = pg.image.load("Assets/other/congrat.png")
+    # Create a surface with the screen dimensions and set its transparency
+    black_surface = pg.Surface((WIDTH, HEIGHT), pg.SRCALPHA)
+    black_surface.set_alpha(150) #higher is darker
+    # Fill the surface with a semi-transparent black color
+    black_surface.fill((0, 0, 0))  
+    
+    
+    Next = Button('rect', (size.w*0.4, size.h * 0.9), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
+    Next_text = Draw_to_Screen('text', None, None, None, None, 'Next', Font((40)), '#000000', Next.rect.center)
+
+    #temporary, delete after having finish order(order trong core game)
+    #while True:
+    #    play_order = input("Enter the order of the player seperate by spaces (e.g., 3 1 4 2 5): ")
+    #    player_order = play_order.split()  # Split the input into a list of strings
+    #    try:
+    #        player_order = [int(num) for num in player_order]  # Convert strings to integers#
+
+    #        if len(player_order) != len(sorted_stages):
+    #            print("Error: The number of player provided does not match the number of stages.")
+    #        else:
+    #            break  # Exit the loop if the input is valid
+    #    except ValueError:
+    #        print("Error: Please enter a valid sequence of numbers separated by spaces.")
+
+    player_order = ranking_list
+
+    while running:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                running = False
+            # Handle other events if needed
+
+        # Display "RESULT" text at the top of the window
+        screen.blit(background_image, (0, 0))
+        # Display the black surface with opacity
+        screen.blit(black_surface, (0, 0))
+        # Display the loaded image at the top-left corner
+        screen.blit(result_image, (0, 20)) 
+        
+        current_x, all_stages_appeared = (WIDTH - sum(stage.width for stage in sorted_stages) - (len(sorted_stages) - 1) * spacing) // 2, True
+
+        all_stages_appeared = True
+        for index, stage in enumerate(sorted_stages):
+            if stage.final_y > HEIGHT - stage.height and stage.appear_delay <= 0:
+                stage.final_y -= animation_speed
+            elif stage.appear_delay > 0:
+                stage.appear_delay -= 1
+            
+            if show_player[chr_select - 1] and stage.appeared and player_order[index] == chr_select:
+                rank = stage.name.strip()  # Assign the stage's name to rank (remove any leading/trailing spaces)
+            
+            # Change the color of the stage that corresponds to the same number as rank to yellow
+            if stage.name.strip() == rank:
+                stage.color = (255, 255, 0)  # Change color to yellow
+
+            stage.display(screen, current_x, stage.final_y)
+            current_x += stage.width + spacing
+            stage.appeared = stage.final_y <= HEIGHT - stage.height
+            if not stage.appeared:
+                all_stages_appeared = False
+
+            player_index = player_order[index] - 1  # Adjust to 0-based index
+            if stage.appeared and not show_player[player_index]:
+                anim = all_animations[player_index]
+                anim_frame = frame_counter // animation_speed % len(anim)
+                anim_center_x = current_x - stage.width // 2 - anim[anim_frame].get_width() // 2
+                anim_center_y = stage.final_y - 120 * size.h / 720
+                screen.blit(anim[anim_frame], (anim_center_x, anim_center_y))
+                player_frame_counters[player_index] += 1
+                show_player[player_index] = True
+
+            if stage.appeared and show_player[player_index]:
+                anim = all_animations[player_index]
+                anim_frame = frame_counter // animation_speed % len(anim)
+                anim_center_x = current_x - stage.width // 2 - anim[anim_frame].get_width() // 2
+                anim_center_y = stage.final_y - 120 * size.h / 720
+                screen.blit(anim[anim_frame], (anim_center_x, anim_center_y))
+                player_frame_counters[player_index] += 1
+        
+        # Display chr_select and rank at the top-right corner
+        font = pg.font.Font(None, 36)
+        text_surface = font.render(f"Your rank: {rank}", True, (255, 255, 255))
+        text_rect = text_surface.get_rect()
+        text_rect.topright = (WIDTH - 20, 20)  
+        screen.blit(text_surface, text_rect)
+        
+            # Check if the rank is 1 and display congratulatory message at the center
+        if rank == "1":
+            # Display congratsz mess
+            congrats_rect = congrats_image.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100))
+            screen.blit(congrats_image,congrats_rect)
+        frame_counter += 1
+        
+        if all_stages_appeared:
+            Next.Blit(0,0)
+            Next_text.Blit(0,0)
+            for event in pg.event.get():
+                if (event.type == pg.MOUSEBUTTONDOWN):
+                        pos = pg.mouse.get_pos()
+                        if Next.Click(pos):
+                            running = False
+        pg.display.flip()
+        clock.tick(60)
+        
+    rank_list = ['1st', '2nd', '3rd', '4th', '5th']
+    
+    Result_text = Draw_to_Screen('text', None, None, None, None, 'RESULT', Font((70)), '#FFFFFF', (size.w * 0.3, size.h * 0.1))
+    for i in range(5):
+        j = ranking_list[i] - 1
+        char = chars_list[j]
+        rank = 5 - i - 1
+        char.rank_display = Draw_to_Screen('text', None, None, None, None, rank_list[rank], Font((40)), '#FFFFFF', (size.w * 0.25, size.h * (0.2 + 0.15 * rank)))
+        char.name_display = Draw_to_Screen('text', None, None, None, None, char.name, Font((40)), '#FFFFFF', (size.w * 0.4, size.h * (0.2 + 0.15 * rank)))
+        if j == player_choice:
+            char.player_chose = Draw_to_Screen('text', None, None, None, None, "Chose by player", Font((40)), '#FFFFFF', (size.w * 0.6, size.h * (0.2 + 0.15 * rank)))
+        else:
+            char.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (size.w * 0.55, size.h * (0.2 + 0.15 * rank)))
+    horizontal_lines = [Draw_to_Screen('rect', (size.w * 0.18, size.h * (0.15 + 0.15 * i)), (size.w * 0.6, size.h * 0.005), None, None, None, None, '#ffffff', None) for i in range(7)]
+    vertical_lines = []
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.18, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.3, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.5, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * (0.18 + 0.6) , size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    running = True
+    while running:
+        screen.blit(background_image, (0, 0))
+        screen.blit(black_surface, (0, 0))
+        Result_text.Blit(0,0)
+        for char in chars_list:
+            char.rank_display.Blit(0,0)
+            char.name_display.Blit(0,0)
+            char.player_chose.Blit(0,0)
+        Next.Blit(0,0)
+        Next_text.Blit(0,0)
+        for line in horizontal_lines:
+            line.Blit(0,0)
+        for line in vertical_lines:
+            line.Blit(0,0)
+        for event in pg.event.get():
+            if (event.type == pg.MOUSEBUTTONDOWN):
+                    pos = pg.mouse.get_pos()
+                    if Next.Click(pos):
+                        running = False
+                        now = datetime.now()
+                        current_time = now.strftime("%H-%M-%S")
+                        today = date.today()
+                        screenshot = pyautogui.screenshot(region = (floor(size.w * 0.18), floor(size.h * 0.15), floor(size.w * 0.605), floor(size.h * 0.755))) 
+                        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+                        cv2.imwrite(f'screenshot/screenshot_{current_time}_{today}.png', screenshot) 
+                        return
+        pg.display.flip()
+        clock.tick(60)
+    pg.quit()
+    sys.exit()
 
 #Settings Tab
 def Video_Menu(prev_menu, set_char, race_len):
@@ -2674,5 +2932,4 @@ def User_Center_Menu(prev_menu, set_char, race_len):
         pg.time.Clock().tick(60)
 
 Load_Config()
-Login('23120050@student.hcmus.edu.vn', '1234567890')
-#Mini_Game_Menu()
+Login('23120050@student.hcmus.edu.vn', 'thembululwa')

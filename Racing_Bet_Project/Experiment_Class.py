@@ -253,13 +253,13 @@ class Game_History():
         self.win = '#00FF00'
         self.lose = '#FF0000'
 
-        if int(self.info[5]) > 0:
+        if self.info[4] == 'Win':
             self.chr_set = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Char', f'{self.info[2]}'), True, self.win)
             self.race_len = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Race', f'{self.info[3]}'), True, self.win)
             self.result = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Result', f'{self.info[4]}'), True, self.win)
             self.coins_change = Font(int(30 * size/1280)).render(f'{self.info[5]}', True, self.win)
             
-        else:
+        elif self.info[4] == 'Lost':
             self.chr_set = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Char', f'{self.info[2]}'), True, self.lose)
             self.race_len = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Race', f'{self.info[3]}'), True, self.lose)
             self.result = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Result', f'{self.info[4]}'), True, self.lose)

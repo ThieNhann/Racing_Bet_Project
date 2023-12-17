@@ -13,6 +13,7 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
     theme_list = ["ocean", "forest", "villager", "street"]
     theme = game_theme
     WIDTH, HEIGHT = size.w, size.h
+    print(WIDTH)
     GOLD = (255, 215, 0)
     chr_select = player_choice + 1  # playera choose)
                     #1. bear   2.boar    3. deer   4.fox    5.wolf

@@ -105,24 +105,24 @@
 
     "History_Char":
     {
-        "0"         :   "Biển",
-        "1"         :   "Rừng",
-        "2"         :   "Làng",
-        "3"         :   "Đường phố",
-        "4"         :   "HCMUS"
+        "Ocean"         :   "Biển",
+        "Forest"         :   "Rừng",
+        "Village"         :   "Làng",
+        "Street"         :   "Đường phố",
+        "School"         :   "Trường học"
     },
 
     "History_Race":
     {
-        "0"         :   "Ngắn",
-        "1"         :   "Trung bình",
-        "2"         :   "Dài"
+        "Short"         :   "Ngắn",
+        "Medium"         :   "Trung bình",
+        "Long"         :   "Dài"
     },
 
     "History_Result":
     {
-        "0"         :   "Thua",
-        "1"         :   "Thắng"
+        "Lost"         :   "Thua",
+        "Win"         :   "Thắng"
     }
 
 }

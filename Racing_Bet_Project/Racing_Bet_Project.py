@@ -1,16 +1,17 @@
 ﻿import pygame
 import random
 import sys
+import os
 from Experiment_Class import *
 import Result_Screen as result
 
+
 # Khởi tạo Pygame
 pygame.init()
-
 # Thiết lập kích thước màn hình
 theme_list = ['ocean', 'forest', 'villager', 'street']
 
-something = random.randint(1, 10101010101);
+something = random.randint(1, 10101010101)
 if something == 727:
     THE_MOST_NORMAL_CAT = 'Cat is me. Literally me. No other animal can come close to relating to me like this. There is no way you can convince me this is not me. Cat could not possibly be anymore me. It is me, and nobody can convince me otherwise. If anyone approached me on the topic of this not possibly being me, then I immediately shut them down with overwhelming evidence that this animal is me. This animal is me, it is indisputable. Why anyone would try to argue that this animal is not me is beyond me. If you held two pictures of me and the cat side by side, you would see no difference. I can safely look at this chart every day and say "Yup, that is me". I can practically see this animal every time I look at myself in the mirror. I go outside and people stop me to comment how similar I look and act to this animal. I chuckle softly as I am assured everyday this animal is me in every way. I can smile each time I get out of bed every morning knowing that I have found my identity with this animal and I know my place in this world. It is really quite funny how similiar the cat is to me. It is almost like we are identical twins. When I first saw the cat, I had an existential crisis. What if this animal was the real me and I was the fictional being. What if this animal actually became aware of my existence? Did it have the ability to become self aware itself?'
 else:
@@ -25,10 +26,10 @@ name_list = [['Anglerfish', 'Eel', 'Octopus', 'Shark', 'Turtle'],
 theme = 3
 length = 0
 baseSize = 90
-baseSpeed = 10 # thay đổi speed nhân vật (for testing)
-screen = pygame.display.set_mode((1920,1080))
+baseSpeed = 4 # thay đổi speed nhân vật (for testing)
+screen = pygame.display.set_mode((1280, 720))
 bg = pygame.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
-bg = pygame.transform.scale(bg, (1920,1080))
+bg = pygame.transform.scale(bg, (1280,720))
 fps = pygame.time.Clock()
 size = Screen_Info(screen.get_size())
 class Char:
@@ -155,7 +156,7 @@ class Obstacle:
     def set_random_image(self):
         rare_chance = 5     # Điều chỉnh tỉ lệ obstacle to_start và to_finish (1 = 0.1%)   (phần còn lại chia đều)
         if not self.changed:
-            image_picker = random.randint(1, 1000);
+            image_picker = random.randint(1, 1000)
             if image_picker <= rare_chance:
                 self.image_path = self.image_paths[5]
             elif image_picker > 1000 - rare_chance:
