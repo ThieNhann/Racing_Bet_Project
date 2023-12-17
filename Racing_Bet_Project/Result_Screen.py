@@ -2,9 +2,14 @@ import pygame
 import sys
 import os
 from Experiment_Class import *
+import numpy as np 
+import cv2 
+import pyautogui 
+from datetime import date, datetime
+import math
 
 # pygame.init()
-def Show_Result(ranking_list, player_choice, game_theme, size):
+def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
     theme_list = ["ocean", "forest", "villager", "street"]
     theme = game_theme
     WIDTH, HEIGHT = size.w, size.h
@@ -38,13 +43,13 @@ def Show_Result(ranking_list, player_choice, game_theme, size):
 
             # Draw a smaller upside-down isosceles triangle above the player stand on the stage that has a number same as the rank
             if self.name.strip() == rank:
-                triangle_top = (x + self.width // 2, y - 115)  # Bottom point of the triangle (moved higher by 150 pixels)
-                triangle_left = (x + self.width // 3, y - 145)  # Left point of the base (moved higher by 150 pixels)
-                triangle_right = (x + 2 * self.width // 3, y - 145)  # Right point of the base (moved higher by 150 pixels)
+                triangle_top = (x + self.width // 2, y - 115 * size.h / 720)  # Bottom point of the triangle (moved higher by 150 pixels)
+                triangle_left = (x + self.width // 3, y - 145 * size.h / 720)  # Left point of the base (moved higher by 150 pixels)
+                triangle_right = (x + 2 * self.width // 3, y - 145 * size.h / 720)  # Right point of the base (moved higher by 150 pixels)
                 pygame.draw.polygon(screen, (255, 255, 0), [triangle_top, triangle_left, triangle_right])  # Draw the triangle
 
     def load_images(directory, num_images):
-        return [pygame.transform.scale(pygame.image.load(os.path.join(directory, f"walk_{i}.png")).convert_alpha(), (100, 100)) for i in range(1, num_images + 1)]
+        return [pygame.transform.scale(pygame.image.load(os.path.join(directory, f"walk_{i}.png")).convert_alpha(), (100 * size.w / 1280, 100 * size.h / 720)) for i in range(1, num_images + 1)]
 
     #change name, width(size), height of stage
     stage_info = [{"name": " 5th", "size": 256 * size.w / 1280, "height": 150 * size.h / 720}, {"name": " 4th", "size": 224 * size.w / 1280, "height": 225 * size.h / 720}, 
@@ -61,6 +66,7 @@ def Show_Result(ranking_list, player_choice, game_theme, size):
 
     spacing, running, animation_speed, delay_between_stages = 8, True, 5, 120
 
+    baseSize = 100
     all_animations = [load_images(f"Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i}", 4) for i in range(1, 6)]
     for stage in sorted_stages: stage.appear_delay = sorted_stages.index(stage) * delay_between_stages
 
@@ -78,9 +84,8 @@ def Show_Result(ranking_list, player_choice, game_theme, size):
     black_surface.fill((0, 0, 0))  
     
     
-    Quit = Button('rect', (size.w*0.4, size.h * 0.9), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
-    Quit_text = Draw_to_Screen('text', None, None, None, None, 'Quit', Font((40)), '#000000', Quit.rect.center)
-
+    Next = Button('rect', (size.w*0.4, size.h * 0.9), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
+    Next_text = Draw_to_Screen('text', None, None, None, None, 'Next', Font((40)), '#000000', Next.rect.center)
 
     #temporary, delete after having finish order(order trong core game)
     #while True:
@@ -113,6 +118,7 @@ def Show_Result(ranking_list, player_choice, game_theme, size):
         
         current_x, all_stages_appeared = (WIDTH - sum(stage.width for stage in sorted_stages) - (len(sorted_stages) - 1) * spacing) // 2, True
 
+        all_stages_appeared = True
         for index, stage in enumerate(sorted_stages):
             if stage.final_y > HEIGHT - stage.height and stage.appear_delay <= 0:
                 stage.final_y -= animation_speed
@@ -137,7 +143,7 @@ def Show_Result(ranking_list, player_choice, game_theme, size):
                 anim = all_animations[player_index]
                 anim_frame = frame_counter // animation_speed % len(anim)
                 anim_center_x = current_x - stage.width // 2 - anim[anim_frame].get_width() // 2
-                anim_center_y = stage.final_y - 100
+                anim_center_y = stage.final_y - 120 * size.h / 720
                 screen.blit(anim[anim_frame], (anim_center_x, anim_center_y))
                 player_frame_counters[player_index] += 1
                 show_player[player_index] = True
@@ -146,7 +152,7 @@ def Show_Result(ranking_list, player_choice, game_theme, size):
                 anim = all_animations[player_index]
                 anim_frame = frame_counter // animation_speed % len(anim)
                 anim_center_x = current_x - stage.width // 2 - anim[anim_frame].get_width() // 2
-                anim_center_y = stage.final_y - 100
+                anim_center_y = stage.final_y - 120 * size.h / 720
                 screen.blit(anim[anim_frame], (anim_center_x, anim_center_y))
                 player_frame_counters[player_index] += 1
         
@@ -164,16 +170,64 @@ def Show_Result(ranking_list, player_choice, game_theme, size):
             screen.blit(congrats_image,congrats_rect)
         frame_counter += 1
         
-        Quit.Blit(0,0)
-        Quit_text.Blit(0,0)
+        if all_stages_appeared:
+            Next.Blit(0,0)
+            Next_text.Blit(0,0)
+            for event in pygame.event.get():
+                if (event.type == pygame.MOUSEBUTTONDOWN):
+                        pos = pygame.mouse.get_pos()
+                        if Next.Click(pos):
+                            running = False
+        pygame.display.flip()
+        clock.tick(60)
+        
+    rank_list = ['1st', '2nd', '3rd', '4th', '5th']
+    
+    Result_text = Draw_to_Screen('text', None, None, None, None, 'RESULT', Font((70)), '#FFFFFF', (size.w * 0.3, size.h * 0.1))
+    for i in range(5):
+        j = ranking_list[i] - 1
+        char = chars_list[j]
+        rank = 5 - i - 1
+        char.rank_display = Draw_to_Screen('text', None, None, None, None, rank_list[rank], Font((40)), '#FFFFFF', (size.w * 0.25, size.h * (0.2 + 0.15 * rank)))
+        char.name_display = Draw_to_Screen('text', None, None, None, None, char.name, Font((40)), '#FFFFFF', (size.w * 0.4, size.h * (0.2 + 0.15 * rank)))
+        if j == player_choice:
+            char.player_chose = Draw_to_Screen('text', None, None, None, None, "Chose by player", Font((40)), '#FFFFFF', (size.w * 0.6, size.h * (0.2 + 0.15 * rank)))
+        else:
+            char.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (size.w * 0.55, size.h * (0.2 + 0.15 * rank)))
+    horizontal_lines = [Draw_to_Screen('rect', (size.w * 0.18, size.h * (0.15 + 0.15 * i)), (size.w * 0.6, size.h * 0.005), None, None, None, None, '#ffffff', None) for i in range(7)]
+    vertical_lines = []
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.18, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.3, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * 0.5, size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    vertical_lines.append(Draw_to_Screen('rect', (size.w * (0.18 + 0.6) , size.h * 0.15), (size.w * 0.005, size.h * 0.75), None, None, None, None, '#ffffff', None))
+    running = True
+    while running:
+        screen.blit(background_image, (0, 0))
+        screen.blit(black_surface, (0, 0))
+        Result_text.Blit(0,0)
+        for char in chars_list:
+            char.rank_display.Blit(0,0)
+            char.name_display.Blit(0,0)
+            char.player_chose.Blit(0,0)
+        Next.Blit(0,0)
+        Next_text.Blit(0,0)
+        for line in horizontal_lines:
+            line.Blit(0,0)
+        for line in vertical_lines:
+            line.Blit(0,0)
         for event in pygame.event.get():
             if (event.type == pygame.MOUSEBUTTONDOWN):
                     pos = pygame.mouse.get_pos()
-                    if Quit.Click(pos):
+                    if Next.Click(pos):
                         running = False
+                        now = datetime.now()
+                        current_time = now.strftime("%H-%M-%S")
+                        today = date.today()
+                        screenshot = pyautogui.screenshot(region = (math.floor(size.w * 0.18), math.floor(size.h * 0.15), math.floor(size.w * 0.605), math.floor(size.h * 0.755))) 
+                        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+                        cv2.imwrite(f'screenshot/screenshot_{current_time}_{today}.png', screenshot) 
                         return
         pygame.display.flip()
         clock.tick(60)
-
     pygame.quit()
     sys.exit()
