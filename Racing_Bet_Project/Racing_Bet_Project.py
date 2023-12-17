@@ -9,25 +9,42 @@ pygame.init()
 
 # Thiết lập kích thước màn hình
 theme_list = ['ocean', 'forest', 'villager', 'street']
-theme = 1  
-length = 2
+
+something = random.randint(1, 10101010101);
+if something == 727:
+    THE_MOST_NORMAL_CAT = 'Cat is me. Literally me. No other animal can come close to relating to me like this. There is no way you can convince me this is not me. Cat could not possibly be anymore me. It is me, and nobody can convince me otherwise. If anyone approached me on the topic of this not possibly being me, then I immediately shut them down with overwhelming evidence that this animal is me. This animal is me, it is indisputable. Why anyone would try to argue that this animal is not me is beyond me. If you held two pictures of me and the cat side by side, you would see no difference. I can safely look at this chart every day and say "Yup, that is me". I can practically see this animal every time I look at myself in the mirror. I go outside and people stop me to comment how similar I look and act to this animal. I chuckle softly as I am assured everyday this animal is me in every way. I can smile each time I get out of bed every morning knowing that I have found my identity with this animal and I know my place in this world. It is really quite funny how similiar the cat is to me. It is almost like we are identical twins. When I first saw the cat, I had an existential crisis. What if this animal was the real me and I was the fictional being. What if this animal actually became aware of my existence? Did it have the ability to become self aware itself?'
+else:
+    THE_MOST_NORMAL_CAT = 'Just a cat'
+    
+name_list = [['Anglerfish', 'Eel', 'Octopus', 'Shark', 'Turtle'], 
+             ['Bear', 'Boar', 'Deer', 'Fox', 'Wolf'], 
+             ['Nobleman', 'Oldman', 'Peasant', 'Villager', 'Worker'], 
+             ['Neko', THE_MOST_NORMAL_CAT, 'Dobermann', 'Shiba', 'Remy'],
+             ['ThieNhann', 'Lackiem1707', 'phuc-dep-trai', 'dzqt1', 'Nichikou']]
+
+theme = 3
+length = 0
 baseSize = 90
-baseSpeed = 2 # thay đổi speed nhân vật (for testing)
-screen = pygame.display.set_mode((1280,720))
+baseSpeed = 10 # thay đổi speed nhân vật (for testing)
+screen = pygame.display.set_mode((1920,1080))
 bg = pygame.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
-bg = pygame.transform.scale(bg, (1280,720))
+bg = pygame.transform.scale(bg, (1920,1080))
 fps = pygame.time.Clock()
 size = Screen_Info(screen.get_size())
 class Char:
-    def __init__(self, x, y, speed, image_path):
+    def __init__(self, x, y, speed, name, image_path):
         self.x = x
         self.y = y
         self.speed = speed
+        self.name = name
         self.act_i = 0
         self.status = 'idle'
         self.laps = 0
         self.orientation = 1
-        self.laps_display = Draw_to_Screen('text', None, None, None, None, f'{self.laps}/{length}', Font((40)), '#FFFFFF', (self.x - 20 * size.w / 1280, self.y))
+        self.laps_display = Draw_to_Screen('text', None, None, None, None, f'{self.laps}/{length}', Font((40)), '#FFFFFF', (self.x - 20 * size.w / 1280, self.y + 20 * size.h / 720))
+        self.name_display = Draw_to_Screen('text', None, None, None, None, f'{self.name}', Font((40)), '#FFFFFF', (self.x + 30 * size.w / 1280, self.y + 5 * size.h / 720))
+        self.rank_display = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (0,0))
+        self.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (0,0))
         # Tải hình ảnh từ đường dẫn được cung cấp
         self.walk = [pygame.image.load(image_path + f'/walk_1.png'),
                      pygame.image.load(image_path + f'/walk_2.png'),
@@ -51,8 +68,9 @@ class Char:
         self.slow = False
         self.speedup = False
         self.finished = False
+        self.first_finish = False
         self.effect_end_time = None
-        self.wait_until = None  # Thời gian mà xe phải đợi trước khi di chuyển tiếp
+        self.wait_until = None  # Thời gian mà xe phải đợi trước khi di`` chuyển tiếp
 
     def draw(self,act_i,status):
         if status == 'walk':
@@ -108,7 +126,10 @@ class Char:
             self.slow = False
             self.speedup = False
             self.effect_end_time = None
-    
+             
+        if self.first_finish:
+            pass
+        
     def is_clicked(self, pos):
         return self.x <= pos[0] <= self.x + baseSize * size.w / 1280 and self.y <= pos[1] <= self.y + baseSize * size.h / 720
 
@@ -116,7 +137,7 @@ class Char:
         return self.x < obstacle.x + baseSize * size.w / 1280 and self.x + baseSize * size.w / 1280 > obstacle.x and self.y < obstacle.y + baseSize * size.h / 720 and self.y + baseSize * size.h / 720 > obstacle.y
 
 # Tạo danh sách các xe với hình ảnh tương ứng
-chars = [Char(50, 30 + (i + 1)*0.15*size.h, random.uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}') for i in range(5)]
+chars = [Char(50, 30 + (i + 1)*0.15*size.h, random.uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, name_list[theme][i], f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}')  for i in range(5)]
 
 class Obstacle:
     def __init__(self, x, y, image_paths):
@@ -182,6 +203,7 @@ def show_menu():
         fps.tick(60)
         for char in chars:
             char.act_i = char.draw(char.act_i,char.status)
+            char.name_display.Blit(0,0)
         pygame.display.flip()
 
         for event in pygame.event.get():
@@ -230,7 +252,7 @@ while running:
                     pos = pygame.mouse.get_pos()
                     if Finish.Click(pos):
                         running = False
-                        result.Show_Result(ranking_list, player_choice, theme, size)
+                        result.Show_Result(ranking_list, player_choice, theme, size, chars)
         screen.blit(bg,(0,0))
         
         if all_Finish:
@@ -241,8 +263,10 @@ while running:
         for char in chars:
             char.act_i = char.draw(char.act_i, char.status)
             char.move()
-            char.laps_display = Draw_to_Screen('text', None, None, None, None, f'{char.laps}/{length+1}', Font((40)), '#FFFFFF', (char.x - 30 * size.w / 1280, char.y))
+            char.laps_display = Draw_to_Screen('text', None, None, None, None, f'{char.laps}/{length+1}', Font((20)), '#FFFFFF', (char.x - 15 * size.w / 1280, char.y + 20 * size.h / 720))
+            char.name_display = Draw_to_Screen('text', None, None, None, None, f'{char.name}', Font((30)), '#FFFFFF', (char.x + 30 * size.w / 1280, char.y + 5 * size.h / 720))
             char.laps_display.Blit(0,0)
+            char.name_display.Blit(0,0)
             image_path = None  # Khởi tạo image_path với giá trị mặc định
             for obstacle in obstacles:
                 if char.collides_with(obstacle):
@@ -291,6 +315,8 @@ while running:
         for i, char in enumerate(chars):
             if (char.x >= 0.92*size.w and char.laps % 2 == 0) or (char.x <= 0.05*size.w and char.laps % 2 == 1):
                 if char.laps == length and i not in finish_order:
+                    if len(finish_order) == 0:
+                        char.first_finish = True
                     finish_order.append(i)
                     ranking_list.insert(0, i + 1)
                     print(ranking_list)
@@ -304,7 +330,7 @@ while running:
                     char.laps += 1
                     char.finished = True
                     char.laps_display = Draw_to_Screen('text', None, None, None, None, f'{char.laps}/{length+1}', Font((40)), '#FFFFFF', (char.x - 30 * size.w / 1280, char.y))
-                    print(f"Xe số {i+1} đã về đích!")
+                    print(f"Char {i+1} finished!")
                 elif not char.finished:
                     obstacles.append(Obstacle(random.uniform(size.w*0.3, size.w*0.7), 30 + 0.15*size.h*(i+1), obstacle_images))
                     char.laps += 1
@@ -314,22 +340,4 @@ while running:
         # Nếu tất cả các xe đều đã về đích, kết thúc trò chơi và công bố kết quả
         if len(finish_order) == len(chars):
             all_Finish = True
-#            print("Tất cả các xe đã về đích!")
-#            for i, char_index in enumerate(finish_order):
-#                if i == 0 and char_index == player_choice:
-#                    player_gold += 20
-#                    result_text = f"Your car comes first! You have received 20 gold. Your current gold amount is {player_gold}."
-#                else:
-#                    result_text = f"Car number {char_index+1} came in {i+1}th place."
-#        
-#                # Tạo font và vẽ văn bản lên màn hình
-#                font = pygame.font.Font(None, 36)
-#                text = font.render(result_text, True, (255, 255, 255))
-#                screen.blit(text, (250 * size.w / 1280, (300 + i * 40) * size.h / 720))  # Thay đổi vị trí y để các dòng văn bản không chồng lên nhau
-
-            # Cập nhật màn hình để hiển thị văn bản
-            pygame.display.flip()
-
-            # Đợi một chút trước khi thoát để người chơi có thể đọc kết quả
-            # pygame.time.wait(5000)
 pygame.quit()
