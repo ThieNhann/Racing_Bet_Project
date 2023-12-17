@@ -13,7 +13,7 @@ from email_validator import validate_email
 from email.message import EmailMessage
 from math import sin, radians as rad, floor
 from Experiment_Class import *
-from random import randint, randrange, uniform, choice
+from random import randint, randrange, uniform, sample
 
 os.environ['SDL_VIDEO_CENTERED'] = '0'
 pg.display.set_caption("Racing Bet")
@@ -275,11 +275,9 @@ def Login(email, pwd):
 
                 #When user submit Login, check for validity and go to Title Screen if good
                 if (submit_login.Click(mouse_pos)):
-                    print(pwd)
                     current_user.email = email
                     current_user.pwd = hashlib.sha256(pwd.encode()).hexdigest()
                     if current_user.Login():
-                        print(current_user.email)
                         Title(True)
                     else:
                         alpha = 500
@@ -789,6 +787,7 @@ def Title(restart_music):
 #In Game Screen
 def In_Game_Menu(alpha):
     #Mainly for the sake of animation. Target menu is the menu that player selected
+    current_user.Update_Coin(200)
     change_menu = False
     target_menu = ''
     fps = 0
@@ -877,7 +876,6 @@ def In_Game_Menu(alpha):
                         Video_Menu('In_Game_Menu', '', '')
             
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                print(True)
                 current_user.Update_Coin(1)
             #Debug: FPS
             if event.type == Bg_cycle:
@@ -1462,27 +1460,41 @@ def Mini_Game_Menu():
     main()
 
 def History_Menu():
-    win = None
-    coin = None
-    chr_set = None
-    race_len = None
+    index_1 = False
+    index_2 = False
+    index_3 = False
+    index_4 = False
+    index_5 = False
+    index_6 = False
 
     background = pg.transform.smoothscale(pg.image.load('Assets/in_game_bg.png').convert_alpha(), (512, 288))
     background = pg.transform.smoothscale(background, (size.w*1.075, size.h*1.075))
 
     title = Font(60).render(Updt_Lang(lang, 'History', 'Title'), True, "#FFFFFF")
 
-    #prompt = Font(20).render(Updt_Lang(lang, 'History', 'Prompt'), True, "#FFFFFF")
-
-    add_record = Button('rect', (0,0), (size.w * 0.25, size.h * 0.1), None, None, None, None, '#000000', '#FFFFFF', None, None)
-    add_record.rect.center = (size.w/2, size.h/4)
-    add_record_Txt = Font(40).render('Add Record', True, "#00FF00")
-
     box = pg.rect.Rect((0,0), (size.w * 0.75, size.h * 0.9))
     box.center = (size.w/2, size.h/2)
 
     box_outline = pg.rect.Rect((0,0), (size.w * 0.75, size.h * 0.9))
     box_outline.center = (size.w/2, size.h/2)
+
+    button01 = Button('rect', (0,0), (size.w * 0.675, size.h * 0.075), None, None, None, None, "#424769", "#383d59", None, None)
+    button01.rect.center = (size.w * 0.5, size.h * 0.375)
+   
+    button02 = Button('rect', (0,0), (size.w * 0.675, size.h * 0.075), None, None, None, None, "#424769", "#383d59", None, None)
+    button02.rect.center = (size.w * 0.5, size.h * 0.475)
+    
+    button03 = Button('rect', (0,0), (size.w * 0.675, size.h * 0.075), None, None, None, None, "#424769", "#383d59", None, None)
+    button03.rect.center = (size.w * 0.5, size.h * 0.575)
+    
+    button04 = Button('rect', (0,0), (size.w * 0.675, size.h * 0.075), None, None, None, None, "#424769", "#383d59", None, None)
+    button04.rect.center = (size.w * 0.5, size.h * 0.675)
+    
+    button05 = Button('rect', (0,0), (size.w * 0.675, size.h * 0.075), None, None, None, None, "#424769", "#383d59", None, None)
+    button05.rect.center = (size.w * 0.5, size.h * 0.775)
+    
+    button06 = Button('rect', (0,0), (size.w * 0.675, size.h * 0.075), None, None, None, None, "#424769", "#383d59", None, None)
+    button06.rect.center = (size.w * 0.5, size.h * 0.875)
 
     chr_Set = Font(30).render("Selected Set", True, "#FFFFFF")
     race_Len = Font(30).render("Race Length", True, "#FFFFFF")
@@ -1503,16 +1515,27 @@ def History_Menu():
             
             if event.type == pg.MOUSEBUTTONDOWN:
                 click_ani.add(Click_Ani(mouse_pos, 5, size.w))
-                if add_record.Click(mouse_pos):
-                    win = randrange(0,2)
-                    coin = randrange(-200, 200)
-                    chr_set = randrange(0,5)
-                    race_len = randrange(0,3)
-                    current_user.Save_History(chr_set, race_len, win, coin)
                 
                 if close.Click(mouse_pos):
                         In_Game_Menu(-20)
+                
+                if button01.Click(mouse_pos) and index_1 == True:
+                    pass
 
+                if button02.Click(mouse_pos) and index_2 == True:
+                    pass
+
+                if button03.Click(mouse_pos) and index_3 == True:
+                    pass
+
+                if button04.Click(mouse_pos) and index_4 == True:
+                    pass
+
+                if button05.Click(mouse_pos) and index_5 == True:
+                    pass
+
+                if button06.Click(mouse_pos) and index_6 == True:
+                    pass
               
         screen.blit(background, (0,0))
         pg.draw.rect(screen, '#424769', box, 0 , 10)
@@ -1521,6 +1544,39 @@ def History_Menu():
         for item in [close]:
             item.Blit(0,0)
             item.Hover(mouse_pos, 0, 0)
+
+
+        if len(current_user.Get_History()) > 0:
+            button01.Blit(0,10)
+            button01.Hover(mouse_pos, 0, 10)
+            index_1 = True
+
+        if len(current_user.Get_History()) > 1:
+            button02.Blit(0,10)
+            button02.Hover(mouse_pos, 0, 10)
+            index_2 = True
+
+        if len(current_user.Get_History()) > 2:
+            button03.Blit(0,10)
+            button03.Hover(mouse_pos, 0, 10)
+            index_3 = True
+
+        if len(current_user.Get_History()) > 3:
+            button04.Blit(0,10)
+            button04.Hover(mouse_pos, 0, 10)
+            index_4 = True
+
+        if len(current_user.Get_History()) > 4:
+            button05.Blit(0,10)
+            button05.Hover(mouse_pos, 0, 10)
+            index_5 = True
+
+        if len(current_user.Get_History()) > 5:
+            button06.Blit(0,10)
+            button06.Hover(mouse_pos, 0, 10)
+            index_6 = True
+
+
 
         if len(current_user.Get_History()) == 0:
             screen.blit(empty, empty.get_rect(center = (size.w/2, size.h * 0.35)))
@@ -1539,15 +1595,16 @@ def History_Menu():
                 screen.blit(history_id.coins_change, history_id.coins_change_rect)
 
 
+        
+
         screen.blit(title, title.get_rect(center = (size.w * 0.5, size.h * 0.15)))
-        #screen.blit(prompt, prompt.get_rect(center = (size.w * 0.5, size.h * 0.225)))
 
         screen.blit(chr_Set, chr_Set.get_rect(center = (size.w * 0.25, size.h * 0.275)))
         screen.blit(race_Len, race_Len.get_rect(center = (size.w * 0.416, size.h * 0.275)))
         screen.blit(result, result.get_rect(center = (size.w * 0.583, size.h * 0.275)))
         screen.blit(coins_Change, coins_Change.get_rect(center = (size.w * 0.75, size.h * 0.275))) 
 
-        #screen.blit(Add_Record_Txt, Add_Record_Txt.get_rect(center = Add_Record.rect.center))
+        
 
         click_ani.update()
         click_ani.draw(screen)
@@ -1771,9 +1828,7 @@ def Choose_Race_Length(alpha, chr_set, race_len):
                     #Debug: if user click start then print out what user has choosen 
                     if enter.Click(mouse_pos) and race_len != 3 :
                         #current_user.Update_Coin(-200)
-                        print(f'Selected: {chr_set}')
-                        print(f'Selected: {race_len}')
-                        current_user.Save_History(preload_chr_set[chr_set], preload_race_len[race_len], "Lost", -200)
+                        current_user.Save_History(preload_chr_set[chr_set], preload_race_len[race_len], "Lost", -200, None)
                         current_user.Update_Coin(-200)
                         Core_Game(chr_set, race_len)
                         
@@ -1835,40 +1890,52 @@ def Choose_Race_Length(alpha, chr_set, race_len):
         pg.display.update()
 
 def Core_Game(theme, length):
-    theme_list = ['ocean', 'forest', 'villager', 'street']
+    theme_list = ['ocean', 'forest', 'villager', 'street', 'member']
 
     something = randint(1, 10101010101)
-    if something == 727:
-        THE_MOST_NORMAL_CAT = 'Cat is me. Literally me. No other animal can come close to relating to me like this. There is no way you can convince me this is not me. Cat could not possibly be anymore me. It is me, and nobody can convince me otherwise. If anyone approached me on the topic of this not possibly being me, then I immediately shut them down with overwhelming evidence that this animal is me. This animal is me, it is indisputable. Why anyone would try to argue that this animal is not me is beyond me. If you held two pictures of me and the cat side by side, you would see no difference. I can safely look at this chart every day and say "Yup, that is me". I can practically see this animal every time I look at myself in the mirror. I go outside and people stop me to comment how similar I look and act to this animal. I chuckle softly as I am assured everyday this animal is me in every way. I can smile each time I get out of bed every morning knowing that I have found my identity with this animal and I know my place in this world. It is really quite funny how similiar the cat is to me. It is almost like we are identical twins. When I first saw the cat, I had an existential crisis. What if this animal was the real me and I was the fictional being. What if this animal actually became aware of my existence? Did it have the ability to become self aware itself?'
-    else:
-        THE_MOST_NORMAL_CAT = 'Just a cat'
+    THE_MOST_NORMAL_CAT = 'Cat is me. Literally me. No other animal can come close to relating to me like this. There is no way you can convince me this is not me. Cat could not possibly be anymore me. It is me, and nobody can convince me otherwise. If anyone approached me on the topic of this not possibly being me, then I immediately shut them down with overwhelming evidence that this animal is me. This animal is me, it is indisputable. Why anyone would try to argue that this animal is not me is beyond me. If you held two pictures of me and the cat side by side, you would see no difference. I can safely look at this chart every day and say "Yup, that is me". I can practically see this animal every time I look at myself in the mirror. I go outside and people stop me to comment how similar I look and act to this animal. I chuckle softly as I am assured everyday this animal is me in every way. I can smile each time I get out of bed every morning knowing that I have found my identity with this animal and I know my place in this world. It is really quite funny how similiar the cat is to me. It is almost like we are identical twins. When I first saw the cat, I had an existential crisis. What if this animal was the real me and I was the fictional being. What if this animal actually became aware of my existence? Did it have the ability to become self aware itself?'
         
-    name_list = [['Anglerfish', 'Eel', 'Octopus', 'Shark', 'Turtle'], 
-                ['Bear', 'Boar', 'Deer', 'Fox', 'Wolf'], 
-                ['Nobleman', 'Oldman', 'Peasant', 'Villager', 'Worker'], 
-                ['Neko', THE_MOST_NORMAL_CAT, 'Dobermann', 'Shiba', 'Remy'],
-                ['ThieNhann', 'Lackiem1707', 'phuc-dep-trai', 'dzqt1', 'Nichikou']]
+    name_list = ['ThieNhann', 'Lackiem1707', 'phuc-dep-trai', 'dzqt1', 'Nichikou']
 
-    theme = 3
-    length = 0
+    names = ['Kevin','Alberto','Carol','Claire','Chris','Henrietta','Sophie','Jane','Candace','Tom',
+                'Lowell','Myrtle','Dana','Rosa','Byron','Ramon','Bryan','Dale','Matthew','Malcolm',
+                'Terrance','Lynn','Edith','Rodolfo','Antonia','Hector','Meredith','Vernon','Tami','Vicky',
+                'Eddie','Julio','Tonya','Wilbert','Vickie','Betsy','Jaime','Leigh','Walter','Loretta',
+                'Susie','Rodney','Grace','Kyle','Rachael','Bryant','Erika','Shelia','Kristi','Harry']
+
+    name_set = sample(range(0, 49), 5)
+
     baseSize = 90
-    baseSpeed = 10 # thay đổi speed nhân vật (for testing)
-
+    baseSpeed = 2 # thay đổi speed nhân vật (for testing)
     bg = pg.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
     bg = pg.transform.scale(bg, (size.w, size.h))
     fps = pg.time.Clock()
+
+    crown = []
+    for i in range(8):
+        image = pg.image.load(f"Assets/other/crown/frame_{i}_delay-0.2s.gif").convert()
+        image = pg.transform.scale(image, (40 * size.w / 1280, 40 * size.h / 720))
+        crown.append(image)
+
     class Char:
         def __init__(self, x, y, speed, name, image_path):
             self.x = x
             self.y = y
+            if theme == 4:
+                self.y += 0.05 * size.h
             self.speed = speed
             self.name = name
             self.act_i = 0
+            self.crown_i = 0
             self.status = 'idle'
             self.laps = 0
             self.orientation = 1
+            self.baseY = self.y
             self.laps_display = Draw_to_Screen('text', None, None, None, None, f'{self.laps}/{length}', Font((40)), '#FFFFFF', (self.x - 20 * size.w / 1280, self.y + 20 * size.h / 720))
-            self.name_display = Draw_to_Screen('text', None, None, None, None, f'{self.name}', Font((40)), '#FFFFFF', (self.x + 30 * size.w / 1280, self.y + 5 * size.h / 720))
+            if theme == 3:
+                self.name_display = Draw_to_Screen('text', None, None, None, None, f'{self.name}', Font((40)), '#FFFFFF', (self.x + 40 * size.w / 1280, self.y + 0.15 * size.h))
+            else:
+                self.name_display = Draw_to_Screen('text', None, None, None, None, f'{self.name}', Font((40)), '#FFFFFF', (self.x + 40 * size.w / 1280, self.y + 0.1 * size.h))
             self.rank_display = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (0,0))
             self.player_chose = Draw_to_Screen('text', None, None, None, None, "", Font((40)), '#FFFFFF', (0,0))
             # Tải hình ảnh từ đường dẫn được cung cấp
@@ -1954,7 +2021,13 @@ def Core_Game(theme, length):
                 self.effect_end_time = None
                 
             if self.first_finish:
-                pass
+                if self.act_i % 15 == 0:
+                    if self.crown_i == 7:
+                        self.crown_i = 0
+                    else:
+                        self.crown_i += 1
+                screen.blit(crown[self.crown_i], (self.x + 30 * size.w / 1280, self.y - 20 * size.h / 720))
+                    
             
         def is_clicked(self, pos):
             return self.x <= pos[0] <= self.x + baseSize * size.w / 1280 and self.y <= pos[1] <= self.y + baseSize * size.h / 720
@@ -1963,12 +2036,20 @@ def Core_Game(theme, length):
             return self.x < obstacle.x + baseSize * size.w / 1280 and self.x + baseSize * size.w / 1280 > obstacle.x and self.y < obstacle.y + baseSize * size.h / 720 and self.y + baseSize * size.h / 720 > obstacle.y
 
     # Tạo danh sách các xe với hình ảnh tương ứng
-    chars = [Char(50, 30 + (i + 1)*0.15*size.h, uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, name_list[theme][i], f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}')  for i in range(5)]
+    if theme == 4:
+        chars = [Char(50, 30 + (i + 1)*0.15*size.h, uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, name_list[i], f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}')  for i in range(5)]
+    else:
+        chars = [Char(50, 30 + (i + 1)*0.15*size.h, uniform(baseSpeed * 1,baseSpeed * 2) * size.w / 1280, names[name_set[i]], f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}')  for i in range(5)]
+
+    if theme == 3 and something == 727:
+        chars[1].name = THE_MOST_NORMAL_CAT
 
     class Obstacle:
         def __init__(self, x, y, image_paths):
             self.x = x
             self.y = y
+            if theme == 4:
+                self.y += 0.05 * size.h
             self.image_paths = image_paths
             self.set_image('Assets/Obstacles/obstacle_box.png')
             self.changed = False  # Thêm thuộc tính này để theo dõi xem hình ảnh đã được thay đổi chưa
@@ -1997,7 +2078,6 @@ def Core_Game(theme, length):
 
         def draw(self):
             screen.blit(self.image, (self.x, self.y))# Vẽ hình ảnh   
-   
     # Tạo danh sách các chướng ngại vật ở nửa đường
     obstacle_images = ['Assets/Obstacles/obstacle_confinement.png',  
                     'Assets/Obstacles/obstacle_reverse.png', 'Assets/Obstacles/obstacle_slow.png', 
@@ -2008,8 +2088,15 @@ def Core_Game(theme, length):
     def show_menu():
         running = True
         selection = -1
+        player_name = ''
+        rename = False
         charImage = Draw_to_Screen('text', None, None, None, None, '', 
                                         Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.60, size.h * 0.5))
+        rename_box = Button('rect', (size.w * 0.35, size.h * 0.7), (size.w*0.275, size.h * 0.1), None, None, None, None, '#FFFFFF', '#FFFFFF', None, None)
+        if theme == 4:
+            charname_text = Draw_to_Screen('text', None, None, None, None, "Your character name (please don't change it):", Font((60)), '#FFFFFF', (size.w * 0.5, size.h * 0.65)) 
+        else:
+            charname_text = Draw_to_Screen('text', None, None, None, None, 'Choose your character name:', Font((60)), '#FFFFFF', (size.w * 0.5, size.h * 0.65)) 
         while running:
             screen.blit(bg,(0,0))
             font = pg.font.Font(None, 36)
@@ -2019,14 +2106,20 @@ def Core_Game(theme, length):
             currentChar = Draw_to_Screen('text', None, None, None, None, 'Your character:', 
                         Font(int(50 * size.w / 1280)), '#FFFFFF', (size.w * 0.4, size.h * 0.5))
             
-            Start = Button('rect', (size.w*0.4, size.h * 0.65), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
+            Start = Button('rect', (size.w*0.4, size.h * 0.85), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
             Start_text = Draw_to_Screen('text', None, None, None, None, 'Start', Font((40)), '#000000', Start.rect.center)
+            
+            rename_text = Draw_to_Screen('text', None, None, None, None, player_name, Font((40)), '#000000', rename_box.rect.center)
             
             text.Blit(0,0)
             currentChar.Blit(0,0)
             charImage.Blit(0,0)
             Start.Blit(0,0)
             Start_text.Blit(0,0)
+            rename_box.Blit(0,0)
+            rename_text.Blit(0,0)
+            charname_text.Blit(0,0)
+            
             fps.tick(60)
             for char in chars:
                 char.act_i = char.draw(char.act_i,char.status)
@@ -2043,13 +2136,27 @@ def Core_Game(theme, length):
                         if char.is_clicked(pos):
                             charImage = Draw_to_Screen('image', None, None, f'Assets/char/animation/{theme_list[theme]}/{theme_list[theme]}_{i+1}/idle_1.png', ((baseSize * 1.2)*size.w/1280, (baseSize * 1.2)* size.w/1280), None, 
                                         None, None, (size.w * 0.6, size.h * 0.5))
+                            player_name = char.name
                             selection = i                # Trả về chỉ số của xe mà người dùng đã chọn
                         if Start.Click(pos) and selection != -1:
+                            if rename and player_name != '':
+                                chars[selection].name = player_name
                             return selection
+                        if rename_box.Click(pos) and theme != 4:
+                            rename = True
                             
-                
+                if event.type == pg.KEYDOWN:
+                    if rename:
+                        if event.key == pg.K_BACKSPACE:
+                            player_name = player_name[:-1]
+                        else:
+                            player_name += event.unicode
+                            
+                    
+
     # Hỏi người chơi chọn xe
     player_choice = show_menu()
+    print(player_choice)
 
     # Khởi tạo số vàng của người chơi
     player_gold = 0
@@ -2078,6 +2185,25 @@ def Core_Game(theme, length):
                         pos = pg.mouse.get_pos()
                         if Finish.Click(pos):
                             running = False
+                            print(f'chose: {player_choice}')
+                            match ranking_list.index(player_choice + 1):
+                                case 0:
+                                    current_user.Update_History('5th', -200)
+                                    print(True)
+                                case 1:
+                                    current_user.Update_History('4th', -200)
+                                    print(True)
+                                case 2:
+                                    current_user.Update_History('3rd', -200)
+                                    print(True)
+                                case 3:
+                                    current_user.Update_History('2nd', -200)
+                                    print(True)
+                                case 4:
+                                    current_user.Update_History('1st', 400)
+                                    current_user.Update_Coin(400)
+                                    print(True)
+
                             Show_Result(ranking_list, player_choice, theme, size, chars)
             screen.blit(bg,(0,0))
             
@@ -2090,7 +2216,10 @@ def Core_Game(theme, length):
                 char.act_i = char.draw(char.act_i, char.status)
                 char.move()
                 char.laps_display = Draw_to_Screen('text', None, None, None, None, f'{char.laps}/{length+1}', Font((20)), '#FFFFFF', (char.x - 15 * size.w / 1280, char.y + 20 * size.h / 720))
-                char.name_display = Draw_to_Screen('text', None, None, None, None, f'{char.name}', Font((30)), '#FFFFFF', (char.x + 30 * size.w / 1280, char.y + 5 * size.h / 720))
+                if theme == 3:
+                    char.name_display = Draw_to_Screen('text', None, None, None, None, f'{char.name}', Font((40)), '#FFFFFF', (char.x + 40 * size.w / 1280, char.y + 0.15 * size.h))
+                else:
+                    char.name_display = Draw_to_Screen('text', None, None, None, None, f'{char.name}', Font((40)), '#FFFFFF', (char.x + 40 * size.w / 1280, char.y + 0.1 * size.h))
                 char.laps_display.Blit(0,0)
                 char.name_display.Blit(0,0)
                 image_path = None  # Khởi tạo image_path với giá trị mặc định
@@ -2169,10 +2298,9 @@ def Core_Game(theme, length):
     pg.quit()
 
 def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
-    theme_list = ["ocean", "forest", "villager", "street"]
+    theme_list = ["ocean", "forest", "villager", "street", "member"]
     theme = game_theme
     WIDTH, HEIGHT = size.w, size.h
-    print(WIDTH)
     GOLD = (255, 215, 0)
     chr_select = player_choice + 1  # playera choose)
                     #1. bear   2.boar    3. deer   4.fox    5.wolf
@@ -2246,20 +2374,6 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
     
     Next = Button('rect', (size.w*0.4, size.h * 0.9), (size.w*0.175, size.h * 0.075), None, None, None, None, '#FFFFFF', '#FFFFFF' , None, None)
     Next_text = Draw_to_Screen('text', None, None, None, None, 'Next', Font((40)), '#000000', Next.rect.center)
-
-    #temporary, delete after having finish order(order trong core game)
-    #while True:
-    #    play_order = input("Enter the order of the player seperate by spaces (e.g., 3 1 4 2 5): ")
-    #    player_order = play_order.split()  # Split the input into a list of strings
-    #    try:
-    #        player_order = [int(num) for num in player_order]  # Convert strings to integers#
-
-    #        if len(player_order) != len(sorted_stages):
-    #            print("Error: The number of player provided does not match the number of stages.")
-    #        else:
-    #            break  # Exit the loop if the input is valid
-    #    except ValueError:
-    #        print("Error: Please enter a valid sequence of numbers separated by spaces.")
 
     player_order = ranking_list
 
@@ -2383,9 +2497,13 @@ def Show_Result(ranking_list, player_choice, game_theme, size, chars_list):
                         now = datetime.now()
                         current_time = now.strftime("%H-%M-%S")
                         today = date.today()
+#                        bbox = (math.floor(size.w * 0.18), math.floor(size.h * 0.15), math.floor(size.w * (0.18 + 0.605)), math.floor(size.h * (0.15 + 0.755)))
+#                        region_screenshot = ImageGrab.grab(bbox=bbox)
+#                        region_screenshot.save(f'screenshot/screenshot_{current_time}_{today}.png')
                         screenshot = pyautogui.screenshot(region = (floor(size.w * 0.18), floor(size.h * 0.15), floor(size.w * 0.605), floor(size.h * 0.755))) 
                         screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
                         cv2.imwrite(f'screenshot/screenshot_{current_time}_{today}.png', screenshot) 
+                        current_user.Update_Image_Path(f'screenshot/screenshot_{current_time}_{today}.png')
                         return
         pg.display.flip()
         clock.tick(60)
@@ -2932,4 +3050,4 @@ def User_Center_Menu(prev_menu, set_char, race_len):
         pg.time.Clock().tick(60)
 
 Load_Config()
-Login('23120050@student.hcmus.edu.vn', 'thembululwa')
+Login('nguyennhatkhang2005@gmail.com', 'khangnhien11')

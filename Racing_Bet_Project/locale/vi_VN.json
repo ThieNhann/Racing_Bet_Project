@@ -117,12 +117,6 @@
         "Short"         :   "Ngắn",
         "Medium"         :   "Trung bình",
         "Long"         :   "Dài"
-    },
-
-    "History_Result":
-    {
-        "Lost"         :   "Thua",
-        "Win"         :   "Thắng"
     }
 
 }

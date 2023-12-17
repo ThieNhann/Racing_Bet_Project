@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS User_History(
             Race_Length VAR CHAR(255),
             Result VAR CHAR(255),
             Coins_Change VAR CHAR (255),
+            Image_Path VAR CHAR (255),
             FOREIGN KEY(USER_ID) REFERENCES User_Data(User_ID)
 )
 """) 
@@ -233,16 +234,41 @@ class User_Data:
                     """, (self.coin, self.email))
         conn.commit()
     
-    def Save_History(self, chr_set, race_len, win, coin):
+    def Save_History(self, chr_set, race_len, win, coin, path):
         cur.execute("""INSERT INTO User_History 
                     (User_ID,
                     Selected_Char, 
                     Race_Length, 
                     Result, 
-                    Coins_Change)
-                    VALUES (?,?,?,?,?)""",(self.user_id, chr_set, race_len, win, coin))
+                    Coins_Change,
+                    Image_Path)
+                    VALUES (?,?,?,?,?,?)""",(self.user_id, chr_set, race_len, win, coin, path))
         conn.commit()
 
+        cur.execute("""Select History_ID FROM User_History ORDER BY History_ID DESC""")
+        self.history_id = cur.fetchone()[0]
+
+    def Update_History(self, rank, coin):
+        cur.execute("""UPDATE User_History
+                    SET Result = ?
+                    WHERE History_ID = ?
+                    """, (rank, self.history_id))
+        
+        cur.execute("""UPDATE User_History
+                    SET Coins_Change = ?
+                    WHERE History_ID = ?
+                    """, (coin, self.history_id))
+
+        conn.commit()
+    
+    def Update_Image_Path(self, path):
+
+        cur.execute("""UPDATE User_History
+                    SET Image_Path = ?
+                    WHERE History_ID = ?
+                    """, (path, self.history_id))
+        conn.commit()
+        
     def Get_History(self):
         cur.execute("SELECT * FROM User_History WHERE User_ID = ? ORDER BY History_ID DESC", (self.user_id,))
         return cur.fetchmany(6)
@@ -253,16 +279,16 @@ class Game_History():
         self.win = '#00FF00'
         self.lose = '#FF0000'
 
-        if self.info[4] == 'Win':
+        if self.info[4] == '1st':
             self.chr_set = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Char', f'{self.info[2]}'), True, self.win)
             self.race_len = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Race', f'{self.info[3]}'), True, self.win)
-            self.result = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Result', f'{self.info[4]}'), True, self.win)
+            self.result = Font(int(30 * size/1280)).render(f'{self.info[4]}', True, self.win)
             self.coins_change = Font(int(30 * size/1280)).render(f'{self.info[5]}', True, self.win)
             
-        elif self.info[4] == 'Lost':
+        else:
             self.chr_set = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Char', f'{self.info[2]}'), True, self.lose)
             self.race_len = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Race', f'{self.info[3]}'), True, self.lose)
-            self.result = Font(int(30 * size/1280)).render(Updt_Lang(lang, 'History_Result', f'{self.info[4]}'), True, self.lose)
+            self.result = Font(int(30 * size/1280)).render(f'{self.info[4]}', True, self.lose)
             self.coins_change = Font(int(30 * size/1280)).render(f'{self.info[5]}', True, self.lose)
 
         self.chr_set_rect = self.chr_set.get_rect(center = (0,0))

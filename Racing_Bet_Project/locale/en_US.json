@@ -116,13 +116,8 @@
         "Short"         :   "Short",
         "Medium"         :   "Medium",
         "Long"         :   "Long"
-    },
-
-    "History_Result":
-    {
-        "Lost"         :   "Lost",
-        "Win"         :   "Win"
     }
+
 
 
     
