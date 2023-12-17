@@ -51,6 +51,22 @@
         "Prompt"   :  "- Bấm để bắt đầu -"
     },
 
+    "In_Game_Menu":
+    {
+        "Play"      :   "Chơi",
+        "Minigame"  :   "Minigame",
+        "History"   :   "Lịch sử",
+        "Hello"     :   "Xin chào",
+        "Play_Error"    :   "Bạn không có đủ tiền, chơi minigame để kiếm thêm",
+        "Minigame_Error":   "Bạn đã có đủ tiền, không thể chơi minigame"
+    },
+
+    "Minigame":
+    {
+        "Gold"     :   "Bạn nhận được: ",
+        "Return"   :    "- Nhấn ESC để quay lại menu chính -"
+    },
+
     "Settings":
     {
         "Video"         :  "Hình ảnh",
@@ -78,7 +94,7 @@
 
     "Select_Char":
     {
-        "Char_Set"  :   "Chọn set nhân vật",
+        "Char_Set"  :   "Chọn nhóm nhân vật",
         "0"         :   "Đã chọn: Biển",
         "1"         :   "Đã chọn: Rừng",
         "2"         :   "Đã chọn: Làng",
@@ -99,8 +115,14 @@
     "History":
     {
         "Title"     :   "Lịch sử",
-        "Prompt"    :   "- Hiển thị 5 trận gần nhất -",
-        "Empty"     :   "~ Danh sách trống ~"
+        "Prompt"    :   "- Nhấn để xem thêm -",
+        "Set"       :   "Nhóm nhân vật",
+        "Length"    :   "Độ dài",
+        "Rank"      :   "Xếp hạng",
+        "Coin"      :   "Tiền nhận được",
+        "Empty"     :   "~ Danh sách trống ~",
+        "Error"     :   "Xảy ra lỗi khi load ảnh :/",
+        "Convert"   :   "Chuyển thành file .txt"
     },
 
     "History_Char":
@@ -117,6 +139,21 @@
         "Short"         :   "Ngắn",
         "Medium"         :   "Trung bình",
         "Long"         :   "Dài"
+    },
+
+    "Core_Game":
+    {
+        "Title"         :     "Hãy chọn nhân vật của bạn!",
+        "Selected"      :      "Đã chọn: ",
+        "Choose_Name"   :   "Chọn tên nhân vật: ",
+        "Fixed_Name"   :   "Tên nhân vật (không thể đổi): ",
+        "Start"         :   "Bắt đầu",
+        "Next"          :   "Tiếp tục"
+    },
+
+    "Show_Result":
+    {
+        "Rank"          :   "Hạng của bạn: "
     }
 
 }

@@ -1,12 +1,12 @@
 import pygame
 import sys
 import os
-from Experiment_Class import *
+from main_class import *
 #from PIL import Image
 #import pyscreenshot as ImageGrab
 import numpy as np 
 import cv2 
-import pyautogui 
+#import pyautogui 
 from datetime import date, datetime
 import math
 import subprocess

@@ -50,6 +50,22 @@
         "Prompt"    :  "- Click anywhere to continue -"
     },
 
+    "In_Game_Menu":
+    {
+        "Play"          :   "Play",
+        "Minigame"      :   "Minigame",
+        "History"       :   "History",
+        "Hello"         :   "Hello",
+        "Play_Error"    :   "You don't have enough coins, play minigame",
+        "Minigame_Error":   "You have enoguh coin, can't enter minigame"
+    },
+
+    "Minigame":
+    {
+        "Gold"     :   "You got: ",
+        "Return"   :    "- Press ESC to return to main menu -"
+    },
+
     "Settings":
     {
         "Video"         :  "Video",
@@ -98,8 +114,14 @@
     "History":
     {
         "Title"     :   "History",
-        "Prompt"    :   "- Showing 5 most recent matches -",
-        "Empty"     :   "~ List is empty ~"
+        "Prompt"    :   "- Click to see more -",
+        "Set"       :   "Set Selected",
+        "Length"    :   "Race's Length",
+        "Rank"      :   "Your rank",
+        "Coin"      :   "Coin gained",
+        "Empty"     :   "~ List is empty ~",
+        "Error"     :   "There is an error with the image :/",
+        "Convert"   :   "Convert to .txt file"
     },
 
     "History_Char":
@@ -116,6 +138,21 @@
         "Short"         :   "Short",
         "Medium"         :   "Medium",
         "Long"         :   "Long"
+    },
+
+    "Core_Game":
+    {   
+        "Title"         :     "Choose your character!",
+        "Selected"      :      "Selected: ",
+        "Choose_Name"   :   "Choose your character name: ",
+        "Fixed_Name"   :   "Your character name (fixed): ",
+        "Start"         :   "Start",
+        "Next"          :   "Next"
+    },
+
+    "Show_Result":
+    {
+        "Rank"          :   "Your rank: "
     }
 
 

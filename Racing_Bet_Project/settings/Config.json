@@ -1,7 +1,7 @@
 {
-    "Start_Language": "US",
-    "Start_Screen_Size": "(1920, 1080)",
-    "In_Full_Screen": "True",
+    "Start_Language": "VN",
+    "Start_Screen_Size": "(1280, 720)",
+    "In_Full_Screen": "False",
     "Music_Volume": "1.0",
     "SFX_Volume": "1.0"
 }

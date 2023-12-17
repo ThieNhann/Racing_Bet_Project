@@ -1,7 +1,0 @@
-RESULT
-Hector : 1st place
-Erika : 2nd place
-Susie : 3rd place
-Chosen by player
-Grace : 4th place
-Jane : 5th place
