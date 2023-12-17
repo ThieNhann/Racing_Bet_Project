@@ -4,6 +4,8 @@ import sys
 import os
 from Experiment_Class import *
 import Result_Screen as result
+import subprocess
+
 
 
 # Khởi tạo Pygame
@@ -311,7 +313,7 @@ while running:
                         running = False
                         result.Show_Result(ranking_list, player_choice, theme, size, chars)
         screen.blit(bg,(0,0))
-        
+        subprocess.run(["python", "convert.py"])
         if all_Finish:
             Finish.Blit(0,0)
             Finish_text.Blit(0,0)
