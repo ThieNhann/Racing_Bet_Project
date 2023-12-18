@@ -4,7 +4,6 @@ import sys
 import os
 import smtplib
 import ssl
-import Result_Screen as Result_Screen
 import requests
 from datetime import date, datetime
 from email_validator import validate_email
@@ -44,10 +43,6 @@ size = Screen_Info(screen.get_size())
 
 #mouse animation group
 click_ani = pg.sprite.Group()
-
-#FPS event counter
-Bg_cycle = pg.USEREVENT + 1
-pg.time.set_timer(Bg_cycle, 1000)
 
 #Create instance of user
 current_user = User_Data()
@@ -158,7 +153,7 @@ def Send_Email(email):
 #Logo Animation
 def Start_Animation():
     #set the alpha value for the screen
-    alpha = -80
+    alpha = -50
 
     #Get logo
     logo = pg.transform.scale(pg.image.load('Assets/icon/Settings/HCMUS_logo.png'), (size.w / 3, size.w / 3))
@@ -166,7 +161,7 @@ def Start_Animation():
 
     #Main code
     while True:
-        alpha += 1.5
+        alpha += 1
         mouse_pos = pg.mouse.get_pos()
 
         for event in pg.event.get():
@@ -185,7 +180,7 @@ def Start_Animation():
             logo.set_alpha(int(255 * sin(rad(alpha))))
             screen.blit(logo, logo_rect)
 
-        elif alpha > 300:
+        elif alpha > 250:
             #if alpha then reaches 250, move onto login screen
             Login('', '')
 
@@ -694,8 +689,6 @@ def Enter_Username(before, prev_menu, set_char, race_len):
 
 #Title Screen
 def Title(restart_music):
-    fps = 0
-    tru_fps = 0
     alpha = 0
 
     #If enter_game becomes True then stop button functions
@@ -719,7 +712,6 @@ def Title(restart_music):
 
     while True:
         alpha += 5
-        fps += 1
         mouse_pos = pg.mouse.get_pos()
 
         for event in pg.event.get():
@@ -744,10 +736,6 @@ def Title(restart_music):
                     sfx_channels.play(interface)
                     enter_game = True
                     alpha = 255
-
-            if event.type == Bg_cycle:
-                tru_fps = fps
-                fps = 0
         
         #Base
         screen.fill(0)
@@ -782,9 +770,6 @@ def Title(restart_music):
         click_ani.update()
         click_ani.draw(screen)
 
-        FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
-        screen.blit(FPS, (0,0))
-
         pg.time.Clock().tick(60)
         pg.display.update()
 
@@ -795,8 +780,6 @@ def In_Game_Menu(alpha, restart_music):
     #Mainly for the sake of animation. Target menu is the menu that player selected
     change_menu = False
     target_menu = ''
-    fps = 0
-    tru_fps = 0
     minigame_error_alpha = 0
     play_error_alpha = 0
 
@@ -806,29 +789,32 @@ def In_Game_Menu(alpha, restart_music):
     settings = Button('image', None, None, 'Assets/icon/Settings/setting_01.png', (50*size.w/1280, 50* size.w/1280), 
                     None, None, None, None, 'Assets/icon/Settings/setting_02.png', (size.w * 0.975, size.h * 0.045))
 
-    play = Button('rect', (0,0), ((size.w*0.25, size.h * 0.15)), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    play = Button('rect', (0,0), ((size.w*0.25, size.h * 0.15)), None, None, None, None, '#FF6865', '#FF4F4B', None, None)
     play.rect.center = (size.w*0.775, size.h * 0.4)
 
-    mini_game = Button('rect', (0,0), ((size.w*0.25, size.h * 0.15)), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    mini_game = Button('rect', (0,0), ((size.w*0.25, size.h * 0.15)), None, None, None, None, '#5ced73', '#39E75F', None, None)
     mini_game.rect.center = (size.w*0.775, size.h * 0.6)
 
-    history = Button('rect', (0,0), ((size.w*0.25, size.h * 0.15)), None, None, None, None, '#676f9d', '#5d648c', None, None)
+    history = Button('rect', (0,0), ((size.w*0.25, size.h * 0.15)), None, None, None, None, '#55CEFF', '#19BDFF', None, None)
     history.rect.center = (size.w*0.775, size.h * 0.8)
 
     ani_surf = pg.surface.Surface((size.w, size.h))
     ani_surf.fill('#000000')
 
-    play_text = Font(int(40 * size.w/1280)).render(Updt_Lang(lang, 'In_Game_Menu', 'Play'), True, "#FFFFFF")
+    play_text = Font(int(50 * size.w/1280)).render(Updt_Lang(lang, 'In_Game_Menu', 'Play'), True, "#FFFFFF")
     play_text_rect = play_text.get_rect(center = play.rect.center)
 
-    minigame_text = Font(int(40 * size.w/1280)).render(Updt_Lang(lang, 'In_Game_Menu', 'Minigame'), True, "#FFFFFF")
+    minigame_text = Font(int(50 * size.w/1280)).render(Updt_Lang(lang, 'In_Game_Menu', 'Minigame'), True, "#FFFFFF")
     minigame_text_rect = minigame_text.get_rect(center = mini_game.rect.center)
 
-    history_text = Font(int(40 * size.w/1280)).render(Updt_Lang(lang, 'In_Game_Menu', 'History'), True, "#FFFFFF")
+    history_text = Font(int(50 * size.w/1280)).render(Updt_Lang(lang, 'In_Game_Menu', 'History'), True, "#FFFFFF")
     history_text_rect = history_text.get_rect(center = history.rect.center)
 
     coins_img = pg.image.load('Assets/icon/others/coin.png').convert_alpha()
     coins_img = pg.transform.rotozoom(coins_img, 0, 4 * size.w / 1280)
+
+    mini_coin = pg.image.load('Assets/icon/others/coin.png').convert_alpha()
+    mini_coin = pg.transform.rotozoom(mini_coin, -30, 3 * size.w / 1280)
 
     coins_Text = Font(int(50*size.w/1280)).render(f'{current_user.coin}', True, "#FFFFFF")
     username_text = Font(int(50 * size.w /1280)).render(f'{Updt_Lang(lang, 'In_Game_Menu', 'Hello')}, {current_user.username}', True, '#FFFFFF')
@@ -836,11 +822,14 @@ def In_Game_Menu(alpha, restart_music):
     minigame_error = Font(int(50 * size.w/1280)).render(Updt_Lang(lang, 'In_Game_Menu', 'Minigame_Error'), True, '#FF0000')
     play_error = Font(int(50 * size.w/1280)).render(Updt_Lang(lang, 'In_Game_Menu', 'Play_Error'), True, '#FF0000')
 
+    cost = Font(int (40*size.w/1280)).render('-100', True, '#FFFFFF')
+    cost_rect = cost.get_rect(center = (size.w * 0.87, size.h * 0.3))
+    cost = pg.transform.rotate(cost, -30)
+
     while True:
         alpha -= 7.5
         minigame_error_alpha -= 7.5
         play_error_alpha -= 7.5
-        fps += 1
         mouse_pos = pg.mouse.get_pos()
 
         for event in pg.event.get():
@@ -880,14 +869,6 @@ def In_Game_Menu(alpha, restart_music):
                         sfx_channels.play(button_click)
                         pg.image.save(screen, 'Assets/temps/temp.png')
                         Video_Menu('In_Game_Menu', '', '')
-            
-            if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                current_user.Update_Coin(1)
-            #Debug: FPS
-            if event.type == Bg_cycle:
-                tru_fps = fps
-                fps = 0
-
         
         screen.fill(0)
         #Background move with cursor
@@ -926,6 +907,8 @@ def In_Game_Menu(alpha, restart_music):
         screen.blit(play_text, play_text_rect)
         screen.blit(minigame_text, minigame_text_rect)
         screen.blit(history_text, history_text_rect)
+        screen.blit(mini_coin, mini_coin.get_rect(midleft = (size.w*0.9, size.h * 0.365)))
+        screen.blit(cost, cost_rect)
 
         minigame_error.set_alpha(minigame_error_alpha)
         screen.blit(minigame_error, minigame_error.get_rect(center = (size.w/2, size.h/2)))
@@ -936,10 +919,6 @@ def In_Game_Menu(alpha, restart_music):
         ani_surf.set_alpha(alpha)
         screen.blit(ani_surf, (0,0))
         #Fade out animation logics
-        
-
-        FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
-        screen.blit(FPS, (0,0))
     
         click_ani.update()
         click_ani.draw(screen)
@@ -1276,7 +1255,7 @@ def Mini_Game_Menu():
 
     def gameplay():
         global highest_scores, gold
-        gp = 8
+        gp = 12
         s_Menu = False
         g_Over = False
         g_exit = False
@@ -1425,14 +1404,14 @@ def Mini_Game_Menu():
                 while True:
                     screen.fill((255, 255, 255))
                     text = Font(int(100 * size.w / 1280)).render("GAME OVER", True, (0, 0, 0))
-                    score = Font(int(30 * size.w / 1280)).render(f"{Updt_Lang(lang, 'Minigame', 'Gold')}      : " + str(gold), True, (0, 0, 0))
+                    score = Font(int(30 * size.w / 1280)).render(f"{Updt_Lang(lang, 'Minigame', 'Gold')} {str(gold)} ", True, (0, 0, 0))
                     scoreRect = score.get_rect()
                     scoreRect.center = (size.w * 0.5, size.h * 0.4)
                     screen.blit(score, scoreRect)
                     textRect = text.get_rect()
                     textRect.center = (size.w * 0.5, size.h * 0.25)
                     screen.blit(text, textRect)
-                    screen.blit(coin_symbol,(715 * size.w / 1280 , 277 * size.w /1280))
+                    screen.blit(coin_symbol,coin_symbol.get_rect(midleft = scoreRect.midright))
                     prompt = Font(int(20 * size.w / 1280)).render(Updt_Lang(lang, 'Minigame', 'Return'), True, "#000000")
                     screen.blit(prompt, prompt.get_rect(center = (size.w/2, size.h* 0.6)))
                     pg.display.update()
@@ -1692,8 +1671,6 @@ def View_Ranks(image_path):
 def Choose_Character_Set(alpha, chr_set, race_len):
     change_menu = False
     update_bg = True
-    fps = 0
-    tru_fps = 0
 
     #Load Assets
     bg_List = ['Assets/background/ocean.png', 
@@ -1723,7 +1700,6 @@ def Choose_Character_Set(alpha, chr_set, race_len):
 
     while True:
         alpha += 7.5
-        fps += 1
         mouse_pos = pg.mouse.get_pos()
 
         for event in pg.event.get():
@@ -1774,10 +1750,6 @@ def Choose_Character_Set(alpha, chr_set, race_len):
                     if back.Click(mouse_pos):
                         sfx_channels.play(button_click)
                         In_Game_Menu(255, False)
-            
-            if event.type == Bg_cycle:
-                tru_fps = fps
-                fps = 0
 
         if update_bg:
             background = pg.transform.scale(pg.image.load(bg_List[chr_set]).convert_alpha(), (512, 288))
@@ -1822,9 +1794,6 @@ def Choose_Character_Set(alpha, chr_set, race_len):
 
         if chr_set != 5:
             pg.draw.rect(screen, "#FFFFFF", bounding_box, 5, 0)
-            
-        FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
-        screen.blit(FPS, (0,0))
     
         click_ani.update()
         click_ani.draw(screen)
@@ -1835,8 +1804,6 @@ def Choose_Character_Set(alpha, chr_set, race_len):
 #Choose race length
 def Choose_Race_Length(alpha, chr_set, race_len):
     change_menu = False
-    fps = 0
-    tru_fps = 0
     bg_List = ['Assets/background/ocean.png', 
                 'Assets/background/forest/forest-1.png',
                 'Assets/background/village/village.png',
@@ -1880,7 +1847,6 @@ def Choose_Race_Length(alpha, chr_set, race_len):
 
     while True:
         alpha += 7.5
-        fps += 1
         mouse_pos = pg.mouse.get_pos()
 
         for event in pg.event.get():
@@ -1924,10 +1890,6 @@ def Choose_Race_Length(alpha, chr_set, race_len):
                     if back.Click(mouse_pos):
                         sfx_channels.play(button_click)
                         Choose_Character_Set(-20, chr_set, race_len)
-            
-            if event.type == Bg_cycle:
-                tru_fps = fps
-                fps = 0
 
         match race_len:
             case 0:
@@ -1968,9 +1930,6 @@ def Choose_Race_Length(alpha, chr_set, race_len):
 
         if race_len != 3:
             pg.draw.rect(screen, "#FFFFFF", bounding_box, 5, 0)
-
-        FPS = Font(int(30 * size.w / 1280)).render(f"FPS: {tru_fps}", True, "Black")
-        screen.blit(FPS, (0,0))
     
         click_ani.update()
         click_ani.draw(screen)
@@ -2010,7 +1969,7 @@ def Core_Game(theme, length):
     name_set = sample(range(0, 49), 5)
 
     baseSize = 90
-    baseSpeed = 2.5 # thay đổi speed nhân vật (for testing)
+    baseSpeed = 1.5 # thay đổi speed nhân vật (for testing)
     bg = pg.image.load(f'Assets/background/{theme_list[theme]}.png').convert()
     bg = pg.transform.scale(bg, (size.w, size.h))
     fps = pg.time.Clock()
@@ -3266,4 +3225,6 @@ def User_Center_Menu(prev_menu, set_char, race_len):
 
 Load_Config()
 Start_Animation()
+
+
 

@@ -99,7 +99,7 @@
         "1"         :   "Đã chọn: Rừng",
         "2"         :   "Đã chọn: Làng",
         "3"         :   "Đã chọn: Đường phố",
-        "4"         :   "Đã chọn: HCMUS",
+        "4"         :   "Đã chọn: Trường học",
         "5"         :   "Đã chọn: Chưa có"
     },
 
@@ -115,7 +115,7 @@
     "History":
     {
         "Title"     :   "Lịch sử",
-        "Prompt"    :   "- Nhấn để xem thêm -",
+        "Prompt"    :   "- Bấm để xem bảng kết quả cuối -",
         "Set"       :   "Nhóm nhân vật",
         "Length"    :   "Độ dài",
         "Rank"      :   "Xếp hạng",

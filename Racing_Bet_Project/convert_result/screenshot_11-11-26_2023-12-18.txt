@@ -1,0 +1,7 @@
+RESULT
+Chris : 1st
+Test : 2nd
+Kyle : 3rd
+Rachael : 4th
+Bryan : 5th
+Chosen by player

@@ -20,7 +20,7 @@
         "Email_Txt"         :  "Email",
         "Pwd_Txt"           :  "Password",
         "Repeat_Pwd_Txt"    :  "Repeat Password",
-        "Submit_Signup"        :  "Sign Up",
+        "Submit_Signup"     :  "Sign Up",
         "Email_Error"       :  "The email is in wrong format",
         "Pwd_Len_Error"     :  "Password must have at least 8 characters",
         "Pwd_Mismatch"      :  "Password doesn't match",
@@ -114,7 +114,7 @@
     "History":
     {
         "Title"     :   "History",
-        "Prompt"    :   "- Click to see more -",
+        "Prompt"    :   "- Click to view the final result table -",
         "Set"       :   "Set Selected",
         "Length"    :   "Race's Length",
         "Rank"      :   "Your rank",
